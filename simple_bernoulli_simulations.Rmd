@@ -1,0 +1,240 @@
+---
+title: "Simple Bernoulli"
+output: html_notebook
+---
+
+
+# Simulations for the simple Bernoulli experiment
+
+
+```{r setup}
+library(SBC)
+library(tidyverse)
+```
+
+
+Generate datasets + setup a set of different generated quantities.
+
+I create a new simple class of SBC backends that just use one function to generate samples when $y = 0$ and another when $y = 1$.
+
+```{r}
+set.seed(1558655)
+
+N_sims_simple_gq <- 1000
+N_sims_simple_gq_large <- 10000
+N_samples_simple_gq <- 100
+
+variables_simple_gq <- runif(N_sims_simple_gq_large)
+generated_simple_gq <- 
+  purrr::map(variables_simple_gq, ~ list(y = rbinom(1, size = 1, .x)))
+
+datasets_simple_gq_large <- SBC_datasets(variables = posterior::draws_matrix(theta = variables_simple_gq),
+                               generated = generated_simple_gq)
+
+datasets_simple_gq <- datasets_simple_gq_large[1 : N_sims_simple_gq]
+
+
+my_backend_func <- function(func0, func1) {
+  structure(list(func0 = func0, func1 = func1), class = "my_backend_func")
+}
+
+SBC_fit.my_backend_func <- function(backend, generated, cores) {
+  if(generated$y == 0) {
+    posterior::draws_matrix(theta = backend$func0())
+  } else if (generated$y == 1) {
+    posterior::draws_matrix(theta = backend$func1())
+  } else {
+    stop("Invalid")
+  }
+}
+
+SBC_backend_iid_draws.my_backend_func <- function(backend) {
+  TRUE
+}
+
+gq_simple_gq <- generated_quantities(log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
+   sq = (theta - 0.5) ^ 2,
+   sin3_2 = sin(3/2 * pi * theta),
+   saw = ifelse(theta < 1/2, theta, -1/2 + theta),
+   saw_irreg = ifelse(theta < 0.375, theta, -1/2 + theta),
+   sin_inv = sin(1 / theta),
+   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3))
+
+```
+
+## Correct posterior
+
+Setup a backend using the correct analytic posterior - it passes SBC including all GQs
+
+```{r}
+backend_simple_gq_ok <- my_backend_func(
+  func0 = rlang::as_function(~ rbeta(N_samples_simple_gq, 1, 2)),
+  func1 = rlang::as_function(~ rbeta(N_samples_simple_gq, 2, 1)))
+
+
+res_simple_gq_ok <- compute_SBC(datasets_simple_gq, backend_simple_gq_ok, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_ok)
+plot_ecdf_diff(res_simple_gq_ok)
+```
+
+## Flipped 0 and 1 outcomes
+
+Now we flip the functions - this still satisfies the "data-averaged posterior = prior" condition but actually fails even the "vanilla" sbc (i.e. the `theta` subplot). Interestingly, the `sq` quantity is completely insensitive to this flipping, because it is symmetric to flips in `theta` around $\frac{1}{2}$.
+
+```{r}
+backend_simple_gq_flip <- my_backend_func(
+  func0 = rlang::as_function(~ rbeta(N_samples_simple_gq, 2, 1)),
+  func1 = rlang::as_function(~ rbeta(N_samples_simple_gq, 1, 2)))
+
+
+res_simple_gq_flip <- compute_SBC(datasets_simple_gq, backend_simple_gq_flip, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_flip)
+plot_ecdf_diff(res_simple_gq_flip)
+
+
+```
+
+## Another counterexample for vanilla SBC
+
+We now build a counterexample, that is slightly similar to the true posterior and is designed to pass SBC for the `theta` parameter. This is how the inverse CDFs of the counterexample compare to the correct ones:
+
+```{r}
+transform_fun_test1_0 <- function(u) {
+  ifelse(u < 3/4, (2/3) * u, 0.5 + (u - 0.75)*2)
+}
+
+transform_fun_test1_1 <- function(u) {
+  ifelse(u < 3/4, (1/3) * sqrt(2) * sqrt(u * (3 + 2 * u)), sqrt(3 - 6*u + 4*u^2))
+}
+
+plot_transform_funs <- function(func0, func1, name) {
+  u <- seq(from = 0, to = 1,length.out = 100)
+  rbind(data.frame(y = 0, u = u, invphi = func0(u), type = name),
+        data.frame(y = 1, u = u, invphi = func1(u), type = name),
+        data.frame(y = 0, u = u, invphi = 1 - sqrt(1 - u), type = "Correct"),
+        data.frame(y = 1, u = u, invphi = sqrt(u), type = "Correct")
+        ) %>%
+    ggplot(aes(x = u, y = invphi, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) + 
+    scale_y_continuous("Inverse CDF of theta") +
+    scale_x_continuous("Quantile")
+}
+
+plot_transform_funs(transform_fun_test1_0, transform_fun_test1_1, "Test 1")
+```
+Let's run SBC. As designed, no problem with `theta`, but many GQs signal problems.
+
+```{r}
+backend_simple_gq_test1 <- my_backend_func(
+  func0 = function() {
+    u = runif(N_samples_simple_gq)
+    transform_fun_test1_0(u)
+  },
+  func1 = function() {
+    u = runif(N_samples_simple_gq)
+    transform_fun_test1_1(u)
+  }
+)
+
+
+res_simple_gq_test1 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test1, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_test1)
+plot_ecdf_diff(res_simple_gq_test1)
+
+
+```
+
+```{r}
+backend_simple_gq_test2 <- my_backend_func(
+  func0 = function() {
+    u = runif(N_samples_simple_gq)
+    u^2
+  },
+  func1 = function() {
+    u = runif(N_samples_simple_gq)
+    sqrt(u * (2-2*u+u^3))
+  }
+)
+
+
+res_simple_gq_test2 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test2, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_test2)
+plot_ecdf_diff(res_simple_gq_test2)
+
+
+```
+
+
+```{r}
+backend_simple_gq_test3 <- my_backend_func(
+  func0 = function() {
+    u = runif(N_samples_simple_gq)
+    ifelse(u < 0.5, u *(2 - sqrt(2)),
+           1 - sqrt(2 * (u - 1) *(1 - sqrt(2) + (-3 + 2 * sqrt(2))*u))
+           )
+  },
+  func1 = function() {
+    u = runif(N_samples_simple_gq)
+    ifelse(u < 0.5, sqrt(2 * u *(-1 + sqrt(2) + (3 - 2 * sqrt(2))*u)), 
+           sqrt(-3 + 2 * sqrt(2) + 2 * u *(5 - 3 * sqrt(2) +
+           (-3 + 2 * sqrt(2))*u))
+           )
+    
+  }
+)
+
+res_simple_gq_test3 <- compute_SBC(datasets_simple_gq_large[1:2500], backend_simple_gq_test3, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_test3)
+plot_ecdf_diff(res_simple_gq_test3)
+```
+
+
+
+```{r}
+backend_simple_gq_test4 <- my_backend_func(
+  func0 = function() {
+    u = runif(N_samples_simple_gq)
+    ifelse(u < 0.5, u^2 * 2 *(2 - sqrt(2)),
+           1 - 2 * abs(u - 1) * sqrt(-4 + 3 * sqrt(2) + (-6 + 4*sqrt(2)) * (u -2) * u) 
+           )
+  },
+  func1 = function() {
+    u = runif(N_samples_simple_gq)
+    ifelse(u < 0.5, sqrt(2 * u *(1 + 2*u *(-2 + sqrt(2) + (6 - 4*sqrt(2)) * u^2))),
+           sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * (-34 + 23 * sqrt(2) + (-6+4*sqrt(2)) * (u - 4) * u)))
+           
+           )
+    
+  }
+)
+
+res_simple_gq_test4 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test4, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_test4)
+plot_ecdf_diff(res_simple_gq_test4)
+```
+
+As noted previously, using just the prior as posterior passes SBC for `theta` and all GQs that depend only on `theta`, however the `log_lik` GQ comes to the rescue! 
+
+```{r}
+backend_simple_gq_prior<- my_backend_func(
+  func0 = rlang::as_function(~ runif(N_samples_simple_gq)),
+  func1 = rlang::as_function(~ runif(N_samples_simple_gq)))
+
+
+res_simple_gq_prior <- compute_SBC(datasets_simple_gq, backend_simple_gq_prior, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq)
+
+plot_rank_hist(res_simple_gq_prior)
+plot_ecdf_diff(res_simple_gq_prior)
+```
