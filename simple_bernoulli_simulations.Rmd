@@ -10,6 +10,10 @@ output: html_notebook
 ```{r setup}
 library(SBC)
 library(tidyverse)
+library(patchwork)
+
+library(future)
+plan(multisession)
 ```
 
 
@@ -52,6 +56,28 @@ SBC_backend_iid_draws.my_backend_func <- function(backend) {
   TRUE
 }
 
+my_backend_func_invcdf <- function(tfunc0, tfunc1) {
+  structure(list(tfunc0 = tfunc0, tfunc1 = tfunc1), class = "my_backend_func_invcdf")
+}
+
+SBC_fit.my_backend_func_invcdf <- function(backend, generated, cores) {
+  if(generated$y == 0) {
+    posterior::draws_matrix(theta = backend$tfunc0(runif(N_samples_simple_gq)))
+  } else if (generated$y == 1) {
+    posterior::draws_matrix(theta = backend$tfunc1(runif(N_samples_simple_gq)))
+  } else {
+    stop("Invalid")
+  }
+}
+
+SBC_backend_iid_draws.my_backend_func_invcdf <- function(backend) {
+  TRUE
+}
+
+
+my_globals <- c("SBC_fit.my_backend_func", "SBC_backend_iid_draws.my_backend_func", "SBC_fit.my_backend_func_invcdf",
+                "SBC_backend_iid_draws.my_backend_func_invcdf", "N_samples_simple_gq")
+
 gq_simple_gq <- generated_quantities(log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
    sq = (theta - 0.5) ^ 2,
    sin3_2 = sin(3/2 * pi * theta),
@@ -73,7 +99,7 @@ backend_simple_gq_ok <- my_backend_func(
 
 
 res_simple_gq_ok <- compute_SBC(datasets_simple_gq, backend_simple_gq_ok, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_ok)
 plot_ecdf_diff(res_simple_gq_ok)
@@ -90,7 +116,7 @@ backend_simple_gq_flip <- my_backend_func(
 
 
 res_simple_gq_flip <- compute_SBC(datasets_simple_gq, backend_simple_gq_flip, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_flip)
 plot_ecdf_diff(res_simple_gq_flip)
@@ -98,9 +124,9 @@ plot_ecdf_diff(res_simple_gq_flip)
 
 ```
 
-## Another counterexample for vanilla SBC
+## Counterexamples for vanilla SBC
 
-We now build a counterexample, that is slightly similar to the true posterior and is designed to pass SBC for the `theta` parameter. This is how the inverse CDFs of the counterexample compare to the correct ones:
+We now build a counterexample, that is slightly similar to the true posterior and is designed to pass SBC for the `theta` parameter. The counterexamples are most naturally expressed vie inverse CDFs, so we'll show those. This is how the inverse CDFs of the counterexample compare to the correct ones:
 
 ```{r}
 transform_fun_test1_0 <- function(u) {
@@ -113,35 +139,37 @@ transform_fun_test1_1 <- function(u) {
 
 plot_transform_funs <- function(func0, func1, name) {
   u <- seq(from = 0, to = 1,length.out = 100)
-  rbind(data.frame(y = 0, u = u, invphi = func0(u), type = name),
+  plot1 <- rbind(data.frame(y = 0, u = u, invphi = func0(u), type = name),
         data.frame(y = 1, u = u, invphi = func1(u), type = name),
         data.frame(y = 0, u = u, invphi = 1 - sqrt(1 - u), type = "Correct"),
         data.frame(y = 1, u = u, invphi = sqrt(u), type = "Correct")
         ) %>%
-    ggplot(aes(x = u, y = invphi, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) + 
+    ggplot(aes(x = u, y = invphi, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) +
     scale_y_continuous("Inverse CDF of theta") +
     scale_x_continuous("Quantile")
+  
+  plot2 <- 
+    rbind(data.frame(y = 0, u = u, invphi_diff = func0(u) - ( 1 - sqrt(1 - u)), type = name),
+        data.frame(y = 1, u = u, invphi_diff = func1(u) - sqrt(u), type = name),
+        crossing(y = c(0,1), u = u, invphi_diff = 0, type = "Correct")) %>%
+    ggplot(aes(x = u, y = invphi_diff, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) +
+    scale_y_continuous("Diff. inverse CDF of theta") +
+    scale_x_continuous("Quantile")
+  
+  plot1 / plot2
 }
 
-plot_transform_funs(transform_fun_test1_0, transform_fun_test1_1, "Test 1")
+plot_transform_funs(transform_fun_test1_0, transform_fun_test1_1, "Counterexample theta 1")
 ```
+
 Let's run SBC. As designed, no problem with `theta`, but many GQs signal problems.
 
 ```{r}
-backend_simple_gq_test1 <- my_backend_func(
-  func0 = function() {
-    u = runif(N_samples_simple_gq)
-    transform_fun_test1_0(u)
-  },
-  func1 = function() {
-    u = runif(N_samples_simple_gq)
-    transform_fun_test1_1(u)
-  }
-)
+backend_simple_gq_test1 <- my_backend_func_invcdf(transform_fun_test1_0, transform_fun_test1_1)
 
 
 res_simple_gq_test1 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test1, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_test1)
 plot_ecdf_diff(res_simple_gq_test1)
@@ -149,21 +177,27 @@ plot_ecdf_diff(res_simple_gq_test1)
 
 ```
 
+Just to test that our counterexample-generating method works, let's try another one:
+
 ```{r}
-backend_simple_gq_test2 <- my_backend_func(
-  func0 = function() {
-    u = runif(N_samples_simple_gq)
-    u^2
-  },
-  func1 = function() {
-    u = runif(N_samples_simple_gq)
-    sqrt(u * (2-2*u+u^3))
-  }
-)
+tfunc_test2_0 <- function(u) {
+  u^2
+}
+
+tfunc_test2_1 <- function(u) {
+  sqrt(u * (2-2*u+u^3))
+}
+
+plot_transform_funs(tfunc_test2_0, tfunc_test2_1, "Counterexample theta 2")
+```
+
+
+```{r}
+backend_simple_gq_test2 <- my_backend_func_invcdf(tfunc_test2_0, tfunc_test2_1)
 
 
 res_simple_gq_test2 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test2, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_test2)
 plot_ecdf_diff(res_simple_gq_test2)
@@ -171,58 +205,73 @@ plot_ecdf_diff(res_simple_gq_test2)
 
 ```
 
+## Counterexamples for theta and log_lik
+
+In the previous two cases, the `log_lik` variable always showed discrepancies. 
+We can however construct counterexamples that satisfy both `theta` and `log_lik`,
+here is one:
 
 ```{r}
-backend_simple_gq_test3 <- my_backend_func(
-  func0 = function() {
-    u = runif(N_samples_simple_gq)
-    ifelse(u < 0.5, u *(2 - sqrt(2)),
+tfunc_test3_0 <- function(u) {
+  ifelse(u < 0.5, u *(2 - sqrt(2)),
            1 - sqrt(2 * (u - 1) *(1 - sqrt(2) + (-3 + 2 * sqrt(2))*u))
            )
-  },
-  func1 = function() {
-    u = runif(N_samples_simple_gq)
-    ifelse(u < 0.5, sqrt(2 * u *(-1 + sqrt(2) + (3 - 2 * sqrt(2))*u)), 
+}
+
+tfunc_test3_1 <- function(u) {
+  ifelse(u < 0.5, sqrt(2 * u *(-1 + sqrt(2) + (3 - 2 * sqrt(2))*u)), 
            sqrt(-3 + 2 * sqrt(2) + 2 * u *(5 - 3 * sqrt(2) +
            (-3 + 2 * sqrt(2))*u))
            )
-    
-  }
-)
+}
+
+plot_transform_funs(tfunc_test3_0, tfunc_test3_1, "Counterexample theta/log_lik 1")
+```
+
+The SBC for both `theta` and `log_lik` passes. Some other quantities however do show the failure! Note that the inverse CDFs follow the correct value quite closely and we need to run more than 1000 simulations (2500) to see violations, but we see them. This shows the space of useful quantities is not exhausted by a univariate marginal distribution and the (log)likelihood and that non-monotonous transformation of the univariate marginal can provide additional power to SBC.
+
+```{r}
+backend_simple_gq_test3 <- my_backend_func_invcdf(tfunc_test3_0, tfunc_test3_1)
 
 res_simple_gq_test3 <- compute_SBC(datasets_simple_gq_large[1:2500], backend_simple_gq_test3, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_test3)
 plot_ecdf_diff(res_simple_gq_test3)
 ```
 
-
+Let's construct another counter example - this one with larger deviations from
+the correct posterior.
 
 ```{r}
-backend_simple_gq_test4 <- my_backend_func(
-  func0 = function() {
-    u = runif(N_samples_simple_gq)
-    ifelse(u < 0.5, u^2 * 2 *(2 - sqrt(2)),
+tfunc_test4_0 <- function(u) {
+  ifelse(u < 0.5, u^2 * 2 *(2 - sqrt(2)),
            1 - 2 * abs(u - 1) * sqrt(-4 + 3 * sqrt(2) + (-6 + 4*sqrt(2)) * (u -2) * u) 
-           )
-  },
-  func1 = function() {
-    u = runif(N_samples_simple_gq)
-    ifelse(u < 0.5, sqrt(2 * u *(1 + 2*u *(-2 + sqrt(2) + (6 - 4*sqrt(2)) * u^2))),
-           sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * (-34 + 23 * sqrt(2) + (-6+4*sqrt(2)) * (u - 4) * u)))
-           
-           )
-    
-  }
-)
+           )  
+} 
+
+tfunc_test4_1 <- function(u) {
+  ifelse(u < 0.5, sqrt(2 * u *(1 + 2*u *(-2 + sqrt(2) + (6 - 4*sqrt(2)) * u^2))),
+           sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * (-34 + 23 * sqrt(2) + (-6+4*sqrt(2)) * (u - 4) * u))))
+}
+
+plot_transform_funs(tfunc_test4_0, tfunc_test4_1, "Counterexample theta/log_lik 2")
+```
+
+Once again, `log_lik` and `theta` show no problems (since we constructed the counterexample to match them), but _all the other_ variables
+show the discrepancy!
+
+```{r}
+backend_simple_gq_test4 <- my_backend_func_invcdf(tfunc_test4_0, tfunc_test4_1)
 
 res_simple_gq_test4 <- compute_SBC(datasets_simple_gq, backend_simple_gq_test4, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_test4)
 plot_ecdf_diff(res_simple_gq_test4)
 ```
+
+## Prior only
 
 As noted previously, using just the prior as posterior passes SBC for `theta` and all GQs that depend only on `theta`, however the `log_lik` GQ comes to the rescue! 
 
@@ -233,8 +282,12 @@ backend_simple_gq_prior<- my_backend_func(
 
 
 res_simple_gq_prior <- compute_SBC(datasets_simple_gq, backend_simple_gq_prior, keep_fits = FALSE,
-                        gen_quants = gq_simple_gq)
+                        gen_quants = gq_simple_gq, globals = my_globals)
 
 plot_rank_hist(res_simple_gq_prior)
 plot_ecdf_diff(res_simple_gq_prior)
 ```
+
+## Summary
+
+Of the quantities we use, we can construct counterexamples that satisfy any two of them, but combining `log_lik` with `theta` and a non-monotonic transformation of `theta` such as `sin(3/2*pi*theta)` manages to uncover all problems. At this point, I am not sure if those three restrict the solutions to only contain the correct posterior, or if a range of possible behaviours is still possible.
