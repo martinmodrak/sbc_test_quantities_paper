@@ -1,0 +1,109 @@
+---
+title: "Simple Uniform"
+output: html_notebook
+---
+
+
+# Simulations for the simple Uniform experiment
+
+
+```{r setup}
+library(SBC)
+library(tidyverse)
+library(patchwork)
+
+library(future)
+plan(multisession)
+```
+
+
+Generate datasets + setup a set of different generated quantities.
+
+I create a new simple class of SBC backends that just use a 2D inverse CDF function to generate samples.
+
+```{r}
+set.seed(5468422)
+
+N_sims_simple_u_gq <- 1000
+N_samples_simple_u_gq <- 100
+
+variables_simple_u_gq <- runif(N_sims_simple_u_gq)
+generated_simple_u_gq <- 
+  purrr::map(variables_simple_u_gq, ~ list(y = runif(1, min = 0, max = .x)))
+
+datasets_simple_u_gq <- SBC_datasets(variables = posterior::draws_matrix(theta = variables_simple_u_gq),
+                               generated = generated_simple_u_gq)
+
+
+my_backend_2d_invcdf <- function(tfunc) {
+  structure(list(tfunc = tfunc), class = "my_backend_2d_invcdf")
+}
+
+SBC_fit.my_backend_2d_invcdf <- function(backend, generated, cores) {
+  posterior::draws_matrix(theta = backend$tfunc(generated$y, runif(N_samples_simple_u_gq)))
+}
+
+SBC_backend_iid_draws.my_backend_2d_invcdf <- function(backend) {
+  TRUE
+}
+
+
+my_globals <- c("SBC_fit.my_backend_2d_invcdf", "SBC_backend_iid_draws.my_backend_2d_invcdf", "N_samples_simple_u_gq")
+
+gq_simple_u_gq <- generated_quantities(log_lik = dunif(y, min = 0, max = theta),
+   sq = (theta - 0.5) ^ 2,
+   sin3_2 = sin(3/2 * pi * theta),
+   saw = ifelse(theta < 1/2, theta, -1/2 + theta),
+   saw_irreg = ifelse(theta < 0.375, theta, -1/2 + theta),
+   sin_inv = sin(1 / theta),
+   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3))
+
+```
+
+
+```{r}
+backend_simple_u_gq_ok <- my_backend_2d_invcdf(
+  tfunc = function(y, u) {
+
+    cdf <- function(c, uval) { -log(c/ y)/log(y) - uval}
+    res <- numeric(length(u)) 
+    for(i in 1:length(u)) {
+      res[i] = uniroot(cdf , lower = y, upper = 1, uval = u[i])$root
+    }
+    res
+  }
+)
+
+res_simple_u_gq_ok <- compute_SBC(datasets_simple_u_gq, backend_simple_u_gq_ok, keep_fits = FALSE,
+                        gen_quants = gq_simple_u_gq, globals = my_globals)
+
+plot_rank_hist(res_simple_u_gq_ok)
+plot_ecdf_diff(res_simple_u_gq_ok)
+```
+
+```{r}
+backend_simple_u_gq_linear <- my_backend_2d_invcdf(
+  tfunc = function(y, u) {
+    intval <- function(a, uval) { 
+      if(a < 1 + 1e-7) {
+        1/2 * (a - 1) - uval
+      } else {
+        (1 - a + a * log(a)) / (a - 1) - uval
+      }
+    }
+    res <- numeric(length(u)) 
+    for(i in 1:length(u)) {
+      a <- uniroot(intval , lower = 1, upper = 5, uval = u[i])$root
+      res[i] <- a * y + (1 - a) * y^2
+    }
+    res
+  }
+)
+
+
+res_simple_u_gq_linear <- compute_SBC(datasets_simple_u_gq, backend_simple_u_gq_linear, keep_fits = FALSE,
+                        gen_quants = gq_simple_u_gq, globals = my_globals)
+
+plot_rank_hist(res_simple_u_gq_linear)
+plot_ecdf_diff(res_simple_u_gq_linear)
+```
