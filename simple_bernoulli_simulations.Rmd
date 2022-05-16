@@ -81,8 +81,10 @@ my_globals <- c("SBC_fit.my_backend_func", "SBC_backend_iid_draws.my_backend_fun
 gq_simple_gq <- generated_quantities(log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
    sq = (theta - 0.5) ^ 2,
    sin3_2 = sin(3/2 * pi * theta),
+   abs = abs(theta - 1/2),
    saw = ifelse(theta < 1/2, theta, -1/2 + theta),
-   saw_irreg = ifelse(theta < 0.375, theta, -1/2 + theta),
+   #saw_irreg = ifelse(theta < 0.375, theta, -1/2 + theta),
+   swap = ifelse(theta < 1/2, theta, theta - 1),
    sin_inv = sin(1 / theta),
    saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3))
 
