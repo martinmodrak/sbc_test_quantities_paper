@@ -17,6 +17,13 @@ plan(multisession)
 ```
 
 
+The model:
+
+$$
+\theta \sim \mathrm{Uniform(0,1)}\\
+y \sim \mathrm{Uniform(0,\theta)}
+$$
+
 Generate datasets + setup a set of different generated quantities.
 
 I create a new simple class of SBC backends that just use a 2D inverse CDF function to generate samples.
@@ -24,7 +31,7 @@ I create a new simple class of SBC backends that just use a 2D inverse CDF funct
 ```{r}
 set.seed(5468422)
 
-N_sims_simple_u_gq <- 1000
+N_sims_simple_u_gq <- 2000
 N_samples_simple_u_gq <- 100
 
 variables_simple_u_gq <- runif(N_sims_simple_u_gq)
@@ -53,11 +60,11 @@ my_globals <- c("SBC_fit.my_backend_2d_invcdf", "SBC_backend_iid_draws.my_backen
 gq_simple_u_gq <- generated_quantities(log_lik = dunif(y, min = 0, max = theta),
    sq = (theta - 0.5) ^ 2,
    sin3_2 = sin(3/2 * pi * theta),
+   abs = abs(theta - 1/2),
    saw = ifelse(theta < 1/2, theta, -1/2 + theta),
-   saw_irreg = ifelse(theta < 0.375, theta, -1/2 + theta),
-   sin_inv = sin(1 / theta),
-   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3))
-
+   swap = ifelse(theta < 1/2, theta, theta - 1),
+   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3)
+   )
 ```
 
 
@@ -80,6 +87,20 @@ res_simple_u_gq_ok <- compute_SBC(datasets_simple_u_gq, backend_simple_u_gq_ok, 
 plot_rank_hist(res_simple_u_gq_ok)
 plot_ecdf_diff(res_simple_u_gq_ok)
 ```
+
+
+
+SBC for $f_1(y, \theta) = \theta$ implies
+
+$$
+\int \mathrm{d}y \int_0^{\Phi^{-1}(y, x)} \mathrm{d} \tilde\theta \: \pi(y | \tilde\theta) =
+\int \mathrm{d}y \int_0^{\Phi^{-1}(y, x)} \mathrm{d}  \tilde\theta \: \mathbb{I}[y < \tilde\theta]\frac{1}{\tilde\theta} = \\
+\int \mathrm{d}y \int_y^{\max\{y,\Phi^{-1}(y, x)\}} \mathrm{d}  \tilde\theta \: \frac{1}{\tilde\theta} = 
+\int \mathrm{d}y \left( \log (\max\{y,\Phi^{-1}(y, x)\}) - \log y \right) = 
+1 + \int \mathrm{d}y \log (\max\{y,\Phi^{-1}(y, x)\}) 
+$$
+
+
 
 ```{r}
 backend_simple_u_gq_linear <- my_backend_2d_invcdf(
