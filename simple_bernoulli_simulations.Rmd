@@ -275,6 +275,7 @@ plot_rank_hist(res_simple_gq_test4)
 plot_ecdf_diff(res_simple_gq_test4)
 ```
 
+
 ## Prior only
 
 As noted previously, using just the prior as posterior passes SBC for `theta` and all GQs that depend only on `theta`, however the `log_lik` GQ comes to the rescue! 
