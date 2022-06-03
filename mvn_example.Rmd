@@ -1,0 +1,276 @@
+---
+title: "Multivariate normal example"
+output: html_notebook
+---
+
+
+```{r setup, message=FALSE,warning=FALSE, results="hide"}
+library(SBC)
+library(ggplot2)
+library(mvtnorm)
+
+options(mc.cores = parallel::detectCores())
+
+library(future)
+plan(multisession)
+
+cache_dir <- "./_SBC_cache"
+
+if(!dir.exists(cache_dir)) {
+  dir.create(cache_dir)
+}
+
+```
+
+
+We are using the model:
+
+$$
+\mathbf{\mu} \sim MVN(0, \mathbf{\Sigma})\\
+\mathbf{y}_1, \ldots, \mathbf{y}_N \sim MVN(\mathbf{\mu}, \mathbf{\Sigma})\\
+\mathbf{\Sigma} = \left(\begin{matrix}
+ 1 & 0.8 \\
+ 0.8 & 1 \\
+\end{matrix}\right)
+$$
+
+where $MVN$ is the multivariate normal distribution. In this case the posterior has analytical solution and should also be multivariate normal.
+
+```{r}
+set.seed(546852)
+
+mvn_sigma <- matrix(c(1, 0.8,0.8,1), nrow = 2)
+
+generator_func_correlated <- function(N, sigma = mvn_sigma) {
+  mu <- rmvnorm(1, sigma = sigma)
+  y <- rmvnorm(N, mean = mu, sigma = sigma)
+  list(variables = list(mu = mu[1,]),
+       generated = list(y = y))
+}
+
+N_sims <- 1000
+
+ds <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma), N_sims)
+
+```
+
+
+```{r}
+my_backend_mvn <- function(sampling_func, N_samples = 100, func_extra_args = list()) {
+  structure(list(sampling_func = sampling_func, N_samples = N_samples, 
+                 func_extra_args = func_extra_args), class = "my_backend_mvn")
+}
+
+SBC_fit.my_backend_mvn <- function(backend, generated, cores) {
+  all_args <- c(list(y = generated$y, N_samples = backend$N_samples), backend$func_extra_args)
+  res_raw <- do.call(backend$sampling_func, all_args)
+  
+  K <- ncol(generated$y)
+  colnames(res_raw) <- paste0("mu[", 1:K, "]")
+  posterior::as_draws_matrix(res_raw)
+}
+
+SBC_backend_iid_draws.my_backend_mvn <- function(backend) {
+  TRUE
+}
+
+my_backend_mvn_globals = c("SBC_fit.my_backend_mvn",
+                                    "SBC_backend_iid_draws.my_backend_mvn",
+                                    "mvn_sigma")
+```
+
+
+```{r}
+quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
+                               `mu[1] - mu[2]` = mu[1] - mu[2],
+                               `mu[1] * mu[2]` = mu[1] * mu[2],
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
+                               `mvn_log_lik[1]` = mvtnorm::dmvnorm(y[1,], mean = mu, sigma = mvn_sigma, log = TRUE),
+                               `mvn_log_lik[3]` = mvtnorm::dmvnorm(y[3,], mean = mu, sigma = mvn_sigma, log = TRUE))
+```
+
+
+# Correct posterior
+
+Introducing $\bar{\mathbf{y}} = \frac{1}{N}\sum_{i = 1}^{N} \mathbf{y}_i$, the posterior is $MVN\left(\frac{N\bar{\mathbf{y}}}{n + 1}, \frac{1}{N + 1}\mathbf{\Sigma}\right)  $
+
+```{r}
+sampling_func_correct <- function(y, N_samples, prior_sigma = mvn_sigma) {
+  K <- ncol(y)
+  N <- nrow(y)
+  
+  ybar = colMeans(y)
+
+  post_mean <- N * ybar / (N  + 1)
+  post_sigma <- prior_sigma / (N + 1) 
+  res_raw <- mvtnorm::rmvnorm(N_samples, mean = post_mean, sigma = post_sigma)
+}
+backend_correct <- my_backend_mvn(sampling_func_correct)
+
+res_correct <- compute_SBC(ds, backend_correct, gen_quants = quants, 
+                              globals = my_backend_mvn_globals,
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_correct"))
+```
+
+```{r}
+plot_rank_hist(res_correct)
+plot_ecdf_diff(res_correct)
+```
+
+# Prior only
+
+```{r}
+sampling_func_prior_only <- function(y, N_samples) {
+  mvtnorm::rmvnorm(n = N_samples, sigma = mvn_sigma)
+}
+
+backend_prior_only <- my_backend_mvn(sampling_func_prior_only)
+
+res_prior_only <- compute_SBC(ds, backend_prior_only, gen_quants = quants, 
+                              globals = my_backend_mvn_globals,
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_prior_only"))
+```
+
+```{r}
+plot_rank_hist(res_prior_only)
+plot_ecdf_diff(res_prior_only)
+```
+
+
+# One missing data point
+
+```{r}
+sampling_func_one_missing <- function(y, N_samples) {
+  sampling_func_correct(y[1:(nrow(y) - 1),], N_samples)
+}
+
+backend_one_missing <- my_backend_mvn(sampling_func_one_missing)
+
+res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, "sampling_func_correct"),
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_one_missing"))
+```
+
+```{r}
+plot_rank_hist(res_one_missing)
+plot_ecdf_diff(res_one_missing)
+```
+
+
+# Incorrect Correlations
+
+
+
+Especially when the number of data points is small, the correlations in the prior should persist in the posterior. 
+
+We however generate posterior samples from a set of independent normal distributions that happen to have the correct mean and standard deviation, just the correlation is missing.
+
+```{r}
+sampling_func_uncorr <- function(y, N_samples, prior_sigma = 1) {
+  K <- ncol(y)
+  N <- nrow(y)
+  
+  ybar = colMeans(y)
+
+  res_raw <- matrix(nrow = N_samples, ncol = K)
+  for(k in 1:K) {
+    post_mean <- N * ybar[k] / (N  + 1)
+    post_sd <- sqrt(1 / (N + 1)) * prior_sigma 
+    res_raw[,k] <- rnorm(N_samples, mean = post_mean, sd = post_sd)
+  }
+  res_raw
+}
+
+backend_uncorr <- my_backend_mvn(sampling_func_uncorr)
+
+
+res_uncorr <- compute_SBC(ds, backend_uncorr, 
+                        globals = my_backend_mvn_globals,
+                        gen_quants = quants,
+                        cache_mode = "results", 
+                        cache_location = file.path(cache_dir, "mvn_uncorr"))
+```
+
+
+Although the posterior is incorrect, the default univariate checks don't show any problem even with `r N_sims` simulations.
+
+```{r results_uncorr}
+plot_rank_hist(res_uncorr)
+plot_ecdf_diff(res_uncorr)
+```
+
+We can however add derived quantities that depend on both elements of mu. We'll
+try their sum, difference, product and the multivarite normal log likelihood
+
+```{r}
+res_corr_gq  <- compute_SBC(ds, backend_uncorr, keep_fits = FALSE,
+                        globals = my_backend_mvn_globals,
+                        gen_quants = quants,
+                        cache_mode = "results", 
+                        cache_location = file.path(cache_dir, "corr_gq"))
+```
+
+We see that all of the derived quantities show problems, but with different strength
+of signal. We'll especially note that the log likelihood is once again a very good
+choice, while sum is probably the worst of those tested.
+
+```{r results_corr_gq}
+plot_rank_hist(res_corr_gq)
+plot_ecdf_diff(res_corr_gq)
+```
+
+# Non-monotonous transform
+
+```{r}
+sampling_func_non_mon <- function(y, N_samples) {
+  res_correct <- sampling_func_correct(y, N_samples)
+  if(y[1] > 0) {
+    res_raw <- res_correct + 0.5
+  } else {
+    res_raw <- res_correct - 0.5
+  }
+  res_raw
+}
+
+backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
+
+res_non_mon <- compute_SBC(ds, backend_non_mon, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, "sampling_func_correct"),
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_non_mon"))
+```
+
+```{r}
+plot_rank_hist(res_non_mon)
+plot_ecdf_diff(res_non_mon)
+```
+
+# Small changes compound
+
+```{r}
+set.seed(5665525)
+mvn_sigma_3 <- matrix(0.8, nrow = 3, ncol = 3)
+diag(mvn_sigma_3) <- 1
+
+ds_3 <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_3), N_sims)
+
+sampling_func_small_change <- function(y, N_samples, prior_sigma) {
+  res_correct <- sampling_func_correct(y, N_samples, prior_sigma)
+  res_correct + 0.03
+}
+
+backend_small_change <- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_3))
+
+res_small_change <- compute_SBC(ds_3, backend_small_change, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, "sampling_func_correct"),
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_small_change"))
+```
+
+```{r}
+plot_rank_hist(res_small_change)
+plot_ecdf_diff(res_small_change)
+```
