@@ -251,23 +251,35 @@ plot_ecdf_diff(res_non_mon)
 # Small changes compound
 
 ```{r}
+K_changes <- 2
 set.seed(5665525)
-mvn_sigma_3 <- matrix(0.8, nrow = 3, ncol = 3)
-diag(mvn_sigma_3) <- 1
+mvn_sigma_changes <- matrix(0.8, nrow = K_changes, ncol = K_changes)
+diag(mvn_sigma_changes) <- 1
 
-ds_3 <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_3), N_sims)
+ds_changes <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_changes), n_sims = 100)
 
 sampling_func_small_change <- function(y, N_samples, prior_sigma) {
   res_correct <- sampling_func_correct(y, N_samples, prior_sigma)
-  res_correct + 0.03
+  K = nrow(prior_sigma)
+  bias <- rnorm(K, mean = 0, sd = 0.3)
+  res <- res_correct
+  for(k in 1:K) {
+    res[,k] <- res[,k] + bias[k]  
+  }
+  #res_correct * matrix(ifelse(runif(K * N_samples) < 0.1, 0, 1), nrow = N_samples, ncol = K)
+  res
 }
 
-backend_small_change <- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_3))
+backend_small_change <- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_changes))
 
-res_small_change <- compute_SBC(ds_3, backend_small_change, gen_quants = quants, 
-                              globals = c(my_backend_mvn_globals, "sampling_func_correct"),
+quants_change <- generated_quantities(sum = sum(mu),
+                                      sum_abs = sum(abs(mu)),
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma_changes, log = TRUE)))
+
+res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = quants_change, 
+                              globals = c(my_backend_mvn_globals, "sampling_func_correct", "mvn_sigma_changes"),
                               cache_mode = "results",
-                              cache_location = file.path(cache_dir, "mvn_small_change"))
+                              cache_location = file.path(cache_dir, paste0("mvn_small_change_", K_changes)))
 ```
 
 ```{r}
