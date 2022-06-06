@@ -226,13 +226,40 @@ plot_ecdf_diff(res_corr_gq)
 
 ```{r}
 sampling_func_non_mon <- function(y, N_samples) {
-  res_correct <- sampling_func_correct(y, N_samples)
-  if(y[1] > 0) {
-    res_raw <- res_correct + 0.5
-  } else {
-    res_raw <- res_correct - 0.5
+  res <- sampling_func_correct(y, N_samples)
+  K <- ncol(y)
+
+  for(k in 1:K) {
+    res_k <- res[,k]
+    
+    if(mean(y[,k]) > 0) {
+      mean_diff <- mean(diff(sort(res_k)))
+      res_k <- res_k + 2 * mean_diff
+    }
+
+    
+    # qs_1 <- quantile(res_k, probs = c(0.1, 0.3))
+    # qs_2 <- quantile(res_k, probs = c(0.7, 0.9))
+    # ids_1 <- res_k > qs_1[1] & res_k < qs_1[2]
+    # ids_2 <- res_k > qs_2[1] & res_k < qs_2[2]
+    # if(y[,k] > 0) {
+    #   res_k[ids_1] <- res_k[ids_1] + abs(rnorm(sum(ids_1), sd = 0.2))
+    # } else {
+    #   #res_k[ids_2] <- res_k[ids_1]
+    # }
+    
+    # qs <- quantile(res_k, probs = c(0.2, 0.4))
+    # ids_to_change <- res_k > qs[1] & res_k < qs[2]
+    # if(mean(y[,k]) > 0) {
+    #   samp_prob <- rank(res_k[ids_to_change])
+    #   res_k[ids_to_change] <- sample(res_k[ids_to_change], size = sum(ids_to_change), replace = TRUE, prob = samp_prob)
+    # } else {
+    #   #samp_prob <- rank(-res_k[ids_to_change])
+    # }
+    
+    res[,k] <- res_k
   }
-  res_raw
+  res
 }
 
 backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
@@ -256,7 +283,7 @@ set.seed(5665525)
 mvn_sigma_changes <- matrix(0.8, nrow = K_changes, ncol = K_changes)
 diag(mvn_sigma_changes) <- 1
 
-ds_changes <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_changes), n_sims = 100)
+ds_changes <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_changes), n_sims = 1000)
 
 sampling_func_small_change <- function(y, N_samples, prior_sigma) {
   res_correct <- sampling_func_correct(y, N_samples, prior_sigma)
@@ -286,3 +313,47 @@ res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = q
 plot_rank_hist(res_small_change)
 plot_ecdf_diff(res_small_change)
 ```
+
+
+```{r}
+library(tidyverse)
+devtools::load_all()
+theme_set(cowplot::theme_cowplot())
+res_small_change$stats %>% 
+  group_by(variable) %>%
+  mutate(history = compute_diff_history_norm(rank, unique(max_rank), p = 1)) %>%
+  filter(sim_id >= 10) %>%
+  ggplot(aes(x = sim_id, y = history, color = variable)) + geom_line() +
+  scale_x_log10() +
+  scale_y_continuous("Mean absolute ECDF difference")
+```
+
+```{r}
+gamma_thresholds_df <- get_precomputed_gamma_thresholds(K = 100)
+```
+
+
+```{r}
+res_small_change$stats %>% 
+  group_by(variable) %>%
+  mutate(log_gamma = compute_log_gamma_history(rank, unique(max_rank))) %>%
+  filter(sim_id > 10, sim_id < 500) %>%
+  inner_join(gamma_thresholds_df, by = c("sim_id" = "N_sims")) %>%
+  ggplot(aes(x = sim_id, y = log_gamma - log_gamma_threshold, color = variable)) + 
+  geom_hline(yintercept = 0, color = "black") +
+  geom_line() +
+  scale_y_continuous("Log Gamma - Threshold")
+```
+
+```{r}
+res_prior_only$stats %>% 
+  group_by(variable) %>%
+  mutate(log_gamma = compute_log_gamma_history(rank, unique(max_rank))) %>%
+  filter(sim_id > 5, sim_id < 50) %>%
+  inner_join(gamma_thresholds_df, by = c("sim_id" = "N_sims")) %>%
+  ggplot(aes(x = sim_id, y = log_gamma - log_gamma_threshold, color = variable)) + 
+  geom_hline(yintercept = 0, color = "black") +
+  geom_line() +
+  scale_y_continuous("Log Gamma - Threshold")
+```
+
