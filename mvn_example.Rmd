@@ -225,37 +225,28 @@ plot_ecdf_diff(res_corr_gq)
 # Non-monotonous transform
 
 ```{r}
-sampling_func_non_mon <- function(y, N_samples) {
-  res <- sampling_func_correct(y, N_samples)
+sampling_func_non_mon <- function(y, N_samples, prior_sigma = mvn_sigma) {
+  # Sample as if correct
   K <- ncol(y)
+  N <- nrow(y)
+  
+  ybar = colMeans(y)
 
+  post_mean <- N * ybar / (N  + 1)
+  post_sigma <- prior_sigma / (N + 1) 
+  res <- mvtnorm::rmvnorm(N_samples, mean = post_mean, sigma = post_sigma)
+
+  # Modify
   for(k in 1:K) {
     res_k <- res[,k]
     
+    uniform_q <- pnorm(res_k, post_mean[k], sqrt(post_sigma[k,k]))
     if(mean(y[,k]) > 0) {
-      mean_diff <- mean(diff(sort(res_k)))
-      res_k <- res_k + 2 * mean_diff
+      transformed_q <- dplyr::if_else(uniform_q < 0.5, 1.5 * uniform_q, 0.75 + (uniform_q - 0.5)*0.5)
+    } else {
+      transformed_q <- dplyr::if_else(uniform_q < 0.5, 0.5 * uniform_q, 0.25 + (uniform_q - 0.5)*1.5)
     }
-
-    
-    # qs_1 <- quantile(res_k, probs = c(0.1, 0.3))
-    # qs_2 <- quantile(res_k, probs = c(0.7, 0.9))
-    # ids_1 <- res_k > qs_1[1] & res_k < qs_1[2]
-    # ids_2 <- res_k > qs_2[1] & res_k < qs_2[2]
-    # if(y[,k] > 0) {
-    #   res_k[ids_1] <- res_k[ids_1] + abs(rnorm(sum(ids_1), sd = 0.2))
-    # } else {
-    #   #res_k[ids_2] <- res_k[ids_1]
-    # }
-    
-    # qs <- quantile(res_k, probs = c(0.2, 0.4))
-    # ids_to_change <- res_k > qs[1] & res_k < qs[2]
-    # if(mean(y[,k]) > 0) {
-    #   samp_prob <- rank(res_k[ids_to_change])
-    #   res_k[ids_to_change] <- sample(res_k[ids_to_change], size = sum(ids_to_change), replace = TRUE, prob = samp_prob)
-    # } else {
-    #   #samp_prob <- rank(-res_k[ids_to_change])
-    # }
+    res_k <- qnorm(transformed_q, post_mean[k], sqrt(post_sigma[k,k]))
     
     res[,k] <- res_k
   }
@@ -264,7 +255,13 @@ sampling_func_non_mon <- function(y, N_samples) {
 
 backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
 
-res_non_mon <- compute_SBC(ds, backend_non_mon, gen_quants = quants, 
+quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
+                                       `abs(mu[1])` = abs(mu[1]),
+                                       `abs(mu[2])` = abs(mu[2]),
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
+
+
+res_non_mon <- compute_SBC(ds, backend_non_mon, gen_quants = quants_non_mon, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_non_mon"))
