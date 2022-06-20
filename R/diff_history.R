@@ -10,7 +10,7 @@ compute_diff_history_norm <- function(ranks, max_rank, p = 2) {
   history_norm
 }
 
-get_precomputed_gamma_thresholds <- function(K, min_sims = 10, max_sims = 1000) {
+get_precomputed_gamma_thresholds <- function(K, min_sims = 1, max_sims = 1000) {
   if(!dir.exists("./_SBC_cache")) {
     dir.create("./_SBC_cache")
   }
@@ -52,4 +52,42 @@ compute_log_gamma_history <- function(ranks, max_rank) {
   }
   #print(dummy)
   log_gamma
+}
+
+compute_ks_test_history <- function(ranks, max_rank) {
+  ranks_cont <- (ranks + runif(length(ranks))) / (max_rank + 1)
+  ks_p <- rep(NA_real_, length(ranks))
+  for(i in 1:length(ranks)) {
+    ks_p[i] <- ks.test(ranks_cont[1:i], "punif")$p.value
+  }
+  ks_p
+}
+
+
+plot_log_gamma_history <- function(results, min_sim_id = 0, max_sim_id = Inf) {
+  unique_max_rank <- unique(results$stats$max_rank)
+  if(length(unique_max_rank) > 1) {
+    stop("Requires all max_rank to be equal")
+  }
+  gamma_thresholds_df <- get_precomputed_gamma_thresholds(K = unique_max_rank + 1)
+  results$stats %>%
+    group_by(variable) %>%
+    mutate(log_gamma = compute_log_gamma_history(rank, unique_max_rank)) %>%
+    filter(sim_id >= min_sim_id, sim_id <= max_sim_id) %>%
+    inner_join(gamma_thresholds_df, by = c("sim_id" = "N_sims")) %>%
+    ggplot(aes(x = sim_id, y = log_gamma - log_gamma_threshold, color = variable)) +
+    geom_hline(yintercept = 0, color = "black") +
+    geom_line() +
+    scale_y_continuous("Log Gamma - Threshold")
+}
+
+plot_ks_test_history <- function(results, min_sim_id = 0, max_sim_id = Inf) {
+  results$stats %>%
+    group_by(variable) %>%
+    mutate(ks_p = compute_ks_test_history(rank, unique(max_rank))) %>%
+    filter(sim_id >= min_sim_id, sim_id <= max_sim_id) %>%
+    ggplot(aes(x = sim_id, y = ks_p, color = variable)) +
+    geom_hline(yintercept = 0.05, color = "black") +
+    geom_line() +
+    scale_y_log10("P - value (KS test)")
 }

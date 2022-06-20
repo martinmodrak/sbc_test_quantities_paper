@@ -8,6 +8,7 @@ output: html_notebook
 library(SBC)
 library(ggplot2)
 library(mvtnorm)
+library(patchwork)
 
 options(mc.cores = parallel::detectCores())
 
@@ -15,9 +16,13 @@ library(future)
 plan(multisession)
 
 cache_dir <- "./_SBC_cache"
+fig_dir <- "./_figs" 
 
 if(!dir.exists(cache_dir)) {
   dir.create(cache_dir)
+}
+if(!dir.exists(fig_dir)) {
+  dir.create(fig_dir)
 }
 
 ```
@@ -118,6 +123,18 @@ plot_rank_hist(res_correct)
 plot_ecdf_diff(res_correct)
 ```
 
+```{r}
+p_hist_correct <- plot_log_gamma_history(res_correct)
+p_hist_correct
+ggsave(file.path(fig_dir, "hist_correct.pdf"), p_hist_correct, width = 7, height = 5)
+```
+
+```{r}
+plot_ks_test_history(res_correct)
+
+```
+
+
 # Prior only
 
 ```{r}
@@ -138,6 +155,13 @@ plot_rank_hist(res_prior_only)
 plot_ecdf_diff(res_prior_only)
 ```
 
+```{r}
+p_hist_prior_only <- plot_log_gamma_history(res_prior_only, max_sim_id = 50)
+p_hist_prior_only
+ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = 7, height = 5)
+```
+
+
 
 # One missing data point
 
@@ -157,6 +181,10 @@ res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants,
 ```{r}
 plot_rank_hist(res_one_missing)
 plot_ecdf_diff(res_one_missing)
+```
+
+```{r}
+plot_log_gamma_history(res_one_missing, max_sim_id = 300)
 ```
 
 
@@ -222,6 +250,11 @@ plot_rank_hist(res_corr_gq)
 plot_ecdf_diff(res_corr_gq)
 ```
 
+```{r}
+plot_log_gamma_history(res_corr_gq, max_sim_id = 100)
+```
+
+
 # Non-monotonous transform
 
 ```{r}
@@ -272,6 +305,12 @@ plot_rank_hist(res_non_mon)
 plot_ecdf_diff(res_non_mon)
 ```
 
+```{r}
+plot_log_gamma_history(res_non_mon, max_sim_id = 500)
+
+```
+
+
 # Small changes compound
 
 ```{r}
@@ -313,44 +352,12 @@ plot_ecdf_diff(res_small_change)
 
 
 ```{r}
-library(tidyverse)
-devtools::load_all()
-theme_set(cowplot::theme_cowplot())
-res_small_change$stats %>% 
-  group_by(variable) %>%
-  mutate(history = compute_diff_history_norm(rank, unique(max_rank), p = 1)) %>%
-  filter(sim_id >= 10) %>%
-  ggplot(aes(x = sim_id, y = history, color = variable)) + geom_line() +
-  scale_x_log10() +
-  scale_y_continuous("Mean absolute ECDF difference")
+plot_log_gamma_history(res_small_change, max_sim_id = 500)
 ```
 
 ```{r}
-gamma_thresholds_df <- get_precomputed_gamma_thresholds(K = 100)
+plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)
 ```
 
 
-```{r}
-res_small_change$stats %>% 
-  group_by(variable) %>%
-  mutate(log_gamma = compute_log_gamma_history(rank, unique(max_rank))) %>%
-  filter(sim_id > 10, sim_id < 500) %>%
-  inner_join(gamma_thresholds_df, by = c("sim_id" = "N_sims")) %>%
-  ggplot(aes(x = sim_id, y = log_gamma - log_gamma_threshold, color = variable)) + 
-  geom_hline(yintercept = 0, color = "black") +
-  geom_line() +
-  scale_y_continuous("Log Gamma - Threshold")
-```
-
-```{r}
-res_prior_only$stats %>% 
-  group_by(variable) %>%
-  mutate(log_gamma = compute_log_gamma_history(rank, unique(max_rank))) %>%
-  filter(sim_id > 5, sim_id < 50) %>%
-  inner_join(gamma_thresholds_df, by = c("sim_id" = "N_sims")) %>%
-  ggplot(aes(x = sim_id, y = log_gamma - log_gamma_threshold, color = variable)) + 
-  geom_hline(yintercept = 0, color = "black") +
-  geom_line() +
-  scale_y_continuous("Log Gamma - Threshold")
-```
 
