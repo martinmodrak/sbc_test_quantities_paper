@@ -38,12 +38,14 @@ compute_log_gamma_history <- function(ranks, max_rank) {
   rank_t <- rep(0, max_rank + 1)
   log_gamma <- rep(NA_real_, length(ranks))
   dummy <- rep(NA_real_, length(ranks))
+
+  K <- max_rank + 1
+  z <- (1:(K - 1)) / K
+
   for(i in 1:length(ranks)) {
     rank_t[ranks[i] + 1] <- rank_t[ranks[i] + 1] + 1
     scaled_ecdf <- cumsum(rank_t[1:max_rank])
 
-    K <- max_rank + 1
-    z <- (1:(K - 1)) / K
     log_gamma[i] <- log(2) + min(
       pbinom(scaled_ecdf, i, z, log = TRUE),
       pbinom(scaled_ecdf - 1, i, z, lower.tail = FALSE, log = TRUE)

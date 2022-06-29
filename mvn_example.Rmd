@@ -9,6 +9,8 @@ library(SBC)
 library(ggplot2)
 library(mvtnorm)
 library(patchwork)
+library(tidyverse)
+theme_set(cowplot::theme_cowplot())
 
 options(mc.cores = parallel::detectCores())
 
@@ -24,6 +26,8 @@ if(!dir.exists(cache_dir)) {
 if(!dir.exists(fig_dir)) {
   dir.create(fig_dir)
 }
+
+devtools::load_all()
 
 ```
 
@@ -184,7 +188,9 @@ plot_ecdf_diff(res_one_missing)
 ```
 
 ```{r}
-plot_log_gamma_history(res_one_missing, max_sim_id = 300)
+p_hist_one_missing <- plot_log_gamma_history(res_one_missing, max_sim_id = 50)
+p_hist_one_missing
+ggsave(file.path(fig_dir, "hist_one_missing.pdf"), p_hist_one_missing, width = 7, height = 5)
 ```
 
 
@@ -251,7 +257,9 @@ plot_ecdf_diff(res_corr_gq)
 ```
 
 ```{r}
-plot_log_gamma_history(res_corr_gq, max_sim_id = 100)
+p_hist_corr <- plot_log_gamma_history(res_corr_gq, max_sim_id = 100)
+p_hist_corr
+ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = 7, height = 5)
 ```
 
 
@@ -306,8 +314,9 @@ plot_ecdf_diff(res_non_mon)
 ```
 
 ```{r}
-plot_log_gamma_history(res_non_mon, max_sim_id = 500)
-
+p_hist_non_mon <- plot_log_gamma_history(res_non_mon, max_sim_id = 500)
+p_hist_non_mon
+ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = 7, height = 5)
 ```
 
 
@@ -339,7 +348,7 @@ quants_change <- generated_quantities(sum = sum(mu),
                                       sum_abs = sum(abs(mu)),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma_changes, log = TRUE)))
 
-res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = quants_change, 
+res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = quants, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct", "mvn_sigma_changes"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, paste0("mvn_small_change_", K_changes)))
@@ -352,7 +361,9 @@ plot_ecdf_diff(res_small_change)
 
 
 ```{r}
-plot_log_gamma_history(res_small_change, max_sim_id = 500)
+p_hist_small_change <- plot_log_gamma_history(res_small_change, max_sim_id = 500)
+p_hist_small_change
+ggsave(file.path(fig_dir, "hist_small_change.pdf"), p_hist_small_change, width = 7, height = 5)
 ```
 
 ```{r}
