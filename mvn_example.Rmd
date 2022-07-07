@@ -29,6 +29,8 @@ if(!dir.exists(fig_dir)) {
 
 devtools::load_all()
 
+hist_plot_width <- 8
+hist_plot_height <- 4
 ```
 
 
@@ -46,7 +48,7 @@ $$
 where $MVN$ is the multivariate normal distribution. In this case the posterior has analytical solution and should also be multivariate normal.
 
 ```{r}
-set.seed(546852)
+set.seed(266552)
 
 mvn_sigma <- matrix(c(1, 0.8,0.8,1), nrow = 2)
 
@@ -95,7 +97,7 @@ quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2],
                                `mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
                                `mvn_log_lik[1]` = mvtnorm::dmvnorm(y[1,], mean = mu, sigma = mvn_sigma, log = TRUE),
-                               `mvn_log_lik[3]` = mvtnorm::dmvnorm(y[3,], mean = mu, sigma = mvn_sigma, log = TRUE))
+                               `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE))
 ```
 
 
@@ -127,13 +129,13 @@ plot_rank_hist(res_correct)
 plot_ecdf_diff(res_correct)
 ```
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_correct <- plot_log_gamma_history(res_correct)
 p_hist_correct
-ggsave(file.path(fig_dir, "hist_correct.pdf"), p_hist_correct, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_correct.pdf"), p_hist_correct, width = hist_plot_width, height = hist_plot_height)
 ```
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_correct)
 
 ```
@@ -159,23 +161,27 @@ plot_rank_hist(res_prior_only)
 plot_ecdf_diff(res_prior_only)
 ```
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_prior_only <- plot_log_gamma_history(res_prior_only, max_sim_id = 50)
 p_hist_prior_only
-ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = hist_plot_width, height = hist_plot_height)
 ```
 
+```{r}
+plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu")
+```
 
 
 # One missing data point
 
 ```{r}
 sampling_func_one_missing <- function(y, N_samples) {
-  sampling_func_correct(y[1:(nrow(y) - 1),], N_samples)
+  sampling_func_correct(y[2:nrow(y),], N_samples)
 }
 
 backend_one_missing <- my_backend_mvn(sampling_func_one_missing)
 
+set.seed(5652265)
 res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
@@ -187,14 +193,41 @@ plot_rank_hist(res_one_missing)
 plot_ecdf_diff(res_one_missing)
 ```
 
-```{r}
-p_hist_one_missing <- plot_log_gamma_history(res_one_missing, max_sim_id = 50)
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+p_hist_one_missing <- plot_log_gamma_history(res_one_missing, max_sim_id = 100)
 p_hist_one_missing
-ggsave(file.path(fig_dir, "hist_one_missing.pdf"), p_hist_one_missing, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_one_missing.pdf"), p_hist_one_missing, width = hist_plot_width, height = hist_plot_height)
+```
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_log_gamma_history(res_one_missing, max_sim_id = 500)
 ```
 
 
-# Incorrect Correlations
+# One missing data point - larger N
+
+```{r}
+set.seed(2665884)
+ds_20 <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 20, sigma = mvn_sigma), N_sims)
+
+
+res_one_missing_20 <- compute_SBC(ds_20, backend_one_missing, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, "sampling_func_correct"),
+                              cache_mode = "results",
+                              cache_location = file.path(cache_dir, "mvn_one_missing_20"))
+```
+
+```{r}
+plot_rank_hist(res_one_missing_20)
+plot_ecdf_diff(res_one_missing_20)
+```
+
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+p_hist_one_missing_20 <- plot_log_gamma_history(res_one_missing_20)
+p_hist_one_missing_20
+ggsave(file.path(fig_dir, "hist_one_missing_20.pdf"), p_hist_one_missing_20, width = hist_plot_width, height = hist_plot_height)
+```
+
+
 
 
 
@@ -256,10 +289,10 @@ plot_rank_hist(res_corr_gq)
 plot_ecdf_diff(res_corr_gq)
 ```
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_corr <- plot_log_gamma_history(res_corr_gq, max_sim_id = 100)
 p_hist_corr
-ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = hist_plot_width, height = hist_plot_height)
 ```
 
 
@@ -299,10 +332,20 @@ backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
 quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `abs(mu[1])` = abs(mu[1]),
                                        `abs(mu[2])` = abs(mu[2]),
+                                       `sin` = sin(mu[1] * 3),
+                                       `f` = ifelse(mu[1] < 1, mu[1], mu[1] - 5),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
 
 
-res_non_mon <- compute_SBC(ds, backend_non_mon, gen_quants = quants_non_mon, 
+set.seed(246855)
+
+ds_more <- bind_datasets(
+  ds,
+  generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma), n_sims = 5000)
+)
+
+
+res_non_mon <- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_non_mon"))
@@ -313,12 +356,22 @@ plot_rank_hist(res_non_mon)
 plot_ecdf_diff(res_non_mon)
 ```
 
-```{r}
-p_hist_non_mon <- plot_log_gamma_history(res_non_mon, max_sim_id = 500)
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+p_hist_non_mon <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500)
 p_hist_non_mon
-ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)
 ```
 
+```{r}
+p_hist_non_mon_ext <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5))
+p_hist_non_mon_ext
+ggsave(file.path(fig_dir, "hist_non_mon_ext.pdf"), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)
+```
+
+
+```{r}
+plot_ecdf_diff(bind_results(res_non_mon, res_non_mon_2))
+```
 
 # Small changes compound
 
@@ -360,13 +413,13 @@ plot_ecdf_diff(res_small_change)
 ```
 
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_small_change <- plot_log_gamma_history(res_small_change, max_sim_id = 500)
 p_hist_small_change
-ggsave(file.path(fig_dir, "hist_small_change.pdf"), p_hist_small_change, width = 7, height = 5)
+ggsave(file.path(fig_dir, "hist_small_change.pdf"), p_hist_small_change, width = hist_plot_width, height = hist_plot_height)
 ```
 
-```{r}
+```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)
 ```
 
