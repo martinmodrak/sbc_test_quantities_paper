@@ -1,0 +1,105 @@
+---
+title: "Approximate power with empirical coverage"
+output: html_notebook
+---
+
+```{r}
+library(furrr)
+library(tidyverse)
+library(patchwork)
+plan(multisession)
+
+fig_dir <- "./_figs" 
+
+if(!dir.exists(fig_dir)) {
+  dir.create(fig_dir)
+}
+
+theme_set(cowplot::theme_cowplot())
+```
+
+
+```{r}
+power_coverage <- function(expected_coverage, true_coverage, N_sims, alpha = 0.05, N_sims_power = 1e5) {
+  observed_hits <- rbinom(N_sims_power, size = N_sims, prob = true_coverage)
+  #print(observed_hits)
+  if(true_coverage > expected_coverage) {
+    discrepancy <- qbeta(alpha / 2, observed_hits + 1, N_sims - observed_hits + 1) > expected_coverage
+  } else if(true_coverage < expected_coverage) {
+    discrepancy <- qbeta(1 - alpha / 2, observed_hits + 1, N_sims - observed_hits + 1) < expected_coverage
+  } else {
+    stop("Expected and true equal, cannot compute power")
+  }
+  #print(qbeta(alpha / 2, observed_hits + 1, N_sims - observed_hits + 1))
+  #print(qbeta(1 - alpha / 2, observed_hits + 1, N_sims - observed_hits + 1))
+  mean(discrepancy)
+}
+
+# power_coverage(0.5, 0.55, 999, N_sims_power = 1e5)
+# power_coverage(0.5, 0.55, 101, N_sims_power = 1e5)
+# power_coverage(0.5, 0.55, 107, N_sims_power = 1e5)
+power_coverage(0.95, 0.99, N_sims = 15, N_sims_power = 100)
+# power_coverage(0.95, 0.97, N_sims = 15)
+# power_coverage(0.95, 0.94, N_sims = 15)
+# power_coverage(0.5, 0.97, N_sims = 15)
+
+power_coverage(0.95, 0.94, N_sims = 15)
+power_coverage(0.95, 0.96, N_sims = 15)
+
+```
+
+
+```{r}
+scenarios <- 
+  rbind(
+    data.frame(expected_coverage = 0.5, true_coverage = c(0.52, 0.55,0.6)),
+    data.frame(expected_coverage = 0.95, true_coverage = c(0.9, 0.93, 0.97, 0.99))
+  )
+power_data <- crossing(scenarios,
+                       # N_sims = c(seq(10, 100, by = 10),
+                       #            seq(120, 200, by = 20),
+                       #            seq(240, 640, by = 40),
+                       #            seq(700, 1500, by = 80),
+                       #            seq(1600, 2000, by = 100))
+                       N_sims = c(10, seq(20, 1000, by = 20))
+                       )
+power_res <- power_data %>% 
+  future_pmap_dbl(power_coverage, N_sims_power = 1e5, .options = furrr_options(seed = TRUE))
+
+power_res_df <- power_data %>% 
+  mutate(power = power_res)
+```
+
+
+```{r}
+
+plot_power <- function(power_res_df, expected_coverage) {
+  power_res_df %>% 
+    filter(expected_coverage == !!expected_coverage) %>%
+    mutate(true_coverage = factor(scales::percent(true_coverage))) %>%
+    ggplot(aes(x = N_sims, y = power, color = true_coverage, linetype = true_coverage)) +
+    geom_line() +
+    #scale_x_log10("Number of simulations") +
+    scale_x_continuous("Number of simulations") +
+    scale_y_continuous("Power", labels = scales::percent) +
+    scale_color_brewer("True coverage", type = "qual", palette = "Set1") +
+    scale_linetype("True coverage") +
+    ggtitle(paste0("Expected coverage = ", scales::percent(expected_coverage))) +
+    theme()
+}  
+
+p_power_coverage <- plot_power(power_res_df, 0.5) |
+  plot_power(power_res_df, 0.95)
+
+p_power_coverage
+
+ggsave(file.path(fig_dir, "power_coverage.pdf"), p_power_coverage, width = 8, height = 4)
+```
+
+```{r}
+power_res_df %>% filter(true_coverage == 0.51, expected_coverage == 0.5)
+```
+```{r}
+
+```
+
