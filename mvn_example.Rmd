@@ -342,7 +342,7 @@ backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
 quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `abs(mu[1])` = abs(mu[1]),
                                        `drop(mu[1])` = ifelse(mu[1] < 1, mu[1], mu[1] - 5),
-                                       `sin(1/x)` = sin(1/mu[1]),
+                                       `sin(1/mu[1])` = sin(1/mu[1]),
                                        `mu[1] * mean(y[,1])` = mu[1] * mean(y[,1]),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
 
@@ -383,7 +383,14 @@ ggsave(file.path(fig_dir, "rank_hist_non_mon_split.pdf"), p_rank_hist_non_mon_sp
 
 
 ```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
-p_hist_non_mon <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500)
+shared_mark <- geom_vline(color = "red", linetype = "dashed", xintercept = 500)
+p_hist_non_mon_1 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = "abs|\\*|drop") +
+  theme(axis.title = element_blank()) + shared_mark
+p_hist_non_mon_2 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = "(^mu\\[.\\]$)|lik|sin") + shared_mark
+p_hist_non_mon <- p_hist_non_mon_1 / p_hist_non_mon_2
+
+#TODO axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+
 p_hist_non_mon
 ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)
 ```
@@ -394,10 +401,6 @@ p_hist_non_mon_ext
 ggsave(file.path(fig_dir, "hist_non_mon_ext.pdf"), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)
 ```
 
-
-```{r}
-plot_ecdf_diff(bind_results(res_non_mon, res_non_mon_2))
-```
 
 # Small changes compound
 

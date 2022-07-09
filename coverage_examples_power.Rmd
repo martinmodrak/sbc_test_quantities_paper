@@ -1,5 +1,5 @@
 ---
-title: "Approximate power with empirical coverage"
+title: "Empirical coverage - examples and approximate power"
 output: html_notebook
 ---
 
@@ -7,6 +7,7 @@ output: html_notebook
 library(furrr)
 library(tidyverse)
 library(patchwork)
+library(SBC)
 plan(multisession)
 
 fig_dir <- "./_figs" 
@@ -18,6 +19,103 @@ if(!dir.exists(fig_dir)) {
 theme_set(cowplot::theme_cowplot())
 ```
 
+
+# Coverage with correct posterior
+
+```{r}
+set.seed(456522)
+Ns_to_test <- c(50, 100, 500)
+plots_coverage <- list()
+plots_ecdf <- list()
+max_rank <- 99
+lims_ecdf <- c(-0.21,0.21)
+lims_coverage <- c(-0.21,0.25)
+for(i in  1:length(Ns_to_test)) {
+  n <- Ns_to_test[i]
+  ranks <- data.frame(variable = paste0(n, " simulations"), max_rank = max_rank, sim_id = 1:n, rank = sample(0:max_rank, size = n, replace = TRUE))
+  if(i == 1) {
+    title_y_coverage <- "Coverage diff"
+    title_y_ecdf <- "ECDF diff"
+  } else {
+    title_y_coverage <- ""
+    title_y_ecdf <- ""
+  }
+  plots_coverage[[i]] <- plot_coverage_diff(ranks) + 
+    scale_y_continuous(title_y_coverage, labels = scales::percent, limits = lims_coverage) 
+  plots_ecdf[[i]] <- plot_ecdf_diff(ranks)  + 
+    scale_y_continuous(title_y_ecdf, limits = lims_ecdf) + 
+    scale_x_continuous("Quantile") +
+    guides(color = "none", fill = "none")
+  if(i > 1) {
+    plots_coverage[[i]] <- plots_coverage[[i]] + theme(axis.text.y = element_blank())
+    plots_ecdf[[i]] <- plots_ecdf[[i]] + theme(axis.text.y = element_blank())
+  }
+}
+#TODO - what's the white stripe with coverage for n = 50
+p_coverage_uniform <- patchwork::wrap_plots(c(plots_ecdf, plots_coverage), nrow = 2)
+p_coverage_uniform
+ggsave(file.path(fig_dir, "coverage_uniform.pdf"), p_coverage_uniform, width = 8, height = 4)
+```
+
+# Coverage with overly certain posterior
+
+
+```{r}
+set.seed(234522)
+Ns_to_test <- c(50, 100, 500)
+plots_coverage <- list()
+plots_ecdf <- list()
+lims_ecdf <- c(-0.21,0.21)
+lims_coverage <- c(-0.35,0.18)
+for(i in  1:length(Ns_to_test)) {
+  n <- Ns_to_test[i]
+  var_name <- 
+    
+  generator <- SBC_generator_function(function() {
+    list(
+      variables = list(
+        "x" = rnorm(1)
+        ),
+      generated = list()
+    )
+  })
+
+  backend <- SBC_backend_mock_rng(
+    "x" = ~ rnorm(., sd = 0.8)
+  )
+
+  res <- compute_SBC(
+    generate_datasets(generator,n_sims = n),
+    backend, chunk_size = 50
+  )
+  
+  ranks <- res$stats %>% 
+    mutate(variable =  paste0(n, " simulations"))
+  if(i == 1) {
+    title_y_coverage <- "Coverage diff"
+    title_y_ecdf <- "ECDF diff"
+  } else {
+    title_y_coverage <- ""
+    title_y_ecdf <- ""
+  }
+  plots_coverage[[i]] <- plot_coverage_diff(ranks) + 
+    scale_y_continuous(title_y_coverage, labels = scales::percent, limits = lims_coverage) 
+  plots_ecdf[[i]] <- plot_ecdf_diff(ranks)  + 
+    scale_y_continuous(title_y_ecdf, limits = lims_ecdf) + 
+    scale_x_continuous("Quantile") +
+    guides(color = "none", fill = "none")
+  if(i > 1) {
+    plots_coverage[[i]] <- plots_coverage[[i]] + theme(axis.text.y = element_blank())
+    plots_ecdf[[i]] <- plots_ecdf[[i]] + theme(axis.text.y = element_blank())
+  }
+}
+#TODO - what's the white stripe with coverage for n = 50
+p_coverage_too_certain <- patchwork::wrap_plots(c(plots_ecdf, plots_coverage), nrow = 2)
+p_coverage_too_certain
+ggsave(file.path(fig_dir, "coverage_too_certain.pdf"), p_coverage_too_certain, width = 8, height = 4)
+```
+
+# Power
 
 ```{r}
 power_coverage <- function(expected_coverage, true_coverage, N_sims, alpha = 0.05, N_sims_power = 1e5) {
