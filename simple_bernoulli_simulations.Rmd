@@ -88,7 +88,12 @@ gq_simple_gq <- generated_quantities(
    swap = ifelse(theta < 1/2, theta, theta - 1),
    #sin_inv = sin(1 / theta),
    #y_plus_theta = y + theta,
-   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3))
+   saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3),
+   
+   # CRPS was suggested, but seems not really useful
+   # Following equation (8) at https://arxiv.org/pdf/2002.09578v1.pdf for CRPS
+   # CRPS = (1 - dbinom(y, size = 1, prob = theta)) - 0.5 * dbinom(1, size = 2, prob = theta)
+   )
 
 ```
 

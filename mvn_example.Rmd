@@ -17,7 +17,14 @@ options(mc.cores = parallel::detectCores())
 library(future)
 plan(multisession)
 
-cache_dir <- "./_SBC_cache"
+include_sampling_scores <- TRUE
+
+if(include_sampling_scores) {
+  cache_dir <- "./_samp_scores_SBC_cache"
+} else {
+  cache_dir <- "./_SBC_cache"
+}
+
 fig_dir <- "./_figs" 
 
 if(!dir.exists(cache_dir)) {
@@ -31,6 +38,8 @@ devtools::load_all()
 
 hist_plot_width <- 8
 hist_plot_height <- 4
+
+
 ```
 
 
@@ -91,13 +100,44 @@ my_backend_mvn_globals = c("SBC_fit.my_backend_mvn",
 ```
 
 
+
+
 ```{r}
 quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
                                `mu[1] - mu[2]` = mu[1] - mu[2],
                                `mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
                                `mvn_log_lik[1]` = mvtnorm::dmvnorm(y[1,], mean = mu, sigma = mvn_sigma, log = TRUE),
-                               `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE))
+                               `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE),
+                               )
+```
+
+
+```{r}
+if(include_sampling_scores) {
+  sampled_score_mvnorm <- function(y, mu, sigma, score, ...) {
+    sim_data <- t(mvtnorm::rmvnorm(200, mean = mu, sigma = sigma))
+    res_single <- numeric(nrow(y))
+    for(i in 1:nrow(y)) {
+      res_single <- score(y[i,], sim_data, ...)
+    }
+    mean(res_single)
+  }
+  
+  es_mvnorm <- function(y, mu, sigma) {
+    sampled_score_mvnorm(y, mu, sigma, scoringRules::es_sample)
+  }
+  
+  vs_mvnorm <- function(y, mu, sigma) {
+    sampled_score_mvnorm(y, mu, sigma, scoringRules::vs_sample)
+  }
+  
+  quants_sampled <- generated_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
+                               `variogram score` =  vs_mvnorm(y, mu, mvn_sigma),
+                               .globals = c("sampled_score_mvnorm", "es_mvnorm", "vs_mvnorm"))
+  
+  quants <- bind_generated_quantities(quants, quants_sampled)
+}
 ```
 
 
@@ -121,7 +161,8 @@ backend_correct <- my_backend_mvn(sampling_func_correct)
 res_correct <- compute_SBC(ds, backend_correct, gen_quants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = "results",
-                              cache_location = file.path(cache_dir, "mvn_correct"))
+                              cache_location = file.path(cache_dir, "mvn_correct"),
+                           )
 ```
 
 ```{r}
@@ -168,7 +209,7 @@ ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = his
 ```
 
 ```{r}
-plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu")
+plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu|vario")
 ```
 
 
@@ -228,7 +269,7 @@ ggsave(file.path(fig_dir, "hist_one_missing_20.pdf"), p_hist_one_missing_20, wid
 ```
 
 
-
+# Incorrect posterior correlations
 
 
 Especially when the number of data points is small, the correlations in the prior should persist in the posterior. 
@@ -336,6 +377,10 @@ quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `f` = ifelse(mu[1] < 1, mu[1], mu[1] - 5),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
 
+if(include_sampling_scores) {
+  quants_non_mon <- bind_generated_quantities(quants_non_mon, quants_sampled)
+}
+
 
 set.seed(246855)
 
@@ -366,11 +411,6 @@ ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = hist_plot
 p_hist_non_mon_ext <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5))
 p_hist_non_mon_ext
 ggsave(file.path(fig_dir, "hist_non_mon_ext.pdf"), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)
-```
-
-
-```{r}
-plot_ecdf_diff(bind_results(res_non_mon, res_non_mon_2))
 ```
 
 # Small changes compound
