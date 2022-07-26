@@ -72,14 +72,10 @@
     "SBC": {
       "Package": "SBC",
       "Version": "0.1.1.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "SBC",
-      "RemoteUsername": "hyunjimoon",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "f513ff8e8a2c53f07d02ed65200285c3f3b00365",
-      "Hash": "222e6d869a5c0b04227088bb8c6c9b8e",
+      "Source": "Local",
+      "RemoteType": "local",
+      "RemoteUrl": "C:\\Users\\modrak_m\\Documents\\SBC",
+      "Hash": "555519559f32ce608ca65c72cf601ff3",
       "Requirements": [
         "R6",
         "abind",
@@ -564,7 +560,7 @@
     },
     "future": {
       "Package": "future",
-      "Version": "1.26.1",
+      "Version": "1.24.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "5cc7addaa73372fbee0a7d06c880068e",
@@ -670,7 +666,7 @@
     },
     "globals": {
       "Package": "globals",
-      "Version": "0.15.1",
+      "Version": "0.14.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "eca8023ed5ca6372479ebb9b3207f5ae",
@@ -1669,7 +1665,7 @@
     },
     "vctrs": {
       "Package": "vctrs",
-      "Version": "0.4.1",
+      "Version": "0.3.8",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ecf749a1b39ea72bd9b51b76292261f1",

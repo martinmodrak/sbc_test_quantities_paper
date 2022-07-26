@@ -1,0 +1,186 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+$$
+\pi_{\text{joint}}(y, \theta) = \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
+\pi_\text{marg}\left(y \right) = \int \mathrm{d} \theta \: \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
+\pi_{\text{post}}(\theta | y) = \frac{\pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)}{\pi_\text{marg}\left(y \right)}
+$$
+
+Alternate $q$ def:
+
+Given a model, fitting algorithm and a function $f$, we define fitted pushforward CDF
+
+$$
+C_{\phi,f}(s | y) = \int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\phi\left(\theta | y\right)
+$$ 
+
+and true pushforward CDF 
+
+$$
+C_{f}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\pi_{\text{post}}(\theta | y)  \\
+
+
+$$
+
+Where $\mathbb{I}$ is the indicator function
+
+$$
+D_{\phi,f}(s | y) = \int \mathrm{d}\theta \: \phi(\theta | y) \mathbb{I}\left[ f(\theta, y) = s \right]
+$$
+
+
+For fixed $\tilde\theta$ and $y$ we define the random variable 
+$\rho_{\phi,f}(\tilde\theta | y)$ as
+
+$$
+\theta \sim \phi_y \\
+e \sim \text{Uniform}_c(0, 1)\\
+\rho_{\phi,f}(\tilde\theta | y) = \mathbb{P} \left(f(\theta, y) < f\left(\tilde\theta,  y \right) \right) + e \mathbb{P} \left(f(\theta, y) = f \left(\tilde\theta, y \right) \right) =\\
+C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) + (e-1) D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)
+$$
+
+
+$$
+\mathbb{P}\left(\rho_{\phi,f}\left(\tilde\theta | y \right) \leq x | \tilde\theta \right) = 
+\begin{cases}
+  0 & \text{if } x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
+  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} & 
+    \text{if } D_{...} > 0 \text{ and } C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
+  1 & \text{if } x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) \right) 
+\end{cases} =
+\\
+= \begin{cases}
+  0 & \text{if } f(\tilde\theta, y) > \inf \left\{s : x \leq C_{\phi,f}(s | y) -  D_{\phi,f} \left(s | y \right) \right\} \\
+  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} & 
+     \text{if } D_{...} > 0 \text{ and } f(\tilde\theta, y) = \inf\{s : x \leq C_{\phi,f}(s | y) \} \\
+  1 & \text{if } f(\tilde\theta, y) \leq \inf\{s : x \leq C_{\phi,f}(s | y)\}
+\end{cases}
+$$
+
+TODO: figure out exact ineqaulities above
+
+```{r}
+x <- 0.2
+f <- 1
+
+c_phi <- function(x) { pbinom(x, size = 2, prob = 0.5) }
+
+inv_c_phi <- function(x) { qbinom(x, size = 2, prob = 0.5) }
+
+inv_c_m_d_phi <- function(x) { }
+
+
+```
+
+
+```{r}
+c_phi <- function(x) { 
+  (floor(x)  + 1) / 3
+#   dplyr::case_when(
+#   x < 0 ~ 0,
+#   x < 1 ~ 1/3,
+#   x < 2 ~ 2/3,
+#   TRUE ~ 1
+# ) 
+}
+
+inv_c_phi <- function(x) {
+  #inf s : x <= c_phi(s)
+  dplyr::case_when(
+    #x == 0 ~ 1,
+    x < 1/3 ~ 0,
+  x < 2 ~ 1/3,
+  x < 3 ~ 2/3,
+  TRUE ~ 1
+) 
+}
+```
+
+
+x = 0.5
+f(tilde t) = 1 
+phi === bernoulli(0.5)
+P(rho <= x) =  0 ; x <= 0.5
+           =  (x - 0.5) * 2 ; 1 > x > 0.5
+           =  1 ; x >= 1
+
+ALT:
+P(rho <= x | tilde t) = 0 ; f(tilde t)
+
+
+$$
+x \leq C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
+f(\tilde\theta,y) \geq \{s: C_{\phi,f} \left(s | y \right) \geq x  \}
+\\
+a
+\\
+C^{-1}_{\phi,f}(x | y) \leq C^{-1}_{\phi,f} \left ( C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) |y \right) \\
+$$
+
+$$
+q(x|y) = 
+\mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = 
+\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = \\
+
+$$
+
+With no ties:
+
+$$
+q(x|y) = 
+\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] = \\
+\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f \left(\tilde\theta, y \right) \leq C^{-1}_{\phi,f}(x | y)\right] =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right)
+$$
+
+More generally:
+
+$$
+q(x|y) = \\
+= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+    D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
+  \right] + \\ 
+  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] \frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} = \\
+= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
+  \right] + \\ 
+  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
+    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
+    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
+$$
+
+Assuming both $C_{\phi, f}$ and $C_{f}$ are discrete (over natural numbers)?
+
+$$
+q(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
+    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right)  + 1 | y \right) >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
+    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
+    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    f \left(\tilde\theta, y \right)  + 1 > C^{-1}_f(x | y) >
+    f \left(\tilde\theta, y \right) \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
+$$

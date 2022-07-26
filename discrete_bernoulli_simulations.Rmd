@@ -88,8 +88,8 @@ Setup a backend using the correct analytic posterior - it passes SBC including a
 
 ```{r}
 backend_disc_gq_ok <- disc_backend_func(
-  prob0 = 8/13,
-  prob1 = 9/24)
+  prob0 = 9/13,
+  prob1 = 3/11)
 
 res_disc_gq_ok <- compute_SBC(datasets_disc_gq, backend_disc_gq_ok, keep_fits = FALSE,
                         gen_quants = gq_disc_gq, globals = my_globals)
