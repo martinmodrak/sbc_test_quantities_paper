@@ -39,7 +39,7 @@ $$
 \theta \sim \phi_y \\
 e \sim \text{Uniform}_c(0, 1)\\
 \rho_{\phi,f}(\tilde\theta | y) = \mathbb{P} \left(f(\theta, y) < f\left(\tilde\theta,  y \right) \right) + e \mathbb{P} \left(f(\theta, y) = f \left(\tilde\theta, y \right) \right) =\\
-C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) + (e-1) D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)
+C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)
 $$
 
 
