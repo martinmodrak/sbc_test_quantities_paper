@@ -121,7 +121,7 @@ C^{-1}_{\phi,f}(x | y) \leq C^{-1}_{\phi,f} \left ( C_{\phi,f} \left(f \left(\ti
 $$
 
 $$
-q(x|y) = 
+q_{\phi,f}(x|y) = 
 \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = 
 \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = \\
 
@@ -130,7 +130,7 @@ $$
 With no ties:
 
 $$
-q(x|y) = 
+q_{\phi,f}(x|y) = 
 \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] = \\
 \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f \left(\tilde\theta, y \right) \leq C^{-1}_{\phi,f}(x | y)\right] =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right)
 $$
@@ -171,7 +171,7 @@ $$
 Assuming both $C_{\phi, f}$ and $C_{f}$ are discrete (over natural numbers)?
 
 $$
-q(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
+q_{\phi,f}(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
     + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
   \mathbb{I}\left[
     C_{\phi,f} \left(f \left(\tilde\theta, y \right)  + 1 | y \right) >
@@ -184,3 +184,107 @@ q(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
     f \left(\tilde\theta, y \right) \right] 
     \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
 $$
+
+For correct posterior we have a stronger condition
+
+$$
+\phi = \pi_{post}: 
+\forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
+$$
+
+Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
+
+## Non-monotonous functions - simple case
+
+Take $\Theta = \mathbb{R}$ and $\text{id} : Y \times \mathbb R \to \mathbb{R}, \text{id}(y, \theta) = \theta$   $C_\text{id}(s|y)$ is invertible over the domain of $f$ for all $y$. Take any continuous, almost everywhere smooth bijection $u: [0,1] \to [0,1], u(0) = 0, u(1) = 1$ and disjoint $Y_1, Y_2 \subset Y$ (with non-zero mass).  
+
+$$
+a,b \in [0,1]\\
+\frac{a}{b} = \frac{\int_{y \in Y_2} \mathrm{d}y \: \pi_\text{marg}(y)}{\int_{y \in Y_1} \mathrm{d}y \: \pi_\text{marg}(y)}
+$$
+
+$$
+v(x) = a u(x) + (1-a)x\\
+w(x) = b (2x - u(x)) + (1-b)x\\
+
+t_1(\theta, y) =  C^{-1}_\text{id}(v(C_\text{id}(\theta|y)) | y)\\
+t_2(\theta, y) =  C^{-1}_\text{id}(w(C_\text{id}(\theta|y)) | y)
+$$
+
+$$
+C^{-1}_\text{id}(v_i(C_\text{id}(\theta|y)) | y) = x \\
+v_i(C_\text{id}(\theta|y)) = C_\text{id}(x |y) \\
+C_\text{id}(\theta|y) = v^{-1}(C_\text{id}(x |y)) \\
+\theta = C^{-1}_\text{id}(v^{-1}(C_\text{id}(x |y)) | y) \\
+$$
+
+$t_{1,2}$ are invertible and we can define:
+
+$$
+\omega(\theta|y) = \begin{cases}
+  \pi_\text{post}(t^{-1}_1(\theta,y)|y) \frac{\partial t^{-1}_1}{\partial \theta}(\theta, y) | y) & \text{if } y \in Y_1 \\
+  \pi_\text{post}(t^{-1}_2(\theta,y)|y) \frac{\partial t^{-1}_2}{\partial \theta}(\theta, y) | y) & \text{if } y \in Y_2 \\
+  \pi_\text{post}(\theta | y) & \text{otherwise}
+\end{cases}
+$$
+
+now $\omega$ satisfies SBC for $\text{id}$.
+
+
+$$
+y \in Y_1: C_{\omega,\text{id}}(s|y) = \int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[\theta \leq s\right]\omega\left(\theta | y\right) = \\
+\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[\theta \leq s\right]\pi_\text{post}(t^{-1}_1(\theta,y)|y) \frac{\partial t^{-1}_1}{\partial \theta}(\theta, y) | y) = \\
+= \int_{\Theta}\mathrm{d}\bar\theta\mathbb{\,I}\left[t_1(\theta,y) \leq s\right]\pi_\text{post}(\bar\theta,y) = C_{t_1}(s|y) \\
+
+
+$$
+
+$$
+y \in Y_1: q_{\omega,\text{id}}(x | y) = C_\text{id} \left(C^{-1}_{\omega,\text{id}}(x | y) | y \right) =
+  C_\text{id} \left(C^{-1}_{t_1}(x | y) | y \right) = 
+  \int \mathrm{d}\theta \: \mathbb{I}\left[\theta< C^{-1}_{t_1}(x | y)\right]\pi_\text{post}(\theta|y) = \\
+  = \int \mathrm{d}\theta \: \mathbb{I}\left[C_{t_1}(\theta |y)< x\right]\pi_\text{post}(\theta|y) = \\
+  = \int \mathrm{d}\theta \: \mathbb{I}\left[\int \mathrm{d}\tilde\theta\: \mathbb{I}\left[t_1(\tilde\theta, y) < \theta \right] \pi_\text{post}(\tilde\theta|y) < x\right]\pi_\text{post}(\theta|y) = \\
+  = \int \mathrm{d}\theta \: \mathbb{I}\left[\int \mathrm{d}\tilde\theta\: \mathbb{I}\left[\tilde\theta < t_1^{-1}(\theta, y) \right] \pi_\text{post}(\tilde\theta|y) < x\right]\pi_\text{post}(\theta|y) = \\
+  = \int \mathrm{d}\theta \: \mathbb{I}\left[C_\text{id}(t_1^{-1}(\theta, y)|y) < x\right]\pi_\text{post}(\theta|y) = \\
+  = \int \mathrm{d}\theta \: \mathbb{I}\left[\theta < t_1(C^{-1}_\text{id}(x|y)\right]\pi_\text{post}(\theta|y) = \\
+  = C_\text{id}\left(t_1(C_\text{id}^{-1}(x|y), y) \right) = v(x)
+  
+$$
+
+Analogously
+
+$$
+y \in Y_2: q_{\omega,\text{id}}(x | y)  = w(x)
+$$
+So we have 
+
+$$
+\int_Y \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) = \\
+\int_{Y_1} \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) + \int_{Y_2} \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) + \int_{Y \setminus Y_1 \cup Y_2} \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) = \\
+v(x) \int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) + w(x)\int_{Y_2} \mathrm{d}y\pi_\text{marg}(y) + x \int_{Y \setminus Y_1 \cup Y_2} \mathrm{d}y \: \pi_\text{marg}(y) = \\
+(a u(x) + (1-a)x)\int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) + (b (2x - u(x)) + (1-b)x)\int_{Y_2} \mathrm{d}y\pi_\text{marg}(y) + x \int_{Y \setminus Y_1 \cup Y_2} \mathrm{d}y \: \pi_\text{marg}(y) =\\
+u(x) a \int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) + b(2x - u(x)) \int_{Y_2} \mathrm{d}y\pi_\text{marg}(y) + x \left( \int_{Y \setminus Y_1 \cup Y_2} \mathrm{d}y \: \pi_\text{marg}(y) + (1-a)\int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) + (1-b)\int_{Y_2} \mathrm{d}y\pi_\text{marg}(y)\right) \\
+$$
+
+We note that from requirements on $a,b$ we have $a \int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) = b \int_{Y_2} \mathrm{d}y \: \pi_\text{marg}(y)$ and $u(x) + u^{-1}(x)$ se we have
+
+$$
+\int_Y \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) = \\
+\left(u(x) + 2x - u(x)\right)\left( a \int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y)\right) + x \left(1 - 2a \int_{Y_1} \mathrm{d}y \: \pi_\text{marg}(y) \right) = x \\
+
+$$
+
+$$
+u(x) + v(x) = 2x \\
+v(x) = 2x - u(x)
+$$
+
+Take $\Theta = \mathbb{R}$ and $f,g: Y \times \mathbb R \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  $C_f(\theta|y), C_g(\theta|y)$ are invertible for all $y$. There exist bounds $l_1 \leq u_1 \leq $\Theta
+
+
+Take $\Theta = \mathbb{R}$ and $f,g: Y \times \mathbb R \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  $C_f(\theta|y), C_g(\theta|y)$ are invertible for all $y$. There exist bounds $l_1 \leq u_1 \leq $\Theta
+
+$disjoint $Y_1, Y_2 \subset Y$ and disjoint $\Theta_1, \Theta_2 \subset \mathbb{R}$
+
+
