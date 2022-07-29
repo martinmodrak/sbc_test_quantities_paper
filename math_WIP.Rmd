@@ -3,9 +3,11 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+Note on notation: we will denote the integral of $f(x)$ w.r.t $x$ over domain $X$ as $\int_X \mathrm{d}x \: f(x)$.
+
 $$
 \pi_{\text{joint}}(y, \theta) = \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
-\pi_\text{marg}\left(y \right) = \int \mathrm{d} \theta \: \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
+\pi_\text{marg}\left(y \right) = \int_\Theta \mathrm{d} \theta \: \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
 \pi_{\text{post}}(\theta | y) = \frac{\pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)}{\pi_\text{marg}\left(y \right)}
 $$
 
@@ -33,7 +35,7 @@ $$
 
 
 For fixed $\tilde\theta$ and $y$ we define the random variable 
-$\rho_{\phi,f}(\tilde\theta | y)$ as
+$\rho_{\phi,f}(\tilde\theta | y)$ (continuous rank) as
 
 $$
 \theta \sim \phi_y \\
@@ -122,8 +124,8 @@ $$
 
 $$
 q_{\phi,f}(x|y) = 
-\mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = 
-\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) < x) = \\
+\mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) \leq x) = 
+\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) \leq x) = \\
 
 $$
 
@@ -131,8 +133,50 @@ With no ties:
 
 $$
 q_{\phi,f}(x|y) = 
-\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] = \\
+\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x  \right] = \\
 \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f \left(\tilde\theta, y \right) \leq C^{-1}_{\phi,f}(x | y)\right] =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right)
+$$
+
+Trying to prove that continuous SBC implies sample SBC with ties
+
+$$
+\text{rank_lower}(\tilde\theta |y) = \mathbb{P}(f(\theta, y) < f(\tilde\theta, y)) + \frac{1}{2} \mathbb{P}(f(\theta, y) = f(\tilde\theta, y)) = \\
+\int_\Theta \mathrm{d}\theta \: \left(\mathbb{P}(f(\theta, y) < f(\tilde\theta, y) \right)
+$$
+
+
+$$
+P(N_\text{less} = n, N_\text{equals} = k | \tilde\theta, y) = \frac{M!}{n!k!(M - k - n)!} \left(\mathbb{P}(f(\theta, y) < f(\tilde\theta, y))\right)^n \left(\mathbb{P}(f(\theta, y) = f(\tilde\theta, y))\right)^k\left(\mathbb{P}(f(\theta, y) > f(\tilde\theta, y))\right)^{M-k-n} \\
+
+P(N_\text{less} + K = r | \tilde\theta, y) = \sum_{n = 0}^r\sum_{k = r - n}^M \frac{1}{k + 1}P(N_\text{less} = n, N_\text{equals} = k | \tilde\theta) \\
+$$
+
+$$
+\mathbb{P} \left( f(y, \theta_1) < f(y, \tilde \theta) \land \ldots \land f(y, \theta_n) < f(y, \tilde \theta) \land \right.\\
+  \land f(y, \theta_{n + 1}) = f(y, \tilde \theta) \land \ldots \land f(y, \theta_{n + n_\text{eq}}) = f(y, \tilde \theta)  \\
+  \left. \land f(y, \theta_{n + n_\text{eq} + 1}) > f(y, \tilde \theta) \land \ldots \land f(y, \theta_{M}) > f(y, \tilde \theta) \land K = k | y \right) = \\
+  \frac{1}{n_\text{eq}}
+$$
+
+
+
+$$
+P(N_\text{less} + K = r | y) = \int_0^1 \mathrm{d}x \: {M \choose r}\left(q^{-1}(x|y)\right)^r \left(1 - q^{-1}(x|y)\right)^{(M - r)} ?? \\
+P\left(\rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) ?? \\
+
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) = 
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \left(q\left(\frac{r + 1}{M + 1} |y \right) - q\left(\frac{r}{M + 1} |y \right) \right) = \\
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r + 1}{M + 1} |y \right) - \int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r}{M + 1} |y \right) = \frac{r + 1}{M + 1} - \frac{r}{M + 1} = \frac{1}{M + 1}
+$$
+
+Probably useless:
+
+$$
+P(N_\text{less} + K = r | \tilde\theta, y) = P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) ?? \\
+
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) = 
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \left(q\left(\frac{r + 1}{M + 1} |y \right) - q\left(\frac{r}{M + 1} |y \right) \right) = \\
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r + 1}{M + 1} |y \right) - \int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r}{M + 1} |y \right) = \frac{r + 1}{M + 1} - \frac{r}{M + 1} = \frac{1}{M + 1}
 $$
 
 More generally:
