@@ -9,11 +9,18 @@ library(tidyverse)
 
 
 ```{r}
-plot_q <- function(pfunc, qfunc, ensure_vals, ...) {
-  x_base <- pfunc(ensure_vals, ...)
+plot_q <- function(pfunc, qfunc, ensure_vals, ..., p_args = list(), q_args = list()) {
+  pfunc_wrap <- function(x) {
+    do.call(pfunc, c(list(x), list(...), p_args))
+  }
+  qfunc_wrap <- function(p) {
+    do.call(qfunc, c(list(p), list(...), q_args))
+  }
+  
+  x_base <- pfunc_wrap(ensure_vals)
   df <- data.frame(x = c(seq(0,1, length.out = 200), x_base - 1e-5, x_base, x_base + 1e-5)) %>%
     filter(x >= 0, x <= 1) %>%
-    mutate(q = pfunc(qfunc(x, ...), ...)) 
+    mutate(q = pfunc_wrap(qfunc_wrap(x))) 
   
   df <- rbind(data.frame(x = 0, q = 0),
               df,
@@ -45,5 +52,10 @@ qrelunormal <- function(x) {
 }
 
 plot_q(pfunc = prelunormal, qfunc = qrelunormal, ensure_vals = 0:10)
+```
+
+```{r}
+plot_q(pfunc = ppois, qfunc = qrelunormal, ensure_vals = 0:30, p_args = list(lambda = 3))
+plot_q(pfunc =prelunormal, qfunc = qpois, ensure_vals = -5:5, q_args = list(lambda = 3))
 ```
 

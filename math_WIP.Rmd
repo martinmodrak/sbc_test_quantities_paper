@@ -229,7 +229,11 @@ q_{\phi,f}(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
     \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
 $$
 
-For correct posterior we have a stronger condition
+
+
+## Correct posterior passes continuous SBC
+
+outline: $C_f(C^{-1}_f(x|y)|y)$ is for a given $y$ either identity or "blocky". The tiebraking exactly removes the blocks, so we have the stronger condition
 
 $$
 \phi = \pi_{post}: 
@@ -237,6 +241,14 @@ $$
 $$
 
 Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
+
+## Continuous SBC imples sample SBC
+
+By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
+
+## Sample SBC for all $M$ implies continuous SBC
+
+Prove that $q$ is the limit of fractional rank distribution as $M \to \infty$
 
 ## Non-monotonous functions - simple case
 
