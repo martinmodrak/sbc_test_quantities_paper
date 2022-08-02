@@ -1,0 +1,49 @@
+---
+title: "Sims for general math"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+plot_q <- function(pfunc, qfunc, ensure_vals, ...) {
+  x_base <- pfunc(ensure_vals, ...)
+  df <- data.frame(x = c(seq(0,1, length.out = 200), x_base - 1e-5, x_base, x_base + 1e-5)) %>%
+    filter(x >= 0, x <= 1) %>%
+    mutate(q = pfunc(qfunc(x, ...), ...)) 
+  
+  df <- rbind(data.frame(x = 0, q = 0),
+              df,
+              data.frame(x = 1, q = 1))
+  
+  df %>%
+    ggplot(aes(x,q)) +
+      geom_abline(intercept = 0, slope = 1, color = "blue") +
+      geom_line()
+}
+
+plot_q(ppois, qpois, ensure_vals = 0:15,  lambda = 3)
+
+plot_q(pfunc = pbinom, qfunc = qbinom, ensure_vals = 0:10,  size = 10, prob = 0.4)
+
+```
+
+```{r}
+# z ~ rnorm(), y = if_else(z <= 0, 0, z)
+prelunormal <- function(q) {
+  case_when(q < 0 ~ 0,
+            q == 0 ~ 0.5,
+            q > 0 ~ pnorm(q))
+}
+
+qrelunormal <- function(x) {
+  case_when(x <= 0.5 ~ 0,
+            x > 0.5 ~ qnorm(x))
+}
+
+plot_q(pfunc = prelunormal, qfunc = qrelunormal, ensure_vals = 0:10)
+```
+
