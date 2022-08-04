@@ -214,6 +214,38 @@ plot_ecdf_diff(res_simple_gq_test2)
 
 ```
 
+## Linear combinations
+
+```{r}
+tfunc_test_lincomb_0 <- function(u) {
+  dplyr::if_else(runif(length(u)) < 0.5,
+    tfunc_test2_0(u),
+    transform_fun_test1_0(u)
+  )
+}
+
+tfunc_test_lincomb_1 <- function(u) {
+  dplyr::if_else(runif(length(u)) < 0.5,
+    tfunc_test2_1(u),
+    transform_fun_test1_1(u)
+  )
+}
+
+backend_simple_gq_test_lincomb <- my_backend_func_invcdf(tfunc_test_lincomb_0, tfunc_test_lincomb_1)
+
+
+res_simple_gq_test_lincomb <- compute_SBC(datasets_simple_gq_large, backend_simple_gq_test_lincomb, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq, globals = c(my_globals,
+                                                               "tfunc_test2_0","tfunc_test2_1", "transform_fun_test1_0","transform_fun_test1_1"))
+
+plot_rank_hist(res_simple_gq_test_lincomb)
+plot_ecdf_diff(res_simple_gq_test_lincomb)
+
+
+```
+
+
+
 ## Counterexamples for theta and log_lik
 
 In the previous two cases, the `log_lik` variable always showed discrepancies. 

@@ -3,6 +3,8 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+## Definitions
+
 Note on notation: we will denote the integral of $f(x)$ w.r.t $x$ over domain $X$ as $\int_X \mathrm{d}x \: f(x)$.
 
 $$
@@ -34,35 +36,28 @@ D_{\phi,f}(s | y) = \int \mathrm{d}\theta \: \phi(\theta | y) \mathbb{I}\left[ f
 $$
 
 
-For fixed $\tilde\theta$ and $y$ we define the random variable 
-$\rho_{\phi,f}(\tilde\theta | y)$ (continuous rank) as
+For fixed $\tilde\theta$ and $y$ we define the continuous rank CDF
+$r_{\phi,f}(x, \tilde\theta | y)$ as
 
 $$
-\theta \sim \phi_y \\
 e \sim \text{Uniform}_c(0, 1)\\
-\rho_{\phi,f}(\tilde\theta | y) = \mathbb{P} \left(f(\theta, y) < f\left(\tilde\theta,  y \right) \right) + e \mathbb{P} \left(f(\theta, y) = f \left(\tilde\theta, y \right) \right) =\\
-C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)
+r_{\phi,f}(x, \tilde\theta | y) = 
+\mathbb{P}\left(C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(x, \tilde\theta, y \right) | y \right) < x\right)
 $$
 
+where $\text{Uniform}_c$ is the continous uniform distribution.
 
 $$
-\mathbb{P}\left(\rho_{\phi,f}\left(\tilde\theta | y \right) \leq x | \tilde\theta \right) = 
+r_{\phi,f}(x, \tilde\theta | y) = 
 \begin{cases}
   0 & \text{if } x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
   1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} & 
     \text{if } D_{...} > 0 \text{ and } C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
   1 & \text{if } x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) \right) 
 \end{cases} =
-\\
-= \begin{cases}
-  0 & \text{if } f(\tilde\theta, y) > \inf \left\{s : x \leq C_{\phi,f}(s | y) -  D_{\phi,f} \left(s | y \right) \right\} \\
-  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} & 
-     \text{if } D_{...} > 0 \text{ and } f(\tilde\theta, y) = \inf\{s : x \leq C_{\phi,f}(s | y) \} \\
-  1 & \text{if } f(\tilde\theta, y) \leq \inf\{s : x \leq C_{\phi,f}(s | y)\}
-\end{cases}
 $$
 
-TODO: figure out exact ineqaulities above
+TODO: figure out exact inequalities above
 
 ```{r}
 x <- 0.2
@@ -78,158 +73,91 @@ inv_c_m_d_phi <- function(x) { }
 ```
 
 
-```{r}
-c_phi <- function(x) { 
-  (floor(x)  + 1) / 3
-#   dplyr::case_when(
-#   x < 0 ~ 0,
-#   x < 1 ~ 1/3,
-#   x < 2 ~ 2/3,
-#   TRUE ~ 1
-# ) 
-}
-
-inv_c_phi <- function(x) {
-  #inf s : x <= c_phi(s)
-  dplyr::case_when(
-    #x == 0 ~ 1,
-    x < 1/3 ~ 0,
-  x < 2 ~ 1/3,
-  x < 3 ~ 2/3,
-  TRUE ~ 1
-) 
-}
-```
-
-
-x = 0.5
-f(tilde t) = 1 
-phi === bernoulli(0.5)
-P(rho <= x) =  0 ; x <= 0.5
-           =  (x - 0.5) * 2 ; 1 > x > 0.5
-           =  1 ; x >= 1
-
-ALT:
-P(rho <= x | tilde t) = 0 ; f(tilde t)
-
-
-$$
-x \leq C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
-f(\tilde\theta,y) \geq \{s: C_{\phi,f} \left(s | y \right) \geq x  \}
-\\
-a
-\\
-C^{-1}_{\phi,f}(x | y) \leq C^{-1}_{\phi,f} \left ( C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) |y \right) \\
-$$
-
 $$
 q_{\phi,f}(x|y) = 
-\mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) \leq x) = 
-\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{P}(\rho_{\phi,f}(\tilde\theta | y) \leq x) = \\
+\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) r_{\phi,f}(x, \tilde\theta | y)\\
 
 $$
 
-With no ties:
+
+If I end up needing it, I can make it look better (https://discourse.mc-stan.org/t/sbc-math-proofs/27655/12?u=martinmodrak) but that might in fact end up not being necessary.
 
 $$
-q_{\phi,f}(x|y) = 
-\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x  \right] = \\
-\int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f \left(\tilde\theta, y \right) \leq C^{-1}_{\phi,f}(x | y)\right] =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right)
+q\left(x\mid y\right)=C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) \\
+s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
 $$
 
-Trying to prove that continuous SBC implies sample SBC with ties
+Presumably, my definition of $C^{-1}$ consistent with Niko's $s$? 
 
 $$
-\text{rank_lower}(\tilde\theta |y) = \mathbb{P}(f(\theta, y) < f(\tilde\theta, y)) + \frac{1}{2} \mathbb{P}(f(\theta, y) = f(\tilde\theta, y)) = \\
-\int_\Theta \mathrm{d}\theta \: \left(\mathbb{P}(f(\theta, y) < f(\tilde\theta, y) \right)
+C^{-1}_{\phi,f}(x | y) = \inf\{ s^{\prime} : x \leq C_{\phi, f}(s^{\prime} | y)\} \\
+s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
 $$
 
+Almost!
+
+### Sample-based
 
 $$
-P(N_\text{less} = n, N_\text{equals} = k | \tilde\theta, y) = \frac{M!}{n!k!(M - k - n)!} \left(\mathbb{P}(f(\theta, y) < f(\tilde\theta, y))\right)^n \left(\mathbb{P}(f(\theta, y) = f(\tilde\theta, y))\right)^k\left(\mathbb{P}(f(\theta, y) > f(\tilde\theta, y))\right)^{M-k-n} \\
+R_{\phi,f}(i, \tilde\theta, y) = \mathbb{P} \left(N_{\mathtt{less}} + K \leq i \right) \\
 
-P(N_\text{less} + K = r | \tilde\theta, y) = \sum_{n = 0}^r\sum_{k = r - n}^M \frac{1}{k + 1}P(N_\text{less} = n, N_\text{equals} = k | \tilde\theta) \\
+Q_{\phi,f}(i | y) = \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,f}(i, \tilde\theta, y)
+$$
+
+passes sample-based SBC iff
+
+$$
+\forall i \in 0, \dots, M - 1: \int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) = \frac{i+1}{M + 1}
+$$
+
+Equivalence with the procedural definition:
+
+$$
+\int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) = 
+\int_Y \: \mathrm{d}y  \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,f}(i, \tilde\theta, y) \pi_\text{marg}(y) = \\
+\int_\Theta \mathrm{d}\tilde\theta   \int_Y \: \mathrm{d}y \: \pi_\text{prior}(\tilde\theta)\pi_\text{lik}(y | \tilde\theta)  R_{\phi,f}(i, \tilde\theta, y) (y)
+
+
+$$
+
+## Ties/no ties correspondance
+
+A posterior family $\phi$ has ties w.r.t model $\pi$ and function $f$ when 
+
+$$
+\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta D_{\phi,f}(f(\tilde\theta,y) | y) > 0
+$$
+
+Given a posterior family $\phi$ which has ties wrt model $\pi$ and function $f$ we can construct a model $\pi^\prime$, posterior family $\phi^\prime$ and function $f^\prime$ such that $\phi^\prime$ has no ties wrt $\pi^\prime$ and $f^\prime$ and
+
+
+$$
+\forall y \in Y, x \in [0,1]: q^\pi_{\phi,f}(x | y) = q^{\pi^\prime}_{\phi,f}(x | y) \\
+\forall y \in Y, i \in 0, \dots, M - 1: Q^\pi_{\phi,f}(i | y) = Q^{\pi^\prime}_{\phi,f}(i | y)
+$$
+
+The construction:
+
+For each $y$ there can only be countable number of collisions with positive probability. So we can define:
+
+$$
+W_{\phi,f}(y) = \{w : D_{\phi,f}(w | y) > 0 \} \\
+L_{\phi,f}(s, y) = |\{w \in W_{\phi,f}(y) | w < s\}|
 $$
 
 $$
-\mathbb{P} \left( f(y, \theta_1) < f(y, \tilde \theta) \land \ldots \land f(y, \theta_n) < f(y, \tilde \theta) \land \right.\\
-  \land f(y, \theta_{n + 1}) = f(y, \tilde \theta) \land \ldots \land f(y, \theta_{n + n_\text{eq}}) = f(y, \tilde \theta)  \\
-  \left. \land f(y, \theta_{n + n_\text{eq} + 1}) > f(y, \tilde \theta) \land \ldots \land f(y, \theta_{M}) > f(y, \tilde \theta) \land K = k | y \right) = \\
-  \frac{1}{n_\text{eq}}
+\Theta^\prime = \Theta \times [0, 1] \\
+\pi^\prime_\text{joint}(y, \theta, u) =  \pi_\text{joint}(y, \theta) \\
+\phi^\prime(\theta, u, y) = \phi(\theta, y) \\
+f^\prime(\theta, u, y) = \begin{cases}
+f(\theta,y) + L_{\phi,f}(\theta,y) + u& \text{if } f(\theta,y) \in W_{\phi,f}(y) \\
+f(\theta,y) + L_{\phi,f}(\theta,y) & \text{otherwise}
+\end{cases}
 $$
 
+By inspection, there are no ties. The ordering of non-colliding elements hasn't changed and the order among those previously equal is uniformly random. 
 
-
-$$
-P(N_\text{less} + K = r | y) = \int_0^1 \mathrm{d}x \: {M \choose r}\left(q^{-1}(x|y)\right)^r \left(1 - q^{-1}(x|y)\right)^{(M - r)} ?? \\
-P\left(\rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) ?? \\
-
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) = 
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \left(q\left(\frac{r + 1}{M + 1} |y \right) - q\left(\frac{r}{M + 1} |y \right) \right) = \\
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r + 1}{M + 1} |y \right) - \int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r}{M + 1} |y \right) = \frac{r + 1}{M + 1} - \frac{r}{M + 1} = \frac{1}{M + 1}
-$$
-
-Probably useless:
-
-$$
-P(N_\text{less} + K = r | \tilde\theta, y) = P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) ?? \\
-
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: P\left(\frac{r}{M + 1} < \rho_{\phi,f}(\tilde\theta|y) \leq \frac{r + 1}{M + 1}\right) = 
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \left(q\left(\frac{r + 1}{M + 1} |y \right) - q\left(\frac{r}{M + 1} |y \right) \right) = \\
-\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r + 1}{M + 1} |y \right) - \int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d}y \: q\left(\frac{r}{M + 1} |y \right) = \frac{r + 1}{M + 1} - \frac{r}{M + 1} = \frac{1}{M + 1}
-$$
-
-More generally:
-
-$$
-q(x|y) = \\
-= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-    D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
-  \right] + \\ 
-  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] \frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} = \\
-= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
-  \right] + \\ 
-  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
-    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
-    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
-$$
-
-Assuming both $C_{\phi, f}$ and $C_{f}$ are discrete (over natural numbers)?
-
-$$
-q_{\phi,f}(x|y) =  C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
-    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right)  + 1 | y \right) >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
-    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
-    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    f \left(\tilde\theta, y \right)  + 1 > C^{-1}_f(x | y) >
-    f \left(\tilde\theta, y \right) \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
-$$
-
-
+Additionally $\phi = \pi_{post}$ if and only if $\phi^\prime = \pi^\prime_\text{post}$.
 
 ## Correct posterior passes continuous SBC
 
@@ -242,13 +170,63 @@ $$
 
 Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
 
+
+
 ## Continuous SBC imples sample SBC
 
 By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
 
+take lowest $k$ where 
+
+$$
+\mathbf{P}(N_\text{less} + K = k) \neq \frac{1}{M + 1}
+$$
+
+$$
+\mathbb{E}(K|y) = \int_\Theta \mathrm{d}\theta \pi(\theta|y) \sum_{i=0}^M \mathtt{binomial\_pmf}\left(i | D_{\phi,f} \left(f \left(\theta, y \right) | y \right), M \right)\frac{i}{2}  = \\
+\int_\Theta \mathrm{d}\theta \:\pi(\theta|y) \frac{D_{\phi,f} \left(f \left(\theta, y \right) | y \right) M}{2}
+\\
+\mathbb{E}(N_\text{less}|y) = M\int_0^1 \mathrm{d}x C_{\phi,f}(C^{-1}_f(x | y) | y)
+$$
+
+Case 1
+
+$$
+\mathbb{P}(N_\text{less} + K \leq k) > \frac{k}{M + 1}
+$$
+
+I choose $\tilde\theta$
+
+
+
+
 ## Sample SBC for all $M$ implies continuous SBC
 
 Prove that $q$ is the limit of fractional rank distribution as $M \to \infty$
+
+## Integral representation of SBC
+
+$$
+  \forall x \in [0,1]: \notag\\ 
+  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
+  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) = x
+$$
+
+## Convex combinations
+
+$$
+  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] (a\phi(\theta, y) + (1-a)\omega(\theta, y))\right)  < x
+  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) = \\
+  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  a\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right) +
+  (1 - a)\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \omega(\theta, y)\right)  < x
+  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) =   
+$$
 
 ## Non-monotonous functions - simple case
 
@@ -275,6 +253,8 @@ C_\text{id}(\theta|y) = v^{-1}(C_\text{id}(x |y)) \\
 $$
 
 $t_{1,2}$ are invertible and we can define:
+
+TODO: Omega and w are similar visually, change
 
 $$
 \omega(\theta|y) = \begin{cases}
