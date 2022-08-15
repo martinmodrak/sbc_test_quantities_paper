@@ -94,7 +94,7 @@ C^{-1}_{\phi,f}(x | y) = \inf\{ s^{\prime} : x \leq C_{\phi, f}(s^{\prime} | y)\
 s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
 $$
 
-Almost!
+Yes!
 
 ### Sample-based
 
@@ -190,6 +190,35 @@ This unifies all of the "failures" of SBC.
 
 ## Continuous SBC implies sample SBC
 
+
+$$
+\forall \tilde x \in [0,1], y \in Y, i \in \{0, \dots, M\}: \\
+\mathbb{P}\left(f(\theta_i, y) <  C_f^{-1}(\tilde x | y)\right) = 
+\int_0^1 \mathrm{d} x\: 
+  \mathbb{I} \left[C^{-1}_{\phi,f}(x | y) < C_f^{-1}(\tilde x | y)\right] = \\
+  = \int_0^1\mathrm{d}x\: 
+  \mathbb{I} \left[x < C_{\phi,f}\left( C_f^{-1}(\tilde x | y) | y \right) \right] = \int_0^{q^{-1}_{\phi,f}(\tilde x | y)}\mathrm{d}x \: 1 = 
+  q^{-1}_{\phi,f}(\tilde x | y)
+$$
+
+$$
+\mathbb{P}\left(f(\theta_i, y) < f(\tilde\theta, y)\right) = C_{\phi,f}(f(\tilde\theta, y))
+$$
+
+The difference between the continous and sample rank can be bounded from above as 
+
+$$
+\frac{1}{M + 1}R_{\phi,f}(\left \lfloor{x(M + 1)}\right \rfloor | \tilde\theta, y) - r_{\phi,f}(x | \tilde\theta, y) = \frac{1}{M + 1}\text{Bin}(\lfloor{x(M + 1)} \rfloor | M, C_{\phi,f}(f(\tilde\theta,y))) - \mathbb{I}[ C_{\phi,f}(f(\tilde\theta,y)) \leq x]
+$$
+
+for $C_{\phi,f}(f(\tilde\theta,y)) \leq x$
+
+$$
+\frac{X}{n} - p = \frac{X - np}{n} = \frac{(X - np)\sqrt{np(1-p)}}{n\sqrt{np(1-p)}} = Z \frac{\sqrt{np(1-p)}}{n}
+$$
+
+
+
 By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
 
 take lowest $k$ where 
@@ -214,7 +243,12 @@ $$
 I choose $\tilde\theta$
 
 
-
+$$
+\forall r \in {0, 1, ... , M}: \mathbb{P}(\sum_{m=1}^M \mathbb{I} [f(y, \theta_l) < f(y, \tilde \theta)] = r)	= \notag\\
+\int_{Y}\mathrm{d}y\: \pi\left(y\right) \int_{0}^{1}\mathrm{d}x\,\binom{M}{r}\left(q_{\phi,f}^{-1}(y,x)\right)^{r}\left(1-q_{\phi,f}^{-1}(y,x)\right)^{M-r} = \label{eq:rank_distribution_q}\\
+  =	\int_{Y}\mathrm{d}y \: \pi\left(y\right)   \int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(y,z) \notag = \\
+ =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi\left(y\right)q_{\phi,f}\left(y,z\right)
+$$
 
 ## Sample SBC for all $M$ implies continuous SBC
 
