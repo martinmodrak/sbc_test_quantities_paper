@@ -159,6 +159,7 @@ By inspection, there are no ties. The ordering of non-colliding elements hasn't 
 
 Additionally $\phi = \pi_{post}$ if and only if $\phi^\prime = \pi^\prime_\text{post}$.
 
+
 ## Correct posterior passes continuous SBC
 
 outline: $C_f(C^{-1}_f(x|y)|y)$ is for a given $y$ either identity or "blocky". The tiebraking exactly removes the blocks, so we have the stronger condition
@@ -170,9 +171,24 @@ $$
 
 Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
 
+### The SBC Gap
 
+If
 
-## Continuous SBC imples sample SBC
+$$
+\forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
+$$
+then 
+
+$$
+\forall y \in Y, s \in \mathbb{R}: C_{\phi,f}(s|y) = C_f(s|y)
+$$
+
+i.e. the pushfoward along $f$ is exactly correct.
+
+This unifies all of the "failures" of SBC.
+
+## Continuous SBC implies sample SBC
 
 By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
 
@@ -229,6 +245,44 @@ $$
 $$
 
 ## Non-monotonous functions - simple case
+
+### Lemma 1
+
+Take $\phi$, $f,g: Y \times \Theta \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  Disjoint intervals $[a_1, b_1], [a_2,b_2], [a_3, b_3] \subset \mathbb{R}, a_1 < b_1 < a_2 < b_2 < a_3 < b_3$ such that 
+
+$$
+\forall x_1 \in [a_1, b_1], x_2 \in [a_2,b_2], x_3 \in [a_3, b_3]: h(x_1) \leq h(x_2),  h(x_3) \leq h(x_2)
+$$
+
+$\phi$ passes SBC for $f$.
+
+Disjoint $Y_1, Y_2 \subset Y, Y_3 = Y \setminus  (Y_1 \cup Y_2)$
+
+$$
+q_{\phi,f}(x | y) = \begin{cases}
+x & \text{for } y \in Y_3 \\
+x & \text{for } y \in Y_1 \cup Y_2, C_{\phi,f}(C^{}) \\
+> x & \text{for } y \in Y_1, C_f(C^{-1}_{\phi,f}(a_2 | y) | y) < x < C_f(C^{-1}_{\phi,f}(b_2 | y) | y) \\
+> x & \text{for } y \in Y_2, C_f(C^{-1}_{\phi,f}(a_3 | y) | y) < x < C_f(C^{-1}_{\phi,f}(b_3 | y) | y) \\
+< x & \text{for } y \in Y_1, C_f(C^{-1}_{\phi,f}(a_3 | y) | y) < x < C_f(C^{-1}_{\phi,f}(b_3 | y) | y) \\
+< x & \text{for } y \in Y_2, C_f(C^{-1}_{\phi,f}(a_2 | y) | y) < x < C_f(C^{-1}_{\phi,f}(b_2 | y) | y)
+\end{cases}
+$$
+
+$$
+\forall y_1 \in Y_1, y_2 \in Y_2: \\
+C_f(a_2 | y_1) < C_f(a_2 | y_2) \\
+C_f(b_2 | y_1) < C_f(b_2 | y_2) \\
+C_f(a_3 | y_1) < C_f(a_3 | y_2) \\
+C_f(b_3 | y_1) < C_f(b_3 | y_2)
+$$
+
+Now $\phi$ does not pass SBC for $g$.
+
+
+(we can prove the other non-monotonous ordering by using $-h$, which maintains SBC)
+
+### Lemma 2
 
 Take $\Theta = \mathbb{R}$ and $\text{id} : Y \times \mathbb R \to \mathbb{R}, \text{id}(y, \theta) = \theta$   $C_\text{id}(s|y)$ is invertible over the domain of $f$ for all $y$. Take any continuous, almost everywhere smooth bijection $u: [0,1] \to [0,1], u(0) = 0, u(1) = 1$ and disjoint $Y_1, Y_2 \subset Y$ (with non-zero mass).  
 
@@ -316,11 +370,122 @@ u(x) + v(x) = 2x \\
 v(x) = 2x - u(x)
 $$
 
-Take $\Theta = \mathbb{R}$ and $f,g: Y \times \mathbb R \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  $C_f(\theta|y), C_g(\theta|y)$ are invertible for all $y$. There exist bounds $l_1 \leq u_1 \leq $\Theta
 
 
-Take $\Theta = \mathbb{R}$ and $f,g: Y \times \mathbb R \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  $C_f(\theta|y), C_g(\theta|y)$ are invertible for all $y$. There exist bounds $l_1 \leq u_1 \leq $\Theta
+## Bernoulli example
 
-$disjoint $Y_1, Y_2 \subset Y$ and disjoint $\Theta_1, \Theta_2 \subset \mathbb{R}$
+$$
+q_{\phi,f}(x | 0) + q_{\phi,f}(x | 1) = x \\
+C_f(C^{-1}_{\phi,f}(x | 0) | 0) + C_f(C^{-1}_{\phi,f}(x | 1) | 1) = x
+$$
+
+Correct solution
+
+$$
+\begin{align}
+    \pi_\text{post}(\theta | 0) = \mathrm{Beta}(\theta | 1, 2) = 2(1-\theta) \notag\\
+    \pi_\text{post}(\theta | 1) = \mathrm{Beta}(\theta | 2, 1) = 2\theta 
+\end{align}
+$$
+
+$f_1$ - identity function (assuming $0 \leq s \leq 1$)
+
+$$
+C_{f_1}(s | 0) = \int_0^s \mathrm{d}\theta \: 2(1 - \theta)  =  2s - s^2 \\
+C_{f_1}(s | 1) = \int_0^s \mathrm{d}\theta \: 2\theta = s^2 \\
+$$
+
+We'll denote 
+
+$$
+\Phi(s | y) = \int_0^x \mathrm{d}\theta \: \phi(\theta, y) = C_{\phi, f_1}(s | y) \\
+\Phi^{-1}(x | y) = C_{\phi, f_1}^{-1}(x | y)
+$$
+
+
+
+$$
+f_3(y, \theta) = \begin{cases}\theta&  \text{for } \theta < \frac{1}{2} \\ \theta - 1,&  \text{otherwise} \end{cases}
+$$
+
+(assuming $-\frac{1}{2} \leq s \leq \frac{1}{2}$)
+
+$$
+C_{f_3}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}\left[f_3(\theta) \leq s\right] (2 - 2\theta) = 
+\begin{cases}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: (2 - 2\theta)  & \text{for } s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta (2 - 2\theta) + \int_{0}^{s} \mathrm{d}\theta (2 - 2\theta) & \text{otherwise}
+\end{cases} = \\
+= \begin{cases}
+ \frac{1}{4} - s^2& \text{for } s < 0 \\
+ \frac{1}{4} + 2 s - s^2  & \text{otherwise}
+\end{cases}
+\\
+C_{f_3}(s | 1) = 
+\begin{cases}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: 2\theta  & \text{for } s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: 2\theta + \int_{0}^{s} \mathrm{d}\theta \: 2\theta & \text{otherwise}
+\end{cases} 
+= \begin{cases}
+ \frac{3}{4} + 2s + s^2& \text{for } s < 0 \\
+ \frac{3}{4} + s^2  & \text{otherwise}
+\end{cases}
+$$
+
+$$
+h_y = \Phi \left(\frac{1}{2} | y\right) \\
+C_{\phi,f_3}(s | y) = 
+\begin{cases}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: \phi(\theta, y)  & \text{for } s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: \phi(\theta, y) + \int_{0}^{s} \mathrm{d}\theta \: \phi(\theta, y) & \text{otherwise} 
+\end{cases}  = \\
+= \begin{cases}
+  \Phi(s + 1| y) - h_y & \text{for } s < 0 \\
+1 -   h_y + \Phi(s | y)& \text{otherwise} 
+\end{cases}
+$$
+Solving for the inverse:
+
+$$
+z = \begin{cases}
+  \Phi(s + 1| y) - h_y & \text{for } s < 0 \\
+1 -   h_y + \Phi(s | y)& \text{otherwise} 
+\end{cases} \\
+
+
+z_1 = \Phi(s + 1| y) - h_y\\
+z_1 + h_y = \Phi(s + 1| y)\\
+\Phi^{-1}(z_1 + h_y | y) - 1 = s \text{ for } z < 1 - h_y \\
+
+z_2 = 1 -   h_y + \Phi(s | y)\\
+z_2 - 1 + h_y =  \Phi(s | y)\\
+\Phi^{-1}(z_2 - 1 + h_y) = s \text{ for } z \geq 1 - h_y \\
+$$
+$$
+C^{-1}_{\phi,f_3}(x | y) = \begin{cases}
+\Phi^{-1}(x + h_y | y) - 1  & \text{ for } x < 1 - h_y \\
+\Phi^{-1}(x - 1 + h_y) & \text{ otherwise } 
+\end{cases}
+$$
+
+$$
+q_{\phi,f_3}(x | 0) = \begin{cases}
+  \frac{1}{4} - \left(\Phi^{-1}(x + h_0 | 0) - 1 \right)^2 & \text{for }  x < 1 - h_0 \\
+  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0) - \left( \Phi^{-1}(x - 1 + h_0)\right)^2  & \text{ otherwise } 
+\end{cases}
+\\
+q_{\phi,f_3}(x | 1) = \begin{cases}
+  \frac{3}{4} + 2\Phi^{-1}(x + h_1 | 1) - 2 + \left(\Phi^{-1}(x + h_1 | 1) - 1 \right)^2 & \text{for }  x < 1 - h_1 \\
+  \frac{3}{4} + \left( \Phi^{-1}(x - 1 + h_1)\right)^2  & \text{ otherwise } 
+\end{cases}
+$$
+
+So the SBC condition is:
+
+$$
+x = \begin{cases}
+-4 + 2 \Phi^{-1}(x + h_0 | 0) - \left(\Phi^{-1}(x + h_0 | 0)\right)^2 + 2\Phi^{-1}(x + h_1 | 1) -2 \Phi^{-1}(x + h_1 | 1) + \left(\Phi^{-1}(x + h_1 | 1)  \right)^2
+\end{cases}
+$$
 
 
