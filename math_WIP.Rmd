@@ -19,9 +19,9 @@ Given a model, fitting algorithm and a function $f$, we define fitted pushforwar
 
 $$
 C_{\phi,f}(s | y) = \int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\phi\left(\theta | y\right)
-$$ 
+$$
 
-and true pushforward CDF 
+and true pushforward CDF
 
 $$
 C_{f}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\pi_{\text{post}}(\theta | y)  \\
@@ -41,19 +41,19 @@ $r_{\phi,f}(x, \tilde\theta | y)$ as
 
 $$
 e \sim \text{Uniform}_c(0, 1)\\
-r_{\phi,f}(x, \tilde\theta | y) = 
+r_{\phi,f}(x, \tilde\theta | y) =
 \mathbb{P}\left(C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(x, \tilde\theta, y \right) | y \right) < x\right)
 $$
 
 where $\text{Uniform}_c$ is the continous uniform distribution.
 
 $$
-r_{\phi,f}(x, \tilde\theta | y) = 
+r_{\phi,f}(x, \tilde\theta | y) =
 \begin{cases}
   0 & \text{if } x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
-  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} & 
+  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} &
     \text{if } D_{...} > 0 \text{ and } C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
-  1 & \text{if } x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) \right) 
+  1 & \text{if } x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) \right)
 \end{cases} =
 $$
 
@@ -74,7 +74,7 @@ inv_c_m_d_phi <- function(x) { }
 
 
 $$
-q_{\phi,f}(x|y) = 
+q_{\phi,f}(x|y) =
 \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) r_{\phi,f}(x, \tilde\theta | y)\\
 
 $$
@@ -87,7 +87,7 @@ q\left(x\mid y\right)=C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}
 s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
 $$
 
-Presumably, my definition of $C^{-1}$ consistent with Niko's $s$? 
+Presumably, my definition of $C^{-1}$ consistent with Niko's $s$?
 
 $$
 C^{-1}_{\phi,f}(x | y) = \inf\{ s^{\prime} : x \leq C_{\phi, f}(s^{\prime} | y)\} \\
@@ -113,7 +113,7 @@ $$
 Equivalence with the procedural definition:
 
 $$
-\int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) = 
+\int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) =
 \int_Y \: \mathrm{d}y  \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,f}(i, \tilde\theta, y) \pi_\text{marg}(y) = \\
 \int_\Theta \mathrm{d}\tilde\theta   \int_Y \: \mathrm{d}y \: \pi_\text{prior}(\tilde\theta)\pi_\text{lik}(y | \tilde\theta)  R_{\phi,f}(i, \tilde\theta, y) (y)
 
@@ -122,7 +122,7 @@ $$
 
 ## Ties/no ties correspondance
 
-A posterior family $\phi$ has ties w.r.t model $\pi$ and function $f$ when 
+A posterior family $\phi$ has ties w.r.t model $\pi$ and function $f$ when
 
 $$
 \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta D_{\phi,f}(f(\tilde\theta,y) | y) > 0
@@ -155,7 +155,7 @@ f(\theta,y) + L_{\phi,f}(\theta,y) & \text{otherwise}
 \end{cases}
 $$
 
-By inspection, there are no ties. The ordering of non-colliding elements hasn't changed and the order among those previously equal is uniformly random. 
+By inspection, there are no ties. The ordering of non-colliding elements hasn't changed and the order among those previously equal is uniformly random.
 
 Additionally $\phi = \pi_{post}$ if and only if $\phi^\prime = \pi^\prime_\text{post}$.
 
@@ -165,7 +165,7 @@ Additionally $\phi = \pi_{post}$ if and only if $\phi^\prime = \pi^\prime_\text{
 outline: $C_f(C^{-1}_f(x|y)|y)$ is for a given $y$ either identity or "blocky". The tiebraking exactly removes the blocks, so we have the stronger condition
 
 $$
-\phi = \pi_{post}: 
+\phi = \pi_{post}:
 \forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
 $$
 
@@ -178,7 +178,7 @@ If
 $$
 \forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
 $$
-then 
+then
 
 $$
 \forall y \in Y, s \in \mathbb{R}: C_{\phi,f}(s|y) = C_f(s|y)
@@ -193,11 +193,11 @@ This unifies all of the "failures" of SBC.
 
 $$
 \forall \tilde x \in [0,1], y \in Y, i \in \{0, \dots, M\}: \\
-\mathbb{P}\left(f(\theta_i, y) <  C_f^{-1}(\tilde x | y)\right) = 
-\int_0^1 \mathrm{d} x\: 
+\mathbb{P}\left(f(\theta_i, y) <  C_f^{-1}(\tilde x | y)\right) =
+\int_0^1 \mathrm{d} x\:
   \mathbb{I} \left[C^{-1}_{\phi,f}(x | y) < C_f^{-1}(\tilde x | y)\right] = \\
-  = \int_0^1\mathrm{d}x\: 
-  \mathbb{I} \left[x < C_{\phi,f}\left( C_f^{-1}(\tilde x | y) | y \right) \right] = \int_0^{q^{-1}_{\phi,f}(\tilde x | y)}\mathrm{d}x \: 1 = 
+  = \int_0^1\mathrm{d}x\:
+  \mathbb{I} \left[x < C_{\phi,f}\left( C_f^{-1}(\tilde x | y) | y \right) \right] = \int_0^{q^{-1}_{\phi,f}(\tilde x | y)}\mathrm{d}x \: 1 =
   q^{-1}_{\phi,f}(\tilde x | y)
 $$
 
@@ -205,23 +205,12 @@ $$
 \mathbb{P}\left(f(\theta_i, y) < f(\tilde\theta, y)\right) = C_{\phi,f}(f(\tilde\theta, y))
 $$
 
-The difference between the continous and sample rank can be bounded from above as 
-
-$$
-\frac{1}{M + 1}R_{\phi,f}(\left \lfloor{x(M + 1)}\right \rfloor | \tilde\theta, y) - r_{\phi,f}(x | \tilde\theta, y) = \frac{1}{M + 1}\text{Bin}(\lfloor{x(M + 1)} \rfloor | M, C_{\phi,f}(f(\tilde\theta,y))) - \mathbb{I}[ C_{\phi,f}(f(\tilde\theta,y)) \leq x]
-$$
-
-for $C_{\phi,f}(f(\tilde\theta,y)) \leq x$
-
-$$
-\frac{X}{n} - p = \frac{X - np}{n} = \frac{(X - np)\sqrt{np(1-p)}}{n\sqrt{np(1-p)}} = Z \frac{\sqrt{np(1-p)}}{n}
-$$
 
 
 
 By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
 
-take lowest $k$ where 
+take lowest $k$ where
 
 $$
 \mathbf{P}(N_\text{less} + K = k) \neq \frac{1}{M + 1}
@@ -254,10 +243,37 @@ $$
 
 Prove that $q$ is the limit of fractional rank distribution as $M \to \infty$
 
+
+We will show that as $M \to \infty$ normalized sample ranks converge to the continous ranks, i.e. that:
+
+$$
+\forall x \in [0,1], \tilde\theta \in \Theta, y \in Y : \lim_{M \to \infty} R_{\phi,f}(xM | \tilde\theta, y) = r_\
+$$
+
+Assuming no ties, $R_{\phi,f}(i | \tilde\theta, y) = \text{Bin}(i | M, C_{\phi,f}(f(\tilde\theta, y)))$ where $\text{Bin}$ is the CDF of a binomial distribution.  Using central limit theorem we have  $\lim_{M \to \infty}Bin(i | M, p) = \text{Normal}(i | Mp,Mp(1-p))$
+
+$$
+\lim_{M \to \infty}\frac{1}{M}\text{Bin}(x M | M, C_{\phi,f}(f(\tilde\theta, y)))
+$$
+
+
+The difference between the continous and sample rank can be bounded from above as
+
+$$
+\frac{1}{M + 1}R_{\phi,f}(\left \lfloor{x(M + 1)}\right \rfloor | \tilde\theta, y) - r_{\phi,f}(x | \tilde\theta, y) = \frac{1}{M + 1}\text{Bin}(\lfloor{x(M + 1)} \rfloor | M, C_{\phi,f}(f(\tilde\theta,y))) - \mathbb{I}[ C_{\phi,f}(f(\tilde\theta,y)) \leq x]
+$$
+
+for $C_{\phi,f}(f(\tilde\theta,y)) \leq x$
+
+$$
+\frac{X}{n} - p = \frac{X - np}{n} = \frac{(X - np)\sqrt{np(1-p)}}{n\sqrt{np(1-p)}} = Z \frac{\sqrt{np(1-p)}}{n}
+$$
+
+
 ## Integral representation of SBC
 
 $$
-  \forall x \in [0,1]: \notag\\ 
+  \forall x \in [0,1]: \notag\\
   \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
   \mathbb{I}\left[
   \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
@@ -275,14 +291,14 @@ $$
   \mathbb{I}\left[
   a\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right) +
   (1 - a)\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \omega(\theta, y)\right)  < x
-  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) =   
+  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) =
 $$
 
 ## Non-monotonous functions - simple case
 
 ### Lemma 1
 
-Take $\phi$, $f,g: Y \times \Theta \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  Disjoint intervals $[a_1, b_1], [a_2,b_2], [a_3, b_3] \subset \mathbb{R}, a_1 < b_1 < a_2 < b_2 < a_3 < b_3$ such that 
+Take $\phi$, $f,g: Y \times \Theta \to \mathbb{R}, h: \mathbb{R} \to \mathbb{R}$ such that $\forall y \in Y, \theta \in \mathbb{R}: g(\theta, y) = h(f(\theta, y)$.  Disjoint intervals $[a_1, b_1], [a_2,b_2], [a_3, b_3] \subset \mathbb{R}, a_1 < b_1 < a_2 < b_2 < a_3 < b_3$ such that
 
 $$
 \forall x_1 \in [a_1, b_1], x_2 \in [a_2,b_2], x_3 \in [a_3, b_3]: h(x_1) \leq h(x_2),  h(x_3) \leq h(x_2)
@@ -318,7 +334,7 @@ Now $\phi$ does not pass SBC for $g$.
 
 ### Lemma 2
 
-Take $\Theta = \mathbb{R}$ and $\text{id} : Y \times \mathbb R \to \mathbb{R}, \text{id}(y, \theta) = \theta$   $C_\text{id}(s|y)$ is invertible over the domain of $f$ for all $y$. Take any continuous, almost everywhere smooth bijection $u: [0,1] \to [0,1], u(0) = 0, u(1) = 1$ and disjoint $Y_1, Y_2 \subset Y$ (with non-zero mass).  
+Take $\Theta = \mathbb{R}$ and $\text{id} : Y \times \mathbb R \to \mathbb{R}, \text{id}(y, \theta) = \theta$   $C_\text{id}(s|y)$ is invertible over the domain of $f$ for all $y$. Take any continuous, almost everywhere smooth bijection $u: [0,1] \to [0,1], u(0) = 0, u(1) = 1$ and disjoint $Y_1, Y_2 \subset Y$ (with non-zero mass).
 
 $$
 a,b \in [0,1]\\
@@ -365,7 +381,7 @@ $$
 
 $$
 y \in Y_1: q_{\omega,\text{id}}(x | y) = C_\text{id} \left(C^{-1}_{\omega,\text{id}}(x | y) | y \right) =
-  C_\text{id} \left(C^{-1}_{t_1}(x | y) | y \right) = 
+  C_\text{id} \left(C^{-1}_{t_1}(x | y) | y \right) =
   \int \mathrm{d}\theta \: \mathbb{I}\left[\theta< C^{-1}_{t_1}(x | y)\right]\pi_\text{post}(\theta|y) = \\
   = \int \mathrm{d}\theta \: \mathbb{I}\left[C_{t_1}(\theta |y)< x\right]\pi_\text{post}(\theta|y) = \\
   = \int \mathrm{d}\theta \: \mathbb{I}\left[\int \mathrm{d}\tilde\theta\: \mathbb{I}\left[t_1(\tilde\theta, y) < \theta \right] \pi_\text{post}(\tilde\theta|y) < x\right]\pi_\text{post}(\theta|y) = \\
@@ -373,7 +389,7 @@ y \in Y_1: q_{\omega,\text{id}}(x | y) = C_\text{id} \left(C^{-1}_{\omega,\text{
   = \int \mathrm{d}\theta \: \mathbb{I}\left[C_\text{id}(t_1^{-1}(\theta, y)|y) < x\right]\pi_\text{post}(\theta|y) = \\
   = \int \mathrm{d}\theta \: \mathbb{I}\left[\theta < t_1(C^{-1}_\text{id}(x|y)\right]\pi_\text{post}(\theta|y) = \\
   = C_\text{id}\left(t_1(C_\text{id}^{-1}(x|y), y) \right) = v(x)
-  
+
 $$
 
 Analogously
@@ -381,7 +397,7 @@ Analogously
 $$
 y \in Y_2: q_{\omega,\text{id}}(x | y)  = w(x)
 $$
-So we have 
+So we have
 
 $$
 \int_Y \mathrm{d}y \: q_{\omega,\text{id}}(x | y) \pi_\text{marg}(y) = \\
@@ -418,7 +434,7 @@ Correct solution
 $$
 \begin{align}
     \pi_\text{post}(\theta | 0) = \mathrm{Beta}(\theta | 1, 2) = 2(1-\theta) \notag\\
-    \pi_\text{post}(\theta | 1) = \mathrm{Beta}(\theta | 2, 1) = 2\theta 
+    \pi_\text{post}(\theta | 1) = \mathrm{Beta}(\theta | 2, 1) = 2\theta
 \end{align}
 $$
 
@@ -429,7 +445,7 @@ C_{f_1}(s | 0) = \int_0^s \mathrm{d}\theta \: 2(1 - \theta)  =  2s - s^2 \\
 C_{f_1}(s | 1) = \int_0^s \mathrm{d}\theta \: 2\theta = s^2 \\
 $$
 
-We'll denote 
+We'll denote
 
 $$
 \Phi(s | y) = \int_0^x \mathrm{d}\theta \: \phi(\theta, y) = C_{\phi, f_1}(s | y) \\
@@ -445,7 +461,7 @@ $$
 (assuming $-\frac{1}{2} \leq s \leq \frac{1}{2}$)
 
 $$
-C_{f_3}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}\left[f_3(\theta) \leq s\right] (2 - 2\theta) = 
+C_{f_3}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}\left[f_3(\theta) \leq s\right] (2 - 2\theta) =
 \begin{cases}
  \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: (2 - 2\theta)  & \text{for } s < 0 \\
  \int_{\frac{1}{2}}^{1} \mathrm{d}\theta (2 - 2\theta) + \int_{0}^{s} \mathrm{d}\theta (2 - 2\theta) & \text{otherwise}
@@ -455,11 +471,11 @@ C_{f_3}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}\left[f_3(\theta) \leq s
  \frac{1}{4} + 2 s - s^2  & \text{otherwise}
 \end{cases}
 \\
-C_{f_3}(s | 1) = 
+C_{f_3}(s | 1) =
 \begin{cases}
  \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: 2\theta  & \text{for } s < 0 \\
  \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: 2\theta + \int_{0}^{s} \mathrm{d}\theta \: 2\theta & \text{otherwise}
-\end{cases} 
+\end{cases}
 = \begin{cases}
  \frac{3}{4} + 2s + s^2& \text{for } s < 0 \\
  \frac{3}{4} + s^2  & \text{otherwise}
@@ -468,14 +484,14 @@ $$
 
 $$
 h_y = \Phi \left(\frac{1}{2} | y\right) \\
-C_{\phi,f_3}(s | y) = 
+C_{\phi,f_3}(s | y) =
 \begin{cases}
  \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: \phi(\theta, y)  & \text{for } s < 0 \\
- \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: \phi(\theta, y) + \int_{0}^{s} \mathrm{d}\theta \: \phi(\theta, y) & \text{otherwise} 
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: \phi(\theta, y) + \int_{0}^{s} \mathrm{d}\theta \: \phi(\theta, y) & \text{otherwise}
 \end{cases}  = \\
 = \begin{cases}
   \Phi(s + 1| y) - h_y & \text{for } s < 0 \\
-1 -   h_y + \Phi(s | y)& \text{otherwise} 
+1 -   h_y + \Phi(s | y)& \text{otherwise}
 \end{cases}
 $$
 Solving for the inverse:
@@ -483,7 +499,7 @@ Solving for the inverse:
 $$
 z = \begin{cases}
   \Phi(s + 1| y) - h_y & \text{for } s < 0 \\
-1 -   h_y + \Phi(s | y)& \text{otherwise} 
+1 -   h_y + \Phi(s | y)& \text{otherwise}
 \end{cases} \\
 
 
@@ -498,19 +514,19 @@ $$
 $$
 C^{-1}_{\phi,f_3}(x | y) = \begin{cases}
 \Phi^{-1}(x + h_y | y) - 1  & \text{ for } x < 1 - h_y \\
-\Phi^{-1}(x - 1 + h_y) & \text{ otherwise } 
+\Phi^{-1}(x - 1 + h_y) & \text{ otherwise }
 \end{cases}
 $$
 
 $$
 q_{\phi,f_3}(x | 0) = \begin{cases}
   \frac{1}{4} - \left(\Phi^{-1}(x + h_0 | 0) - 1 \right)^2 & \text{for }  x < 1 - h_0 \\
-  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0) - \left( \Phi^{-1}(x - 1 + h_0)\right)^2  & \text{ otherwise } 
+  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0) - \left( \Phi^{-1}(x - 1 + h_0)\right)^2  & \text{ otherwise }
 \end{cases}
 \\
 q_{\phi,f_3}(x | 1) = \begin{cases}
   \frac{3}{4} + 2\Phi^{-1}(x + h_1 | 1) - 2 + \left(\Phi^{-1}(x + h_1 | 1) - 1 \right)^2 & \text{for }  x < 1 - h_1 \\
-  \frac{3}{4} + \left( \Phi^{-1}(x - 1 + h_1)\right)^2  & \text{ otherwise } 
+  \frac{3}{4} + \left( \Phi^{-1}(x - 1 + h_1)\right)^2  & \text{ otherwise }
 \end{cases}
 $$
 
