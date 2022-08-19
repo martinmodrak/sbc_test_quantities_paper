@@ -3,7 +3,7 @@ title: "Sims for general math"
 output: html_notebook
 ---
 
-```{r}
+```{r setup}
 library(tidyverse)
 ```
 
@@ -57,5 +57,75 @@ plot_q(pfunc = prelunormal, qfunc = qrelunormal, ensure_vals = 0:10)
 ```{r}
 plot_q(pfunc = ppois, qfunc = qrelunormal, ensure_vals = 0:30, p_args = list(lambda = 3))
 plot_q(pfunc =prelunormal, qfunc = qpois, ensure_vals = -5:5, q_args = list(lambda = 3))
+```
+
+
+```{r}
+plot_q_D <- function(test_dist, true_dist, ensure_vals, ..., test_args = list(), true_args = list()) {
+  dist_test_q <- function(x) { 
+    qfunc <- get(paste0("q", test_dist))
+    do.call(qfunc, c(list(x), list(...), test_args))
+  }
+  dist_true_q <- function(x) { 
+    qfunc <- get(paste0("q", true_dist))
+    do.call(qfunc, c(list(x), list(...), true_args))
+  }
+  
+  dist_test_d <- function(x) { 
+    dfunc <- get(paste0("d", test_dist))
+    do.call(dfunc, c(list(x), list(...), test_args))
+  }
+  dist_true_d <- function(x) { 
+    dfunc <- get(paste0("d", true_dist))
+    do.call(dfunc, c(list(x), list(...), true_args))
+  }
+  
+  dist_test_p <- function(x) { 
+    pfunc <- get(paste0("p", test_dist))
+    do.call(pfunc, c(list(x), list(...), test_args))
+  }
+  dist_true_p <- function(x) { 
+    pfunc <- get(paste0("p", true_dist))
+    do.call(pfunc, c(list(x), list(...), true_args))
+  }
+    
+    
+  x_base <- unique(dist_test_p(ensure_vals), dist_true_p(ensure_vals))
+  df <- data.frame(x = c(seq(0,1, length.out = 200), x_base - 1e-5, x_base, x_base + 1e-5)) %>%
+    filter(x >= 0, x <= 1) %>%
+    mutate(s = dist_test_q(x),
+           #q = dist_true_p(s) - dist_true_d(s) + if_else(dist_test_d(s) > 0, (dist_true_d(s)/dist_test_d(s)) * (x - dist_test_p(s)) , 0) ) %>%
+           q = dist_true_p(s) + if_else(dist_test_d(s) > 0, (dist_true_d(s)/dist_test_d(s)) * (x - dist_test_p(s)) , 0) ) %>%
+    select(-s)
+  
+  df <- rbind(data.frame(x = 0, q = 0),
+              df,
+              data.frame(x = 1, q = 1))
+  
+  df_points <- df %>% filter(x %in% x_base)
+  
+  df %>%
+    ggplot(aes(x,q)) +
+      geom_abline(intercept = 0, slope = 1, color = "blue") +
+      geom_line() +
+      geom_point(data = df_points, color = "orangered")
+}
+```
+
+```{r}
+plot_q(pbinom, qbinom, ensure_vals = 0:10, size = 10, prob = 0.4)
+plot_q_D("binom", "binom", ensure_vals = 0:10, size = 10, prob = 0.4)
+
+```
+
+
+```{r}
+plot_q(pbinom, qbinom, ensure_vals = 0:10, size = 10, p_args = list(prob = 0.4), q_args = list(prob = 0.35))
+plot_q_D("binom", "binom", ensure_vals = 0:10, size = 10, test_args = list(prob = 0.3), true_args = list(prob = 0.4))
+```
+
+
+```{r}
+plot_q_D("binom", "pois", ensure_vals = 0:10, test_args = list(size = 10, prob = 0.4), true_args = list(lambda = 4))
 ```
 

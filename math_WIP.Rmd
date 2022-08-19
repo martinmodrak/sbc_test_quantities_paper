@@ -3,6 +3,12 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+A property of quantile functions that we will use extensively is the Galois connection
+
+\begin{equation}
+    \forall x \in [0,1], s \in \bar{\mathbb{R}}: x \leq C_{\phi,f}(s | y) \iff C^{-1}_{\phi,f}(x | y) \leq s \label{eq:galois}
+\end{equation}
+
 ## Definitions
 
 Note on notation: we will denote the integral of $f(x)$ w.r.t $x$ over domain $X$ as $\int_X \mathrm{d}x \: f(x)$.
@@ -24,9 +30,7 @@ $$
 and true pushforward CDF
 
 $$
-C_{f}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\pi_{\text{post}}(\theta | y)  \\
-
-
+C_{f}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\pi_{\text{post}}(\theta | y) 
 $$
 
 Where $\mathbb{I}$ is the indicator function
@@ -171,7 +175,7 @@ $$
 
 Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
 
-### The SBC Gap
+## The SBC Gap
 
 If
 
@@ -188,21 +192,153 @@ i.e. the pushfoward along $f$ is exactly correct.
 
 This unifies all of the "failures" of SBC.
 
+
+We build $\pi^\prime$ over the same data space such that
+
+$$
+\Theta^\prime = \mathbb{R} \\
+\forall s \in \mathbb{R}, y \in Y:  \int_{-\infty}^{\infty} \mathrm{d}\theta^\prime \: \pi^\prime_\text{post}(\theta^\prime | y) \mathbb{I}[\theta^\prime \leq s] = C^\pi_f(s | y) \\
+\pi^\prime_\text{prior}(\theta^\prime) = \int_\Theta \mathrm{d}\theta \int_Y \mathrm{d}y \: \mathbb{I}[f(\theta,y) = \theta^\prime] \pi_\text{prior}(\theta)\pi_\text{obs}(y | \theta) \\
+\pi^\prime_\text{marg}(y) = \pi_\text{marg}(y)
+$$
+
+Now we also construct
+
+$$
+\phi^\prime : \mathbb{R} \times Y \to \mathbb{R} \\
+\forall s \in \mathbb{R}, y \in Y: \int_{-\infty}^{\infty} \mathrm{d}\theta^\prime \: \phi^\prime(\theta^\prime , y) \mathbb{I}[\theta^\prime \leq s]
+ = C_{\phi,f}(s | y)
+$$
+
+using the identity function 
+
+$$
+\text{id} : \mathbb{R} \times Y \to \mathbb{R} \\
+\text{id}(\theta^\prime, y) = \theta^\prime
+$$
+
+We have by construction 
+
+$$
+\begin{align*}
+\forall s \in \mathbb{R}, x \in [0,1], y \in Y: \\
+C^{\pi^\prime}_\text{id}(s | y) = C^\pi_f(s | y)\\
+C^{\pi^\prime}_{\phi^\prime,\text{id}}(s | y) = C^\pi_{\phi, f}(s | y)
+\end{align*}
+$$
+
+This then implies 
+
+$$
+\forall x \in [0,1], y \in Y: q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y)  = q^{\pi}_{\phi,f}(x | y)
+$$
+
+It therefore suffices to prove that for $\pi^\prime$ we have
+
+$$
+\forall \theta^\prime \in \mathbb{R}: \phi^\prime(\theta^\prime, y) =  \pi^\prime(\theta^\prime |y) \iff \forall x \in [0,1] : q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y) = x
+$$
+
+Thanks to Lemma~\ref{le:tie_removal} it also suffices to prove this only for the case with no ties. The forward implication is an instance of correct posterior producing correct $q$ which is proved in  Theorem~\ref{th:SBC_correct}.
+The reverse implication, since there are no ties we have:
+
+$$
+\forall x \in [0,1] : x = q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y) = C^{\pi^\prime}_\text{id}(C^{\pi^\prime, -1}_{\phi,\text{id}}(x | y) | y)
+$$
+
+since inverse is unique, it follows that 
+
+$$
+\forall s \in \mathbb{R}: C^{\pi^\prime}_\text{id}(s | y) = C^{\pi^\prime}_{\phi,\text{id}}(s | y)
+$$
+
+and since both $\phi^\prime$ and $\pi^\prime$ are uniquely determined by the pushforward CDFs we also get 
+
+$$
+\forall \theta^\prime \in \mathbb{R}: \phi^\prime(\theta^\prime, y)  =  \pi^\prime(\theta^\prime |y)
+$$
+
+Completing the proof.
+
+Whenever $D_{f}\left(C^{-1}_f(x | y)\mid y\right) = 0$ then $C_{f}\left(C^{-1}_f(x | y)\mid y\right) = x$
+
+$$
+C_{f}\left(\inf \{s : x \leq C_f(s | y) \} \mid y\right)
+$$
+
+for $D_{f}\left(C^{-1}_f(x | y)\mid y\right) = 0$ we get
+
+$$
+q_{\phi,f}\left(x\mid y\right) = C_{f}\left(C^{-1}_f(x | y)\mid y\right) = x
+$$
+
+
+for $D_{f}\left(C^{-1}_f(x | y)\mid y\right) > 0$
+
+
+$$
+q_{\phi,f}\left(x\mid y\right) = 
+C_{f}\left(C^{-1}_f(x | y)\mid y\right)+\frac{D_{f}\left(C^{-1}_f(x | y)\mid y\right)}{D_{f}\left(C^{-1}_f(x | y)\mid y\right)}\left(x-C_{f}\left(C^{-1}_f(x | y)\mid y\right)\right) = x
+$$
+
+
+
+$$
+q_{\phi,f}
+$$
+
+
+$$
+
+F^{-1}(x) = \inf \{s : x \leq F(s)\} \\
+x \geq F(a) \iff F(a) = x \vee a \notin \{s : x \leq F(s)\} \iff  F(a) = x \vee \inf \{s : x \leq F(s)\} > a \\
+\iff F(a) = x \vee  F^{-1}(x) > a \implies a \in \{s : x \leq F(s)\} \vee F^{-1}(x) > a \implies F^{-1}(x) \geq a\\
+F^{-1}(x) \geq a \implies \inf \{s : x \leq F(s)\} \geq a\\
+$$
+
+
+
+$$
+\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x >  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] = \\
+ = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) < C^{-1}_{\phi,f}(x | y)\right]  
+$$
+
+$$
+\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x \geq  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] =  1 - \\
+ = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) \leq C^{-1}_{\phi,f}(x | y)\right] 
+$$
+
+$$
+x = C_{\phi,f}(f(\theta, y) | y) \\
+\int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y) \mathbb{I}[x = C_{\phi,f}(f(\theta, y) | y)] =
+
+$$
+
 ## Continuous SBC implies sample SBC
 
 
 $$
-\forall \tilde x \in [0,1], y \in Y, i \in \{0, \dots, M\}: \\
-\mathbb{P}\left(f(\theta_i, y) <  C_f^{-1}(\tilde x | y)\right) =
-\int_0^1 \mathrm{d} x\:
-  \mathbb{I} \left[C^{-1}_{\phi,f}(x | y) < C_f^{-1}(\tilde x | y)\right] = \\
-  = \int_0^1\mathrm{d}x\:
-  \mathbb{I} \left[x < C_{\phi,f}\left( C_f^{-1}(\tilde x | y) | y \right) \right] = \int_0^{q^{-1}_{\phi,f}(\tilde x | y)}\mathrm{d}x \: 1 =
-  q^{-1}_{\phi,f}(\tilde x | y)
+\forall r \in {0, 1, ... , M}: \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right)	= \notag\\
+ \int_{0}^{1}\mathrm{d}x\,\binom{M}{r}\left(q_{\phi,f}^{-1}(x|y)\right)^{r}\left(1-q_{\phi,f}^{-1}(x|y)\right)^{M-r} \\
+  =	\int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(z | y) \notag = \\
+ =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi_\text{marg}\left(y\right)q_{\phi,f}\left(z | y\right) 
 $$
 
 $$
-\mathbb{P}\left(f(\theta_i, y) < f(\tilde\theta, y)\right) = C_{\phi,f}(f(\tilde\theta, y))
+Q_{\phi,f}(j | y) = \sum_{r = 0}^{j} \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right) = \frac{j + 1}{M + 1}
+$$
+
+$$
+\forall r \in {0, 1, ... , M}: \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r\right)	= \notag\\
+\int_{Y}\mathrm{d}y\: \pi_\text{marg}\left(y\right) \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right) \\ = 
+  =	\int_{Y}\mathrm{d}y \: \pi_\text{marg}\left(y\right)   \int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(z | y) \notag = \\
+ =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi_\text{marg}\left(y\right)q_{\phi,f}\left(z | y\right) 
+$$
+
+$$
+\lim_{M \to \infty}\frac{\lfloor xM \rfloor - Mp}{\sqrt{Mp(1-p)}} =
+\lim_{M \to \infty}\frac{\lfloor xM \rfloor -xM}{\sqrt{Mp(1-p)}} + \lim_{M \to \infty}\frac{xM- Mp}{\sqrt{Mp(1-p)}}=
+0 + \lim_{M \to \infty}\frac{(x - p)\sqrt{M}}{\sqrt{p(1-p)}}
 $$
 
 
@@ -280,19 +416,211 @@ $$
   \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) = x
 $$
 
-## Convex combinations
+## Incomplete use of data
+
+Given a model $\pi$ with observation space $Y$ and parameter space $\Theta$, a space $Y^\prime$ and measurable function $t : Y \rightarrow Y^\prime$. Denote the set $t^{-1}(y^\prime) = \{y \in Y: t(y) = y^\prime\}$. Consider the model $\pi^\prime$ with parameter space $\Theta$ and observation space $Y^\prime$ such that:
+
+$$
+\begin{align*}
+\forall{\theta \in \Theta} &, y^\prime \in Y^\prime : \\
+\pi^\prime_\text{prior}(\theta) &= \pi_\text{prior}(\theta) \\
+\pi^\prime_\text{obs}(y^\prime |\theta) &= \int_{t^{-1}(y^\prime)} \mathrm{d}y \: \pi_\text{obs}(y | \theta)
+\end{align*}
+$$
+Given a measurable functions $f^\prime : Y^\prime \times \Theta \rightarrow \mathbb{R}$. 
+If we have a posterior family $\phi^\prime$ on $Y^\prime, \Theta$ such that $\phi^\prime$ passes continous SBC w.r.t $f^\prime$ and set function $f: Y \times \Theta \rightarrow \mathbb{R}, f(y, \theta) = f^\prime(t(y), \theta)$ and posterior family $\phi$ on $Y, \Theta$ such that $\phi(y, \theta) = \phi^\prime(t(y), \theta)$ then $\phi$ passes continuous SBC w.r.t. $f$.
+
+$$
+r^\pi_{\phi,f}(x | \theta, y) =  \\
+C^\pi_{\phi,f}(s | y) = \int_\Theta \mathrm{d}\theta \: \mathbb{I}[f^\prime(\theta, t(y)) \leq s] \phi^\prime(\theta, t(y)) = C^{\pi^\prime}_{\phi^\prime, f^\prime}(s | t(y))
+$$
+
+$$
+q^{\pi}_{\phi, f}(x | y) = 
+$$
+
+$$
+ \forall x \in [0,1]: \notag\\ 
+  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
+  \right] \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = x 
+$$
 
 $$
   \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
   \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] (a\phi(\theta, y) + (1-a)\omega(\theta, y))\right)  < x
-  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) = \\
+  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
+  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \notag\\
+  = 
   \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
   \mathbb{I}\left[
-  a\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right) +
-  (1 - a)\int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \omega(\theta, y)\right)  < x
-  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) =
+  C_{\phi,f}(f(\tilde\theta, y) | y)  < x
+  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \notag\\
+  = \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  f(\tilde\theta, y) < C^{-1}_{\phi,f}(x | y)
+  \right]   \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta)
+  = \\
+  = \int_Y \mathrm{d}y \: C_{f}\left(C^{-1}_{\phi,f}(x|y)|y\right) \pi_\text{marg}(y) 
+  = \int_Y \mathrm{d}y \: q_{\phi,f}(x|y) \pi_\text{marg}(y)
 $$
+
+$$
+\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f(\theta, y) < f(\tilde\theta, y) ]\phi(\theta, y)  \leq x
+  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\
+\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, t(y)) < f^\prime(\tilde\theta, t(y))]\phi^\prime(\theta, t(y))  \leq x
+  \right] \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\
+\int_{Y^\prime} \mathrm{d}y^\prime \int_{t^{-1}(\bar{y})} \mathrm{d} y \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
+  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\  
+\int_{Y^\prime} \mathrm{d}y^\prime \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
+  \right]  \int_{t^{-1}(y^\prime)} \mathrm{d} y \: \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\    
+\int_{Y^\prime} \mathrm{d}y^\prime \int_\Theta \mathrm{d} \tilde\theta \:
+  \mathbb{I}\left[
+  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
+  \right]  \pi^\prime_\text{obs}(y | \tilde\theta) \pi^\prime_\text{prior}(\tilde\theta) = x
+$$
+
+## Density ratio
+
+For any posterior family $\phi$, take $g\left(\theta,y\right)=\frac{\pi_{\mathrm{post}}\left(\theta\mid y\right)}{\phi\left(\theta,y\right)}$. Then $\phi$ passes continuous SBC w.r.t. $g$ if and only if 
+
+$$
+\int_Y \mathrm{d}y \int_\Theta \mathrm{d}\theta \: \pi_\text{joint}(y, \theta) \mathbb{I}\left[ \pi_\text{post}(\theta | y) \neq \phi(\theta, y)\right] = 0
+$$
+
+$$
+C_{\phi,g}\left(s \mid y\right)=\int\mathrm{d}\theta\,\phi\left(\theta,y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right] \\
+C_{g}\left(s \mid y\right)=\int\mathrm{d}\theta\,\pi_{\mathrm{post}}\left(\theta\mid y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right]=\int\mathrm{d}\theta\,\phi\left(\theta,y\right)g\left(\theta,y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right]
+$$
+
+$$
+\int_\Theta\mathrm{d}\theta\:\phi\left(\theta,y\right)g\left(\theta,y\right) = \int_\Theta\mathrm{d}\theta\, \pi_\text{post}(\theta | y) = 1
+$$
+
+$$
+C_{\phi,g}(s | y) - C_g(s|y) = \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:  \phi(\theta, y) \left(1 -   g\left(\theta,y\right) \right)
+$$
+
+since $g(\theta, y) > 0$ when $s \leq 1$ we integrate only over non-negative values. 
+
+When $s > 1$
+
+$$
+C_{\phi,g}(s | y) - C_g(s|y) 
+= \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:  \phi(\theta, y)  -  \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:   \phi(\theta, y) g\left(\theta,y\right)  =  \\
+= 1 - \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:  \phi(\theta, y)  - 1 +  \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:   \phi(\theta, y) g\left(\theta,y\right) = \\
+= \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:  \phi(\theta, y) \left(g\left(\theta,y\right) - 1 \right)
+$$
+And this is once again integrating only non-negative values.
+
+In both cases the difference cannot be zero once there is region of non-zero mass where $g(\theta, y) \neq 1$.
+
+$$
+r_{\phi_f}(x | \tilde\theta, y) \geq \mathbb{I}[x \geq C_{\phi,f}(f(\tilde\theta, y) | y)]
+$$
+
+
+$$
+\frac{D_g(s | y)}{D_{\phi,g}(s | y)} = 
+\frac{\int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y) \mathbb{I}\left[ g(\theta, y) = s \right]}{\int_\Theta \mathrm{d}\theta \: \phi(\theta, y) \mathbb{I}\left[ g(\theta, y) = s \right]} = 
+\frac{\int_{g(\theta, y) = s} \mathrm{d}\theta \: \phi(\theta,y)s }{\int_{g(\theta, y) = s} \mathrm{d}\theta \: \phi(\theta, y) } = s
+$$
+
+$$
+q\left(x\mid y\right)=C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) \\
+s = C^{-1}_{\phi,f}(x | y)
+$$
+$$
+x - C_{\phi,f}(C^{-1}_{\phi,f}(x|y)|y) = 0
+$$
+
+$$
+\forall y \in Y, x \in [0,1]: q_{\phi,f}(x | y) = C_g(C^{-1}_{\phi,g}(x | y) | y) \leq  C_g(C^{-1}_{g}(x | y) | y) = x
+$$
+
+### Lemma 
+
+Lemma: Let $\phi$ be any posterior family over $Y$, $\Theta$ and $f$ a measurable function $f: \Theta \times Y \to \mathbb{R}$ and let $s = C^{-1}_{\phi, f}(x | y)$. The for all $y \in Y, x \in [0,1]$ $D_{\phi,f}(s | y) > 0$ then 
+
+$$
+q_{\phi,f}\left(x\mid y\right) = \begin{cases}
+C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) & \text{for } D_{\phi,f}\left(s\mid y\right) > 0 \\
+C_{f}\left(s\mid y\right) & \text{otherwise}
+\end{cases}
+$$
+
+$$
+\Theta_{1}^x=\left\{ \theta \in \Theta :x\geq C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\} \\
+\Theta_{2}^x=\left\{ \theta  \in \Theta :C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)-D_{\phi,f}\left(f\left(\theta,y\right)\mid y\right) \leq x < C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\} \\
+\Theta_{3}^x=\left\{ \theta \in \Theta :x<C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)-D_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\}
+$$
+
+
+Now for $\theta \in \Theta_1^x$ we have $r_{\phi,f}(x | \theta, y) = 1$, for  
+
+$$
+r_{\phi,f}(x | \theta, y) = \begin{cases}
+  1 & \text{for } \theta \in \Theta_1^x
+  
+  0 & \text{for } \theta \in \Theta_3^x
+\end{cases}
+$$
+
+We note that $\theta \in \Theta_2^x$ if and only if $f(\theta, y) = C^{-1}_{\phi,f}(x | y)$. TODO check (but seems right)
+
+$$
+\int_{\Theta_2^x} \mathrm{d}\theta \: \pi_\text{post}(\theta | y) r_{\phi,f}(x | \theta, y)  = \int_{\Theta_{2}^x} \mathrm{d}\theta \: \pi_\text{post}(\theta|y) \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} =  \\ = \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} 
+  
+  \int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y)\mathbb{I}\left[f(\theta, y) = s\right] = \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} D_f(s|y)
+$$
+
+$$
+ \int_{\Theta_1^x} \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) r_{\phi,f}(x | \tilde\theta, y) = \int_{\Theta_1^x} \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) =
+ \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x\geq  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] = \\
+ = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) \leq C^{-1}_{\phi,f}(x | y)\right] = C_f(s | y)
+$$
+
+
+$$
+q(x|y) = \\
+= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+    D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
+  \right] + \\ 
+  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] \frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} = \\
+= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
+  \right] + \\ 
+  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
+    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
+    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
+  \mathbb{I}\left[
+    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
+     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
+    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
+    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right)
+$$
+
 
 ## Non-monotonous functions - simple case
 
