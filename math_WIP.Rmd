@@ -3,623 +3,72 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-A property of quantile functions that we will use extensively is the Galois connection
+## Plans/further development
+
+Non-monotonous, finish.
+
+Data averaged posterior.
+
+Can the lemma to create counterexamples for non-monotonous functions be used to prove that you need infinite test functions?
+
+Test-function orthogonality.
+
+
+## Data-averaged posterior
+
+$$
+\forall \theta \in \Theta: \pi_\text{prior}(\theta) = \int_Y \mathrm{d} y \int_\Theta \mathrm{d}\tilde\theta  \: \pi_\text{post}(\theta |y) \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde \theta)
+$$
+
+$$
+\forall{s}: \int_\Theta \mathrm{d}\theta \: \mathbb{I}\left[ f(\theta) < s \right] \pi_\text{prior}(\theta) = 
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d} y \int_\Theta \mathrm{d}\theta \: \mathbb{I}\left[f(\theta) < s\right] \phi(\theta, y) \pi_\text{obs}(y|\tilde\theta) \pi_\text{prior}(\tilde\theta)
+$$
+
+In some discussions, SBC is linked to the concept of data-averaged posterior. It is true that data-averaged posterior equals the prior:
 
 \begin{equation}
-    \forall x \in [0,1], s \in \bar{\mathbb{R}}: x \leq C_{\phi,f}(s | y) \iff C^{-1}_{\phi,f}(x | y) \leq s \label{eq:galois}
+\pi(\theta) = \int_Y \mathrm{d} y \int_\Theta \mathrm{d}\tilde\theta  \: \pi(\theta |y) \pi(y | \tilde\theta) \pi(\tilde \theta) \label{eq:data_averaged_posterior}
 \end{equation}
 
-## Definitions
+\begin{definition}[Data-averaged posterior] A posterior family $\phi$ satisfies the data-averaged posterior criterion for a function $f: \Theta \to \mathbb{R}$ if
 
-Note on notation: we will denote the integral of $f(x)$ w.r.t $x$ over domain $X$ as $\int_X \mathrm{d}x \: f(x)$.
+\begin{equation*}
+\forall{s}: \int_\Theta \mathrm{d}\theta \: \mathbb{I}\left[ f(\theta) < s \right] \pi(\theta) = 
+\int_\Theta \mathrm{d}\tilde\theta \int_Y \mathrm{d} y \int_\Theta \mathrm{d}\theta \: \mathbb{I}\left[f(\theta) < s\right] \phi(y, \theta) \pi(y|\tilde\theta) \pi(\tilde\theta)
+\end{equation*}
 
-$$
-\pi_{\text{joint}}(y, \theta) = \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
-\pi_\text{marg}\left(y \right) = \int_\Theta \mathrm{d} \theta \: \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
-\pi_{\text{post}}(\theta | y) = \frac{\pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)}{\pi_\text{marg}\left(y \right)}
-$$
+\end{definition}
 
-Alternate $q$ def:
+It however turns out that $\phi$ satisfying this relationship, i.e.
 
-Given a model, fitting algorithm and a function $f$, we define fitted pushforward CDF
+\begin{equation}
+\pi(\theta) = \int \int \mathrm{d}\tilde{y} \mathrm{d}\tilde\theta \: \phi(\tilde{y},\theta) \pi(\tilde{y} | \tilde\theta) \pi(\tilde \theta) \label{eq:data_averaged_posterior_phi}
+\end{equation}
 
-$$
-C_{\phi,f}(s | y) = \int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\phi\left(\theta | y\right)
-$$
+Is not a sufficient condition to pass continuous SBC. A quick counter-example: we have a very simple model:
 
-and true pushforward CDF
+\begin{align}
+\theta &\sim \mathrm{Unif}(0,1) \notag\\
+y  &\sim \mathrm{Bernoulli}(\theta) \label{eq:bernoulli_model}
+\end{align}
 
-$$
-C_{f}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \leq s\right]\pi_{\text{post}}(\theta | y) 
-$$
+We know the correct solution is 
 
-Where $\mathbb{I}$ is the indicator function
+\begin{align}
+    \pi(\theta | 0) = \mathrm{Beta}(\theta | 1, 2) = 2(1-\theta) \notag\\
+    \pi(\theta | 1) = \mathrm{Beta}(\theta | 2, 1) = 2\theta \label{eq:bernoulli_correct}
+\end{align}
 
-$$
-D_{\phi,f}(s | y) = \int \mathrm{d}\theta \: \phi(\theta | y) \mathbb{I}\left[ f(\theta, y) = s \right]
-$$
+However, flipping the $y$ values, i.e. having:
+\begin{align}
+    \phi(0, \theta) = \mathrm{Beta}(\theta | 2, 1) \notag\\
+    \phi(1, \theta) = \mathrm{Beta}(\theta | 1, 2) \label{eq:bernoulli_flipped}
+\end{align}
 
+(and really any two functions that average to 1 over the whole $[0, 1]$ interval) Will satisfy \ref{eq:data_averaged_posterior_phi}.
+We can however show that the posterior family from \ref{eq:bernoulli_flipped} will not pass SBC. (I currently only did a quick simulation to check, but it should be easy to also show mathematically).
 
-For fixed $\tilde\theta$ and $y$ we define the continuous rank CDF
-$r_{\phi,f}(x, \tilde\theta | y)$ as
-
-$$
-e \sim \text{Uniform}_c(0, 1)\\
-r_{\phi,f}(x, \tilde\theta | y) =
-\mathbb{P}\left(C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(x, \tilde\theta, y \right) | y \right) < x\right)
-$$
-
-where $\text{Uniform}_c$ is the continous uniform distribution.
-
-$$
-r_{\phi,f}(x, \tilde\theta | y) =
-\begin{cases}
-  0 & \text{if } x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
-  1 - \frac{C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - x}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} &
-    \text{if } D_{...} > 0 \text{ and } C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x < C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \\
-  1 & \text{if } x \geq C_{\phi,f} \left(f \left(\tilde\theta, y \right) \right)
-\end{cases} =
-$$
-
-TODO: figure out exact inequalities above
-
-```{r}
-x <- 0.2
-f <- 1
-
-c_phi <- function(x) { pbinom(x, size = 2, prob = 0.5) }
-
-inv_c_phi <- function(x) { qbinom(x, size = 2, prob = 0.5) }
-
-inv_c_m_d_phi <- function(x) { }
-
-
-```
-
-
-$$
-q_{\phi,f}(x|y) =
-\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) r_{\phi,f}(x, \tilde\theta | y)\\
-
-$$
-
-
-If I end up needing it, I can make it look better (https://discourse.mc-stan.org/t/sbc-math-proofs/27655/12?u=martinmodrak) but that might in fact end up not being necessary.
-
-$$
-q\left(x\mid y\right)=C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) \\
-s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
-$$
-
-Presumably, my definition of $C^{-1}$ consistent with Niko's $s$?
-
-$$
-C^{-1}_{\phi,f}(x | y) = \inf\{ s^{\prime} : x \leq C_{\phi, f}(s^{\prime} | y)\} \\
-s=\sup\left\{ s^{\prime}:C_{\phi,f}\left(s^{\prime}\mid y\right)<x\right\}
-$$
-
-Yes!
-
-### Sample-based
-
-$$
-R_{\phi,f}(i, \tilde\theta, y) = \mathbb{P} \left(N_{\mathtt{less}} + K \leq i \right) \\
-
-Q_{\phi,f}(i | y) = \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,f}(i, \tilde\theta, y)
-$$
-
-passes sample-based SBC iff
-
-$$
-\forall i \in 0, \dots, M - 1: \int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) = \frac{i+1}{M + 1}
-$$
-
-Equivalence with the procedural definition:
-
-$$
-\int_Y \: \mathrm{d}y \: Q_{\phi,f}(i |y) \pi_\text{marg}(y) =
-\int_Y \: \mathrm{d}y  \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,f}(i, \tilde\theta, y) \pi_\text{marg}(y) = \\
-\int_\Theta \mathrm{d}\tilde\theta   \int_Y \: \mathrm{d}y \: \pi_\text{prior}(\tilde\theta)\pi_\text{lik}(y | \tilde\theta)  R_{\phi,f}(i, \tilde\theta, y) (y)
-
-
-$$
-
-## Ties/no ties correspondance
-
-A posterior family $\phi$ has ties w.r.t model $\pi$ and function $f$ when
-
-$$
-\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta D_{\phi,f}(f(\tilde\theta,y) | y) > 0
-$$
-
-Given a posterior family $\phi$ which has ties wrt model $\pi$ and function $f$ we can construct a model $\pi^\prime$, posterior family $\phi^\prime$ and function $f^\prime$ such that $\phi^\prime$ has no ties wrt $\pi^\prime$ and $f^\prime$ and
-
-
-$$
-\forall y \in Y, x \in [0,1]: q^\pi_{\phi,f}(x | y) = q^{\pi^\prime}_{\phi,f}(x | y) \\
-\forall y \in Y, i \in 0, \dots, M - 1: Q^\pi_{\phi,f}(i | y) = Q^{\pi^\prime}_{\phi,f}(i | y)
-$$
-
-The construction:
-
-For each $y$ there can only be countable number of collisions with positive probability. So we can define:
-
-$$
-W_{\phi,f}(y) = \{w : D_{\phi,f}(w | y) > 0 \} \\
-L_{\phi,f}(s, y) = |\{w \in W_{\phi,f}(y) | w < s\}|
-$$
-
-$$
-\Theta^\prime = \Theta \times [0, 1] \\
-\pi^\prime_\text{joint}(y, \theta, u) =  \pi_\text{joint}(y, \theta) \\
-\phi^\prime(\theta, u, y) = \phi(\theta, y) \\
-f^\prime(\theta, u, y) = \begin{cases}
-f(\theta,y) + L_{\phi,f}(\theta,y) + u& \text{if } f(\theta,y) \in W_{\phi,f}(y) \\
-f(\theta,y) + L_{\phi,f}(\theta,y) & \text{otherwise}
-\end{cases}
-$$
-
-By inspection, there are no ties. The ordering of non-colliding elements hasn't changed and the order among those previously equal is uniformly random.
-
-Additionally $\phi = \pi_{post}$ if and only if $\phi^\prime = \pi^\prime_\text{post}$.
-
-
-## Correct posterior passes continuous SBC
-
-outline: $C_f(C^{-1}_f(x|y)|y)$ is for a given $y$ either identity or "blocky". The tiebraking exactly removes the blocks, so we have the stronger condition
-
-$$
-\phi = \pi_{post}:
-\forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
-$$
-
-Presumably, if the above condition holds, than it also holds for any transform of $f$, even if the posterior is incorrect (TODO check).
-
-## The SBC Gap
-
-If
-
-$$
-\forall y \in Y, x \in [0,1] : q_{\phi,f}(x|y) = x
-$$
-then
-
-$$
-\forall y \in Y, s \in \mathbb{R}: C_{\phi,f}(s|y) = C_f(s|y)
-$$
-
-i.e. the pushfoward along $f$ is exactly correct.
-
-This unifies all of the "failures" of SBC.
-
-
-We build $\pi^\prime$ over the same data space such that
-
-$$
-\Theta^\prime = \mathbb{R} \\
-\forall s \in \mathbb{R}, y \in Y:  \int_{-\infty}^{\infty} \mathrm{d}\theta^\prime \: \pi^\prime_\text{post}(\theta^\prime | y) \mathbb{I}[\theta^\prime \leq s] = C^\pi_f(s | y) \\
-\pi^\prime_\text{prior}(\theta^\prime) = \int_\Theta \mathrm{d}\theta \int_Y \mathrm{d}y \: \mathbb{I}[f(\theta,y) = \theta^\prime] \pi_\text{prior}(\theta)\pi_\text{obs}(y | \theta) \\
-\pi^\prime_\text{marg}(y) = \pi_\text{marg}(y)
-$$
-
-Now we also construct
-
-$$
-\phi^\prime : \mathbb{R} \times Y \to \mathbb{R} \\
-\forall s \in \mathbb{R}, y \in Y: \int_{-\infty}^{\infty} \mathrm{d}\theta^\prime \: \phi^\prime(\theta^\prime , y) \mathbb{I}[\theta^\prime \leq s]
- = C_{\phi,f}(s | y)
-$$
-
-using the identity function 
-
-$$
-\text{id} : \mathbb{R} \times Y \to \mathbb{R} \\
-\text{id}(\theta^\prime, y) = \theta^\prime
-$$
-
-We have by construction 
-
-$$
-\begin{align*}
-\forall s \in \mathbb{R}, x \in [0,1], y \in Y: \\
-C^{\pi^\prime}_\text{id}(s | y) = C^\pi_f(s | y)\\
-C^{\pi^\prime}_{\phi^\prime,\text{id}}(s | y) = C^\pi_{\phi, f}(s | y)
-\end{align*}
-$$
-
-This then implies 
-
-$$
-\forall x \in [0,1], y \in Y: q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y)  = q^{\pi}_{\phi,f}(x | y)
-$$
-
-It therefore suffices to prove that for $\pi^\prime$ we have
-
-$$
-\forall \theta^\prime \in \mathbb{R}: \phi^\prime(\theta^\prime, y) =  \pi^\prime(\theta^\prime |y) \iff \forall x \in [0,1] : q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y) = x
-$$
-
-Thanks to Lemma~\ref{le:tie_removal} it also suffices to prove this only for the case with no ties. The forward implication is an instance of correct posterior producing correct $q$ which is proved in  Theorem~\ref{th:SBC_correct}.
-The reverse implication, since there are no ties we have:
-
-$$
-\forall x \in [0,1] : x = q^{\pi^\prime}_{\phi^\prime,\text{id}}(x | y) = C^{\pi^\prime}_\text{id}(C^{\pi^\prime, -1}_{\phi,\text{id}}(x | y) | y)
-$$
-
-since inverse is unique, it follows that 
-
-$$
-\forall s \in \mathbb{R}: C^{\pi^\prime}_\text{id}(s | y) = C^{\pi^\prime}_{\phi,\text{id}}(s | y)
-$$
-
-and since both $\phi^\prime$ and $\pi^\prime$ are uniquely determined by the pushforward CDFs we also get 
-
-$$
-\forall \theta^\prime \in \mathbb{R}: \phi^\prime(\theta^\prime, y)  =  \pi^\prime(\theta^\prime |y)
-$$
-
-Completing the proof.
-
-Whenever $D_{f}\left(C^{-1}_f(x | y)\mid y\right) = 0$ then $C_{f}\left(C^{-1}_f(x | y)\mid y\right) = x$
-
-$$
-C_{f}\left(\inf \{s : x \leq C_f(s | y) \} \mid y\right)
-$$
-
-for $D_{f}\left(C^{-1}_f(x | y)\mid y\right) = 0$ we get
-
-$$
-q_{\phi,f}\left(x\mid y\right) = C_{f}\left(C^{-1}_f(x | y)\mid y\right) = x
-$$
-
-
-for $D_{f}\left(C^{-1}_f(x | y)\mid y\right) > 0$
-
-
-$$
-q_{\phi,f}\left(x\mid y\right) = 
-C_{f}\left(C^{-1}_f(x | y)\mid y\right)+\frac{D_{f}\left(C^{-1}_f(x | y)\mid y\right)}{D_{f}\left(C^{-1}_f(x | y)\mid y\right)}\left(x-C_{f}\left(C^{-1}_f(x | y)\mid y\right)\right) = x
-$$
-
-
-
-$$
-q_{\phi,f}
-$$
-
-
-$$
-
-F^{-1}(x) = \inf \{s : x \leq F(s)\} \\
-x \geq F(a) \iff F(a) = x \vee a \notin \{s : x \leq F(s)\} \iff  F(a) = x \vee \inf \{s : x \leq F(s)\} > a \\
-\iff F(a) = x \vee  F^{-1}(x) > a \implies a \in \{s : x \leq F(s)\} \vee F^{-1}(x) > a \implies F^{-1}(x) \geq a\\
-F^{-1}(x) \geq a \implies \inf \{s : x \leq F(s)\} \geq a\\
-$$
-
-
-
-$$
-\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x >  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] = \\
- = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) < C^{-1}_{\phi,f}(x | y)\right]  
-$$
-
-$$
-\int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x \geq  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] =  1 - \\
- = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) \leq C^{-1}_{\phi,f}(x | y)\right] 
-$$
-
-$$
-x = C_{\phi,f}(f(\theta, y) | y) \\
-\int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y) \mathbb{I}[x = C_{\phi,f}(f(\theta, y) | y)] =
-
-$$
-
-## Continuous SBC implies sample SBC
-
-
-$$
-\forall r \in {0, 1, ... , M}: \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right)	= \notag\\
- \int_{0}^{1}\mathrm{d}x\,\binom{M}{r}\left(q_{\phi,f}^{-1}(x|y)\right)^{r}\left(1-q_{\phi,f}^{-1}(x|y)\right)^{M-r} \\
-  =	\int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(z | y) \notag = \\
- =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi_\text{marg}\left(y\right)q_{\phi,f}\left(z | y\right) 
-$$
-
-$$
-Q_{\phi,f}(j | y) = \sum_{r = 0}^{j} \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right) = \frac{j + 1}{M + 1}
-$$
-
-$$
-\forall r \in {0, 1, ... , M}: \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r\right)	= \notag\\
-\int_{Y}\mathrm{d}y\: \pi_\text{marg}\left(y\right) \mathbb{P} \left(\sum_{i=1}^M \mathbb{I} [f(\theta_i, y) < f(\tilde \theta, y)] = r | y \right) \\ = 
-  =	\int_{Y}\mathrm{d}y \: \pi_\text{marg}\left(y\right)   \int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(z | y) \notag = \\
- =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi_\text{marg}\left(y\right)q_{\phi,f}\left(z | y\right) 
-$$
-
-$$
-\lim_{M \to \infty}\frac{\lfloor xM \rfloor - Mp}{\sqrt{Mp(1-p)}} =
-\lim_{M \to \infty}\frac{\lfloor xM \rfloor -xM}{\sqrt{Mp(1-p)}} + \lim_{M \to \infty}\frac{xM- Mp}{\sqrt{Mp(1-p)}}=
-0 + \lim_{M \to \infty}\frac{(x - p)\sqrt{M}}{\sqrt{p(1-p)}}
-$$
-
-
-
-
-By contradiction: if sample ranks are non-uniform, there has to be some $x: \int_Y \mathrm{d} y: q_{\phi,f}(x|y) \neq x$.
-
-take lowest $k$ where
-
-$$
-\mathbf{P}(N_\text{less} + K = k) \neq \frac{1}{M + 1}
-$$
-
-$$
-\mathbb{E}(K|y) = \int_\Theta \mathrm{d}\theta \pi(\theta|y) \sum_{i=0}^M \mathtt{binomial\_pmf}\left(i | D_{\phi,f} \left(f \left(\theta, y \right) | y \right), M \right)\frac{i}{2}  = \\
-\int_\Theta \mathrm{d}\theta \:\pi(\theta|y) \frac{D_{\phi,f} \left(f \left(\theta, y \right) | y \right) M}{2}
-\\
-\mathbb{E}(N_\text{less}|y) = M\int_0^1 \mathrm{d}x C_{\phi,f}(C^{-1}_f(x | y) | y)
-$$
-
-Case 1
-
-$$
-\mathbb{P}(N_\text{less} + K \leq k) > \frac{k}{M + 1}
-$$
-
-I choose $\tilde\theta$
-
-
-$$
-\forall r \in {0, 1, ... , M}: \mathbb{P}(\sum_{m=1}^M \mathbb{I} [f(y, \theta_l) < f(y, \tilde \theta)] = r)	= \notag\\
-\int_{Y}\mathrm{d}y\: \pi\left(y\right) \int_{0}^{1}\mathrm{d}x\,\binom{M}{r}\left(q_{\phi,f}^{-1}(y,x)\right)^{r}\left(1-q_{\phi,f}^{-1}(y,x)\right)^{M-r} = \label{eq:rank_distribution_q}\\
-  =	\int_{Y}\mathrm{d}y \: \pi\left(y\right)   \int_{0}^{1}\mathrm{d}z\,\binom{M}{r}z^{r}\left(1-z\right)^{M-r} \frac{\partial}{\partial z} q_{\phi,f}(y,z) \notag = \\
- =\int_{0}^{1}\mathrm{d}z\binom{M}{r}z^{r}\left(1-z\right)^{M-r}\frac{\partial}{\partial z}\int_{Y}\mathrm{d}y\,\pi\left(y\right)q_{\phi,f}\left(y,z\right)
-$$
-
-## Sample SBC for all $M$ implies continuous SBC
-
-Prove that $q$ is the limit of fractional rank distribution as $M \to \infty$
-
-
-We will show that as $M \to \infty$ normalized sample ranks converge to the continous ranks, i.e. that:
-
-$$
-\forall x \in [0,1], \tilde\theta \in \Theta, y \in Y : \lim_{M \to \infty} R_{\phi,f}(xM | \tilde\theta, y) = r_\
-$$
-
-Assuming no ties, $R_{\phi,f}(i | \tilde\theta, y) = \text{Bin}(i | M, C_{\phi,f}(f(\tilde\theta, y)))$ where $\text{Bin}$ is the CDF of a binomial distribution.  Using central limit theorem we have  $\lim_{M \to \infty}Bin(i | M, p) = \text{Normal}(i | Mp,Mp(1-p))$
-
-$$
-\lim_{M \to \infty}\frac{1}{M}\text{Bin}(x M | M, C_{\phi,f}(f(\tilde\theta, y)))
-$$
-
-
-The difference between the continous and sample rank can be bounded from above as
-
-$$
-\frac{1}{M + 1}R_{\phi,f}(\left \lfloor{x(M + 1)}\right \rfloor | \tilde\theta, y) - r_{\phi,f}(x | \tilde\theta, y) = \frac{1}{M + 1}\text{Bin}(\lfloor{x(M + 1)} \rfloor | M, C_{\phi,f}(f(\tilde\theta,y))) - \mathbb{I}[ C_{\phi,f}(f(\tilde\theta,y)) \leq x]
-$$
-
-for $C_{\phi,f}(f(\tilde\theta,y)) \leq x$
-
-$$
-\frac{X}{n} - p = \frac{X - np}{n} = \frac{(X - np)\sqrt{np(1-p)}}{n\sqrt{np(1-p)}} = Z \frac{\sqrt{np(1-p)}}{n}
-$$
-
-
-## Integral representation of SBC
-
-$$
-  \forall x \in [0,1]: \notag\\
-  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
-  \right]  \pi(y | \tilde\theta) \pi(\tilde\theta) = x
-$$
-
-## Incomplete use of data
-
-Given a model $\pi$ with observation space $Y$ and parameter space $\Theta$, a space $Y^\prime$ and measurable function $t : Y \rightarrow Y^\prime$. Denote the set $t^{-1}(y^\prime) = \{y \in Y: t(y) = y^\prime\}$. Consider the model $\pi^\prime$ with parameter space $\Theta$ and observation space $Y^\prime$ such that:
-
-$$
-\begin{align*}
-\forall{\theta \in \Theta} &, y^\prime \in Y^\prime : \\
-\pi^\prime_\text{prior}(\theta) &= \pi_\text{prior}(\theta) \\
-\pi^\prime_\text{obs}(y^\prime |\theta) &= \int_{t^{-1}(y^\prime)} \mathrm{d}y \: \pi_\text{obs}(y | \theta)
-\end{align*}
-$$
-Given a measurable functions $f^\prime : Y^\prime \times \Theta \rightarrow \mathbb{R}$. 
-If we have a posterior family $\phi^\prime$ on $Y^\prime, \Theta$ such that $\phi^\prime$ passes continous SBC w.r.t $f^\prime$ and set function $f: Y \times \Theta \rightarrow \mathbb{R}, f(y, \theta) = f^\prime(t(y), \theta)$ and posterior family $\phi$ on $Y, \Theta$ such that $\phi(y, \theta) = \phi^\prime(t(y), \theta)$ then $\phi$ passes continuous SBC w.r.t. $f$.
-
-$$
-r^\pi_{\phi,f}(x | \theta, y) =  \\
-C^\pi_{\phi,f}(s | y) = \int_\Theta \mathrm{d}\theta \: \mathbb{I}[f^\prime(\theta, t(y)) \leq s] \phi^\prime(\theta, t(y)) = C^{\pi^\prime}_{\phi^\prime, f^\prime}(s | t(y))
-$$
-
-$$
-q^{\pi}_{\phi, f}(x | y) = 
-$$
-
-$$
- \forall x \in [0,1]: \notag\\ 
-  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
-  \right] \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = x 
-$$
-
-$$
-  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \left(\mathbb{I}[f(\theta, y) < f(\tilde\theta, y)] \phi(\theta, y)\right)  < x
-  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \notag\\
-  = 
-  \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  C_{\phi,f}(f(\tilde\theta, y) | y)  < x
-  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \notag\\
-  = \int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  f(\tilde\theta, y) < C^{-1}_{\phi,f}(x | y)
-  \right]   \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta)
-  = \\
-  = \int_Y \mathrm{d}y \: C_{f}\left(C^{-1}_{\phi,f}(x|y)|y\right) \pi_\text{marg}(y) 
-  = \int_Y \mathrm{d}y \: q_{\phi,f}(x|y) \pi_\text{marg}(y)
-$$
-
-$$
-\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f(\theta, y) < f(\tilde\theta, y) ]\phi(\theta, y)  \leq x
-  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\
-\int_Y \mathrm{d}y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, t(y)) < f^\prime(\tilde\theta, t(y))]\phi^\prime(\theta, t(y))  \leq x
-  \right] \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\
-\int_{Y^\prime} \mathrm{d}y^\prime \int_{t^{-1}(\bar{y})} \mathrm{d} y \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
-  \right]  \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\  
-\int_{Y^\prime} \mathrm{d}y^\prime \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
-  \right]  \int_{t^{-1}(y^\prime)} \mathrm{d} y \: \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \\    
-\int_{Y^\prime} \mathrm{d}y^\prime \int_\Theta \mathrm{d} \tilde\theta \:
-  \mathbb{I}\left[
-  \int_\Theta \mathrm{d}\theta \: \mathbb{I} [f^\prime(\theta, y^\prime) < f^\prime( \tilde\theta, y^\prime)]\phi^\prime(\theta, y^\prime)  \leq x
-  \right]  \pi^\prime_\text{obs}(y | \tilde\theta) \pi^\prime_\text{prior}(\tilde\theta) = x
-$$
-
-## Density ratio
-
-For any posterior family $\phi$, take $g\left(\theta,y\right)=\frac{\pi_{\mathrm{post}}\left(\theta\mid y\right)}{\phi\left(\theta,y\right)}$. Then $\phi$ passes continuous SBC w.r.t. $g$ if and only if 
-
-$$
-\int_Y \mathrm{d}y \int_\Theta \mathrm{d}\theta \: \pi_\text{joint}(y, \theta) \mathbb{I}\left[ \pi_\text{post}(\theta | y) \neq \phi(\theta, y)\right] = 0
-$$
-
-$$
-C_{\phi,g}\left(s \mid y\right)=\int\mathrm{d}\theta\,\phi\left(\theta,y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right] \\
-C_{g}\left(s \mid y\right)=\int\mathrm{d}\theta\,\pi_{\mathrm{post}}\left(\theta\mid y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right]=\int\mathrm{d}\theta\,\phi\left(\theta,y\right)g\left(\theta,y\right)\mathbb{I}\left[g\left(\theta,y\right)\leq s\right]
-$$
-
-$$
-\int_\Theta\mathrm{d}\theta\:\phi\left(\theta,y\right)g\left(\theta,y\right) = \int_\Theta\mathrm{d}\theta\, \pi_\text{post}(\theta | y) = 1
-$$
-
-$$
-C_{\phi,g}(s | y) - C_g(s|y) = \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:  \phi(\theta, y) \left(1 -   g\left(\theta,y\right) \right)
-$$
-
-since $g(\theta, y) > 0$ when $s \leq 1$ we integrate only over non-negative values. 
-
-When $s > 1$
-
-$$
-C_{\phi,g}(s | y) - C_g(s|y) 
-= \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:  \phi(\theta, y)  -  \int_{\theta \in \Theta: g(\theta, y) \leq s} \mathrm{d}\theta \:   \phi(\theta, y) g\left(\theta,y\right)  =  \\
-= 1 - \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:  \phi(\theta, y)  - 1 +  \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:   \phi(\theta, y) g\left(\theta,y\right) = \\
-= \int_{\theta \in \Theta: g(\theta, y) > s} \mathrm{d}\theta \:  \phi(\theta, y) \left(g\left(\theta,y\right) - 1 \right)
-$$
-And this is once again integrating only non-negative values.
-
-In both cases the difference cannot be zero once there is region of non-zero mass where $g(\theta, y) \neq 1$.
-
-$$
-r_{\phi_f}(x | \tilde\theta, y) \geq \mathbb{I}[x \geq C_{\phi,f}(f(\tilde\theta, y) | y)]
-$$
-
-
-$$
-\frac{D_g(s | y)}{D_{\phi,g}(s | y)} = 
-\frac{\int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y) \mathbb{I}\left[ g(\theta, y) = s \right]}{\int_\Theta \mathrm{d}\theta \: \phi(\theta, y) \mathbb{I}\left[ g(\theta, y) = s \right]} = 
-\frac{\int_{g(\theta, y) = s} \mathrm{d}\theta \: \phi(\theta,y)s }{\int_{g(\theta, y) = s} \mathrm{d}\theta \: \phi(\theta, y) } = s
-$$
-
-$$
-q\left(x\mid y\right)=C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) \\
-s = C^{-1}_{\phi,f}(x | y)
-$$
-$$
-x - C_{\phi,f}(C^{-1}_{\phi,f}(x|y)|y) = 0
-$$
-
-$$
-\forall y \in Y, x \in [0,1]: q_{\phi,f}(x | y) = C_g(C^{-1}_{\phi,g}(x | y) | y) \leq  C_g(C^{-1}_{g}(x | y) | y) = x
-$$
-
-### Lemma 
-
-Lemma: Let $\phi$ be any posterior family over $Y$, $\Theta$ and $f$ a measurable function $f: \Theta \times Y \to \mathbb{R}$ and let $s = C^{-1}_{\phi, f}(x | y)$. The for all $y \in Y, x \in [0,1]$ $D_{\phi,f}(s | y) > 0$ then 
-
-$$
-q_{\phi,f}\left(x\mid y\right) = \begin{cases}
-C_{f}\left(s\mid y\right)+\frac{D_{f}\left(s\mid y\right)}{D_{\phi,f}\left(s\mid y\right)}\left(x-C_{\phi,f}\left(s\mid y\right)\right) & \text{for } D_{\phi,f}\left(s\mid y\right) > 0 \\
-C_{f}\left(s\mid y\right) & \text{otherwise}
-\end{cases}
-$$
-
-$$
-\Theta_{1}^x=\left\{ \theta \in \Theta :x\geq C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\} \\
-\Theta_{2}^x=\left\{ \theta  \in \Theta :C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)-D_{\phi,f}\left(f\left(\theta,y\right)\mid y\right) \leq x < C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\} \\
-\Theta_{3}^x=\left\{ \theta \in \Theta :x<C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)-D_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right\}
-$$
-
-
-Now for $\theta \in \Theta_1^x$ we have $r_{\phi,f}(x | \theta, y) = 1$, for  
-
-$$
-r_{\phi,f}(x | \theta, y) = \begin{cases}
-  1 & \text{for } \theta \in \Theta_1^x
-  
-  0 & \text{for } \theta \in \Theta_3^x
-\end{cases}
-$$
-
-We note that $\theta \in \Theta_2^x$ if and only if $f(\theta, y) = C^{-1}_{\phi,f}(x | y)$. TODO check (but seems right)
-
-$$
-\int_{\Theta_2^x} \mathrm{d}\theta \: \pi_\text{post}(\theta | y) r_{\phi,f}(x | \theta, y)  = \int_{\Theta_{2}^x} \mathrm{d}\theta \: \pi_\text{post}(\theta|y) \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} =  \\ = \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} 
-  
-  \int_\Theta \mathrm{d}\theta \: \pi_\text{post}(\theta | y)\mathbb{I}\left[f(\theta, y) = s\right] = \frac{x - C_{\phi,f}(s | y)}{D_{\phi,f}(s | y)} D_f(s|y)
-$$
-
-$$
- \int_{\Theta_1^x} \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) r_{\phi,f}(x | \tilde\theta, y) = \int_{\Theta_1^x} \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) =
- \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[x\geq  C_{\phi,f}\left(f\left(\theta,y\right)\mid y\right)\right] = \\
- = \int_\Theta \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) \mathbb{I}\left[f(\theta, y) \leq C^{-1}_{\phi,f}(x | y)\right] = C_f(s | y)
-$$
-
-
-$$
-q(x|y) = \\
-= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-    D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
-  \right] + \\ 
-  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] \frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} = \\
-= \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  
-  \right] + \\ 
-  + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right) = \\
-    C_f \left(C^{-1}_{\phi,f}(x | y) | y \right) + \\
-    + \int \mathrm{d} \tilde\theta \: \pi_\text{post}(\tilde\theta | y) 
-  \mathbb{I}\left[
-    C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) +  
-     D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)   >
-    x > C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)  \right] 
-    \left(\frac{x - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)}{D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right)} - 1\right)
-$$
 
 
 ## Non-monotonous functions - simple case
@@ -766,6 +215,8 @@ $$
 \end{align}
 $$
 
+### Projection
+
 $f_1$ - identity function (assuming $0 \leq s \leq 1$)
 
 $$
@@ -773,14 +224,50 @@ C_{f_1}(s | 0) = \int_0^s \mathrm{d}\theta \: 2(1 - \theta)  =  2s - s^2 \\
 C_{f_1}(s | 1) = \int_0^s \mathrm{d}\theta \: 2\theta = s^2 \\
 $$
 
-We'll denote
+The corresponding data-averaged posterior criterium for the identity function (and thus also the whole posterior) simply entails:
 
 $$
-\Phi(s | y) = \int_0^x \mathrm{d}\theta \: \phi(\theta, y) = C_{\phi, f_1}(s | y) \\
-\Phi^{-1}(x | y) = C_{\phi, f_1}^{-1}(x | y)
+\forall \theta \in [0,1]: \phi(\theta, 0) + \phi(\theta, 1) = 2
 $$
 
 
+$$
+\Phi^{-1}(x | 0) = \begin{cases}
+   \frac{2}{3}x & x < \frac{3}{4} \\
+   \frac{1}{2} + 2(x - \frac{3}{4}) & x \geq \frac{3}{4} \\
+\end{cases} \\
+\Phi^{-1}(x | 1) = \begin{cases}
+   \frac{1}{3}\sqrt{6x + 4 x^2} & x < \frac{3}{4} \\
+   \sqrt{3 - 6x + 4 x ^2} & x \geq \frac{3}{4} \\
+\end{cases}
+$$
+$$
+\phi(\theta | 0) = \begin{cases}
+ \frac{3}{2} & \theta \leq \frac{1}{2} \\
+ \frac{1}{2} & \theta > \frac{1}{2}
+\end{cases}\\
+\phi(\theta | 1) = \begin{cases}
+ \frac{3s}{\sqrt{1 + 4 s ^ 2}} & \theta \leq \frac{\sqrt{3}}{2} \\
+ \frac{s}{\sqrt{4s ^2  - 3}} & \theta > \frac{\sqrt{3}}{2}
+\end{cases}
+$$
+
+### Likelihood
+
+$$
+C_{f_1}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}[1 - \theta < s]2(1 - \theta)  =  
+  2 \int_{1-s}^1 \mathrm{d}\theta \: (1 - \theta) = 1 - 2s + s^2 \\
+C_{f_2}(s | 1) = C_{f_1}(s | 1) = \int_0^s \mathrm{d}\theta \: 2\theta = s^2 \\
+C^{-1}_{\phi,f_2}(x | 1) = C^{-1}_{\phi,f_1}(x | 1) =  \Phi^{-1}(x | 1) \\
+C_{\phi,f_2}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}[1 - \theta < s]\phi(\theta, 0) = \int_{1-s}^1 \mathrm{d}\theta \: \phi(\theta,0) = 1 - \Phi(\theta | 0) \\
+C^{-1}_{\phi,f_2}(x | 0) = \Phi^{-1}(1 - x | 0) 
+$$
+
+$$
+\forall x \in [0,1]: \frac{1}{2} - \Phi^{-1}(1 - x | 0) + \frac{(\Phi^{-1}(1 - x| 0))^2}{2} + \frac{(\Phi^{-1}(x | 1))^2}{2}  = x 
+$$
+
+### Swap
 
 $$
 f_3(y, \theta) = \begin{cases}\theta&  \text{for } \theta < \frac{1}{2} \\ \theta - 1,&  \text{otherwise} \end{cases}
@@ -791,22 +278,22 @@ $$
 $$
 C_{f_3}(s | 0) = \int_0^1 \mathrm{d}\theta \: \mathbb{I}\left[f_3(\theta) \leq s\right] (2 - 2\theta) =
 \begin{cases}
- \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: (2 - 2\theta)  & \text{for } s < 0 \\
- \int_{\frac{1}{2}}^{1} \mathrm{d}\theta (2 - 2\theta) + \int_{0}^{s} \mathrm{d}\theta (2 - 2\theta) & \text{otherwise}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: (2 - 2\theta)  & -\frac{1}{2} < s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta (2 - 2\theta) + \int_{0}^{s} \mathrm{d}\theta (2 - 2\theta) & 0 \leq s < \frac{1}{2}
 \end{cases} = \\
 = \begin{cases}
- \frac{1}{4} - s^2& \text{for } s < 0 \\
- \frac{1}{4} + 2 s - s^2  & \text{otherwise}
+ \frac{1}{4} - s^2& -\frac{1}{2} < s < 0 \\
+ \frac{1}{4} + 2 s - s^2  & 0 \leq s < \frac{1}{2}
 \end{cases}
 \\
 C_{f_3}(s | 1) =
 \begin{cases}
- \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: 2\theta  & \text{for } s < 0 \\
- \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: 2\theta + \int_{0}^{s} \mathrm{d}\theta \: 2\theta & \text{otherwise}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: 2\theta  & -\frac{1}{2} < s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: 2\theta + \int_{0}^{s} \mathrm{d}\theta \: 2\theta & 0 \leq s < \frac{1}{2}
 \end{cases}
 = \begin{cases}
- \frac{3}{4} + 2s + s^2& \text{for } s < 0 \\
- \frac{3}{4} + s^2  & \text{otherwise}
+ \frac{3}{4} + 2s + s^2& -\frac{1}{2} < s < 0 \\
+ \frac{3}{4} + s^2  & 0 \leq s < \frac{1}{2}
 \end{cases}
 $$
 
@@ -814,12 +301,12 @@ $$
 h_y = \Phi \left(\frac{1}{2} | y\right) \\
 C_{\phi,f_3}(s | y) =
 \begin{cases}
- \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: \phi(\theta, y)  & \text{for } s < 0 \\
- \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: \phi(\theta, y) + \int_{0}^{s} \mathrm{d}\theta \: \phi(\theta, y) & \text{otherwise}
+ \int_{\frac{1}{2}}^{s + 1} \mathrm{d}\theta \: \phi(\theta, y)  & -\frac{1}{2} < s < 0 \\
+ \int_{\frac{1}{2}}^{1} \mathrm{d}\theta \: \phi(\theta, y) + \int_{0}^{s} \mathrm{d}\theta \: \phi(\theta, y) & 0 \leq s < \frac{1}{2}
 \end{cases}  = \\
 = \begin{cases}
   \Phi(s + 1| y) - h_y & \text{for } s < 0 \\
-1 -   h_y + \Phi(s | y)& \text{otherwise}
+1 -   h_y + \Phi(s | y)& 0 \leq s < \frac{1}{2}
 \end{cases}
 $$
 Solving for the inverse:
@@ -842,28 +329,35 @@ $$
 $$
 C^{-1}_{\phi,f_3}(x | y) = \begin{cases}
 \Phi^{-1}(x + h_y | y) - 1  & \text{ for } x < 1 - h_y \\
-\Phi^{-1}(x - 1 + h_y) & \text{ otherwise }
+\Phi^{-1}(x - 1 + h_y |y) & \text{ otherwise }
 \end{cases}
 $$
 
 $$
 q_{\phi,f_3}(x | 0) = \begin{cases}
   \frac{1}{4} - \left(\Phi^{-1}(x + h_0 | 0) - 1 \right)^2 & \text{for }  x < 1 - h_0 \\
-  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0) - \left( \Phi^{-1}(x - 1 + h_0)\right)^2  & \text{ otherwise }
+  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0|0) - \left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2  & \text{ otherwise }
 \end{cases}
 \\
 q_{\phi,f_3}(x | 1) = \begin{cases}
   \frac{3}{4} + 2\Phi^{-1}(x + h_1 | 1) - 2 + \left(\Phi^{-1}(x + h_1 | 1) - 1 \right)^2 & \text{for }  x < 1 - h_1 \\
-  \frac{3}{4} + \left( \Phi^{-1}(x - 1 + h_1)\right)^2  & \text{ otherwise }
+  \frac{3}{4} + \left( \Phi^{-1}(x - 1 + h_1|1)\right)^2  & \text{ otherwise }
 \end{cases}
 $$
 
 So the SBC condition is:
 
+See Wolfram
+
+### Ties
+
 $$
-x = \begin{cases}
--4 + 2 \Phi^{-1}(x + h_0 | 0) - \left(\Phi^{-1}(x + h_0 | 0)\right)^2 + 2\Phi^{-1}(x + h_1 | 1) -2 \Phi^{-1}(x + h_1 | 1) + \left(\Phi^{-1}(x + h_1 | 1)  \right)^2
+q_{\phi,f_1}(x | 0) = \begin{cases}
+   \frac{2x}{3 \phi\left(\frac{1}{3}|0\right)} & x \leq \phi\left(\frac{1}{3}|0\right) \\
+   \frac{2}{3} + \frac{x - \phi\left(\frac{1}{3}|0\right)}{3\left(1 - \phi\left(\frac{1}{3}|0\right)\right)} & \text{otherwise}
+\end{cases} \\
+q_{\phi,f_1}(x | 1) = \begin{cases}
+   \frac{x}{3 \phi\left(\frac{1}{3}|1\right)} & x \leq \phi\left(\frac{1}{3}|1\right) \\
+   \frac{1}{3} + \frac{2\left(x - \phi\left(\frac{1}{3}|0\right)\right)}{3\left(1 - \phi\left(\frac{1}{3}|0\right)\right)} & \text{otherwise}
 \end{cases}
 $$
-
-
