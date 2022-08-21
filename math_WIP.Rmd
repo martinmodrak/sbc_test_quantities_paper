@@ -224,12 +224,60 @@ C_{f_1}(s | 0) = \int_0^s \mathrm{d}\theta \: 2(1 - \theta)  =  2s - s^2 \\
 C_{f_1}(s | 1) = \int_0^s \mathrm{d}\theta \: 2\theta = s^2 \\
 $$
 
+$$
+\forall x \in [0,1]: 
+  \Phi^{-1}(x | 1) = \sqrt{2x - 2\Phi^{-1}(x | 0) + (\Phi^{-1}(x | 0))^2} \\
+$$
+
+
+
 The corresponding data-averaged posterior criterium for the identity function (and thus also the whole posterior) simply entails:
 
 $$
 \forall \theta \in [0,1]: \phi(\theta, 0) + \phi(\theta, 1) = 2
 $$
+DAP entails
 
+$$
+\Phi(s| 0) + \Phi(s | 1) = 2s \\
+\Phi(s| 1)  = 2s - \Phi(s | 0) \\
+s = \Phi^{-1}(2s - \Phi(s | 0) | 1) \\
+$$
+
+subst $x = 2s - \Phi(s | 0)$
+
+
+$$
+\Phi^{-1}(x | 1) = \sqrt{2x - 2\Phi^{-1}(x | 0) + (\Phi^{-1}(x | 0))^2} \\
+\Phi^{-1}(2s - \Phi(s | 0) | 1) = \sqrt{2(2s - \Phi(s | 0)) - 2\Phi^{-1}(2s - \Phi(s | 0) | 0) + (\Phi^{-1}(2s - \Phi(s | 0) | 0))^2} \\
+s = \sqrt{2(2s - \Phi(s | 0)) - 2\Phi^{-1}(2s - \Phi(s | 0) | 0) + (\Phi^{-1}(2s - \Phi(s | 0) | 0))^2} \\
+$$
+
+$$
+x^2 = 4x  - 2f(x) - 2f^{-1}(2x - f(x)) + (f^{-1}(2x - f(x)))^2 \\
+$$
+
+Substituting $x = \Phi(s|)$ into the SBC condition
+
+$$
+s = \sqrt{2\Phi(s | 1) - 2\Phi^{-1}(\Phi(s | 1) | 0) + (\Phi^{-1}(\Phi(s | 1) | 0))^2} \\
+s^2 = 2\Phi(s | 1) - 2\Phi^{-1}(\Phi(s | 1) | 0) + (\Phi^{-1}(\Phi(s | 1) | 0))^2 \\
+\Phi^{-1}(\Phi(s | 1) | 0) = 1 - \sqrt{1 - 2 \Phi(s|1) + s^2} \\
+\Phi(s | 1) = \Phi(1 - \sqrt{1 - 2 \Phi(s|1) + s^2}| 0)
+$$
+
+$$
+2s-\Phi(s | 0) = \Phi(1 - \sqrt{1 - 2 (2s-\Phi(s | 0)) + s^2}| 0) \\
+2x - f(x) = f(1 - \sqrt{1 - 4x + 2 f(x) + x^2}) \\
+f(x) = 2x - f(1 - \sqrt{1 - 4x + 2 f(x) + x^2}) \\
+$$
+
+Since derivative has to be between 0 and 2, we get at least $f^\prime(x) < 2 - x$ (see Mathematica NTB)
+
+Choosing $\Phi(s|1)$ this implies a valid inverse CDF as long as:
+
+$$
+$$
 
 $$
 \Phi^{-1}(x | 0) = \begin{cases}
@@ -251,6 +299,8 @@ $$
  \frac{s}{\sqrt{4s ^2  - 3}} & \theta > \frac{\sqrt{3}}{2}
 \end{cases}
 $$
+
+
 
 ### Likelihood
 
