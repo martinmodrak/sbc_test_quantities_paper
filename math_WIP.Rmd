@@ -5,14 +5,66 @@ output: html_notebook
 
 ## Plans/further development
 
-Non-monotonous, finish.
+Inverse functions
 
-Data averaged posterior.
+Finish Lemma for building counterexamples
+
+Swap example
+
+Data averaged posterior
+  - Convex combinations
+  - Transforms do not change
+
+Non-monotonous, finish.
 
 Can the lemma to create counterexamples for non-monotonous functions be used to prove that you need infinite test functions?
 
 Test-function orthogonality.
 
+## Inverse transforms
+
+$$
+\forall y \in Y,  \tilde\theta \in \Theta, x \in [0, 1] : r_{\phi, f}(x | \tilde\theta, y) = r_{\phi, g}(1 - x | \tilde\theta, y) \\
+\forall y \in Y,  \tilde\theta \in \Theta, i \in \{0, \dots, M \} : R_{\phi, f}(i | \tilde\theta, y) = R_{\phi, g}(M - i | \tilde\theta, y)
+$$
+
+$$
+N^g_\text{equals} = N^f_\text{equals}\\
+N^g_\text{less} = M - N^f_\text{less} - N^f_\text{equals}\\
+
+R_{\phi,g}(M - i | \tilde\theta, y) = \mathbb{P} \left(N^g_{\mathtt{less}} + K \leq M - i \right) =
+  \mathbb{P} \left(M - N^f_{\mathtt{less}} - N^f_\text{equals} + K \leq M - i \right) = \\
+  \mathbb{P} \left(N^f_{\mathtt{less}} + N^f_\text{equals} - K \geq   i \right) = \\
+  1 - \mathbb{P} \left(N^f_{\mathtt{less}} + K \leq   i + 1 \right) = \\
+  1 - R_{\phi,f}(i + 1 | \tilde\theta, y)
+$$
+
+$$
+Q_{\phi,g}(i | y) = \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y)  R_{\phi,g}(i| \tilde\theta, y) = \\
+\int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y) - \int_\Theta \mathrm{d}\tilde\theta \: \pi_\text{post}(\tilde\theta|y) R_{\phi,g}(i + 1| \tilde\theta, y) = \\
+1 - Q_{\phi,g}(i + 1|y)
+$$
+
+$$
+r_{\phi,f}(x | \tilde\theta, y) = 
+\mathbb{P}\left(C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq x\right) 
+$$
+
+$$
+C_{\phi,g}\left( s | y\right)=\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[g\left(\theta, y \right) \leq s\right]\phi(\theta | y) = 
+\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[-f\left(\theta, y \right) \leq s\right]\phi(\theta | y) = \\
+\int_{\Theta}\mathrm{d}\theta\mathbb{\,I}\left[f\left(\theta, y \right) \geq -s\right]\phi(\theta | y) = 1 - C_{\phi,f}(-s | y) + D_{\phi,f}(-s|y) \\
+D_{\phi,g}(s|y) = D_{\phi,f}(-s|y)
+$$
+
+$$
+r_{\phi, g}(1 - x | \tilde\theta, y) = \mathbb{P}\left(C_{\phi,g} \left(g \left(\tilde\theta, y \right) | y \right) - e D_{\phi,g} \left(g \left(\tilde\theta, y \right) | y \right) \leq 1 - x\right) = \\
+\mathbb{P}\left(C_{\phi,g} \left(-f \left(\tilde\theta, y \right) | y \right) - e D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq 1 - x\right) =  \\
+\mathbb{P}\left(1 - C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) + (1 - e) D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq 1 - x\right) = \\
+\mathbb{P}\left( C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - (1 - e) D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \geq  x\right) = \\
+1 - \mathbb{P}\left( C_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) - (1 - e) D_{\phi,f} \left(f \left(\tilde\theta, y \right) | y \right) \leq  x\right) = \\
+1 - r_{\phi, f}(x | \tilde\theta, y)
+$$
 
 ## Data-averaged posterior
 
@@ -257,7 +309,7 @@ $$
 x^2 = 4x  - 2f(x) - 2f^{-1}(2x - f(x)) + (f^{-1}(2x - f(x)))^2 \\
 $$
 
-Substituting $x = \Phi(s|)$ into the SBC condition
+Substituting $x = \Phi(s|1)$ into the SBC condition
 
 $$
 s = \sqrt{2\Phi(s | 1) - 2\Phi^{-1}(\Phi(s | 1) | 0) + (\Phi^{-1}(\Phi(s | 1) | 0))^2} \\
@@ -268,8 +320,8 @@ $$
 
 $$
 2s-\Phi(s | 0) = \Phi(1 - \sqrt{1 - 2 (2s-\Phi(s | 0)) + s^2}| 0) \\
-2x - f(x) = f(1 - \sqrt{1 - 4x + 2 f(x) + x^2}) \\
-f(x) = 2x - f(1 - \sqrt{1 - 4x + 2 f(x) + x^2}) \\
+2x - F(x) = F(1 - \sqrt{1 - 4x + 2 F(x) + x^2}) \\
+F(x) = 2x - F(1 - \sqrt{1 - 4x + 2 F(x) + x^2}) \\
 $$
 
 Since derivative has to be between 0 and 2, we get at least $f^\prime(x) < 2 - x$ (see Mathematica NTB)
