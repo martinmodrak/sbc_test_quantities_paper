@@ -5,6 +5,8 @@ output: html_notebook
 
 ```{r setup}
 library(tidyverse)
+library(cowplot)
+theme_set(cowplot::theme_cowplot())
 ```
 
 
@@ -127,5 +129,75 @@ plot_q_D("binom", "binom", ensure_vals = 0:10, size = 10, test_args = list(prob 
 
 ```{r}
 plot_q_D("binom", "pois", ensure_vals = 0:10, test_args = list(size = 10, prob = 0.4), true_args = list(lambda = 4))
+```
+
+```{r}
+sim_phi_solution <- function(first_x, first_val, N_iters) {
+  res_x <- numeric(N_iters)
+  res_val <- numeric(N_iters)
+  cur_x <- first_x
+  cur_val <- first_val
+  for(i in 1:N_iters) {
+    res_x[i] <- cur_x
+    res_val[i] <- cur_val
+    new_x <- 1 - sqrt(1 - 4*cur_x + 2 * cur_val + cur_x ^ 2)
+    cur_val <- 2 * cur_x - cur_val
+    cur_x <- new_x
+  }
+  data.frame(x = res_x, val = res_val, dir = "fwd")
+}
+
+# sim_phi_solution_back <- function(first_x, first_val, N_iters) {
+#   res_x <- numeric(N_iters)
+#   res_val <- numeric(N_iters)
+#   cur_x <- first_x
+#   cur_val <- first_val
+#   for(i in 1:N_iters) {
+#     res_x[i] <- cur_x
+#     res_val[i] <- cur_val
+#     prop_val <- 0.5 * (-1 - cur_val + 4*cur_x)
+#     new_x <- 2 - sqrt(4 - 2*prop_val - 2* cur_x + cur_x^2)
+#     cur_val <- 2 * cur_x - prop_val
+#     cur_x <- new_x
+#   }
+#   data.frame(x = res_x, val = res_val, dir = "rev")
+# }
+
+correct_post <- data.frame(x = seq(0,1, length.out = 200)) %>% mutate(val = 2*x-x^2)
+
+plot_solution <- function(sol) {
+  if(length(unique(sol$x) > 3)) {
+    quad_geom <- geom_smooth(formula = y ~ x + I(x^2), method = "lm", color = "gray", fullrange = TRUE)
+  } else {
+    quad_geom <- NULL
+  }
+  sol %>%
+  ggplot(aes(x = x, y = val)) + 
+    geom_hline(yintercept = 0, color = "blue") +
+    geom_hline(yintercept = 1, color = "blue") +
+    geom_vline(xintercept = 0, color = "blue") +
+    geom_vline(xintercept = 1, color = "blue") +
+    geom_line(data = correct_post, color = "orangered", linetype = "dashed") +
+    geom_abline(slope = 1, intercept = 0, color = "green", linetype = "dashed") +
+    quad_geom +
+    #geom_line() +
+    geom_point()
+}
+
+```
+```{r}
+#first_x <- 0.9; first_val <- 2*0.9 - 0.9^2 + 0.009;
+#first_x <- 0.95; mix <- 0.9; first_val <- mix * first_x + (1 - mix)*(2*first_x - first_x^2);
+#first_val <- 0.3; mix <- 1; first_x <- 2 - mix * sqrt(4 - 2 *first_val) - (1 - mix) * sqrt(3 - 2*first_val)
+first_x <- 1/4; first_val <- 1/10;
+#sol <- sim_phi_solution(0.5, 2*0.5 - 0.5^2, 5000)
+#sol <- sim_phi_solution(0.9, 2*0.9 - 0.9^2, 5000)
+sol <- sim_phi_solution(first_x,first_val, 5000)
+sol
+# sol_back <- sim_phi_solution_back(first_x,first_val, 5000)
+# sol_back
+
+# rbind(sol, sol_back) %>%
+plot_solution(sol)
 ```
 

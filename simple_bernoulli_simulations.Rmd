@@ -355,6 +355,35 @@ plot_rank_hist(res_simple_gq_prior)
 plot_ecdf_diff(res_simple_gq_prior)
 ```
 
+
+## Passing DAP and vanilla SBC
+
+```{r}
+tfunc_test5_0 <- function(u) {
+  lb = 1/6 * (3 - sqrt(6))
+  ub = 1/6 * (3 + sqrt(6))
+  ifelse(lb < u & u < ub, 1 - sqrt(11 - 12 * u)/sqrt(12), u)  
+} 
+
+tfunc_test5_1 <- function(u) {
+  lb = 1/6 * (3 - sqrt(6))
+  ub = 1/6 * (3 + sqrt(6))
+  ifelse(lb < u & u < ub, 0.5*sqrt(-1/3 +4* u) , u)  
+}
+
+plot_transform_funs(tfunc_test5_0, tfunc_test5_1, "Counterexample passing SBC and DAP")
+```
+
+```{r}
+backend_simple_gq_test5 <- my_backend_func_invcdf(tfunc_test5_0, tfunc_test5_1)
+
+res_simple_gq_test5 <- compute_SBC(datasets_simple_gq_large, backend_simple_gq_test5, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq, globals = my_globals)
+
+plot_rank_hist(res_simple_gq_test5)
+plot_ecdf_diff(res_simple_gq_test5)
+```
+
 ## Summary
 
 Of the quantities we use, we can construct counterexamples that satisfy any two of them, but combining `log_lik` with `theta` and a non-monotonic transformation of `theta` such as `sin(3/2*pi*theta)` manages to uncover all problems. At this point, I am not sure if those three restrict the solutions to only contain the correct posterior, or if a range of possible behaviours is still possible.
