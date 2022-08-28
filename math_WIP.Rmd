@@ -540,11 +540,51 @@ $$
     & \text{for } \bar{h} < y \leq 1 + \bar{h} \\
     \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0)\right)^2 -  2 \Phi^{-1}(y - 1 -\bar{h}|0) + 2(y -  \bar{h} - h_0)}
     & \text{for } 1 + \bar{h} < y  \\
-
   \end{cases}
 $$
 
-See Wolfram
+Since we need to ensure $\Phi^{-1}(0 | 1) = 1$ we obtain:
+
+$$
+1 =   
+  \begin{cases}
+    \sqrt{\left(\Phi^{-1}(1 - h_1 + h_0  | 0) - 1 \right)^2 + 2(1  - h_1)}
+    & \text{for }  0 \leq \bar{h} \\
+    \sqrt{\left( \Phi^{-1}(h_0  - h_1 | 0)\right)^2 -  2 \Phi^{-1}(  - h_1 + h_0|0) + 2(1 -  h_1)}
+    & \text{for } \bar{h} < 0  \\
+  \end{cases}
+$$
+
+Since we need to ensure $\Phi^{-1}(0 | 1) = 0$ we obtain:
+
+$$
+0 =   
+\begin{cases}
+    \left(\Phi^{-1}(1 - h_1 + h_0 | 0)\right)^2 - 2 \Phi^{-1}(1 - h_1 + h_0 | 0) + 2(1 - h_1)
+    & \text{for } 0  \leq \bar{h} \\
+    \left(\Phi^{-1}(h_0 - h_1  | 0) - 1 \right)^2 -2h_1
+    & \text{for } \bar{h} < 0 
+  \end{cases}
+$$
+
+$$
+\left(\Phi^{-1}(h_0 - h_1  | 0) - 1 \right)^2 -2h_1 = 0 \\
+1 - \Phi^{-1}(h_0 - h_1  | 0) = \sqrt{2h_1} \\
+\Phi^{-1}(h_0 - h_1  | 0) = 1 - \sqrt{2h_1}
+$$
+
+$$
+\left(\Phi^{-1}(1 - h_1 + h_0 | 0)\right)^2 - 2 \Phi^{-1}(1 - h_1 + h_0 | 0) + 2(1 - h_1) = 0 \\
+\left(\Phi^{-1}(1 - h_1 + h_0 | 0) - 1\right)^2 + 1 - 2h_1 = 0 \\
+1 - \Phi^{-1}(1 - h_1 + h_0 | 0) = \sqrt{2h_1 - 1} \\
+\Phi^{-1}(1 - h_1 + h_0 | 0) = 1 - \sqrt{2h_1 - 1}
+$$
+
+$$
+\sqrt{2h_1} < 1 \\
+h_1 < \frac{1}{2}
+
+$$
 
 ### Ties
 

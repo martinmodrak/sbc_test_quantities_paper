@@ -384,6 +384,89 @@ plot_rank_hist(res_simple_gq_test5)
 plot_ecdf_diff(res_simple_gq_test5)
 ```
 
+## Swap
+
+$$
+\Phi^{-1}(y | 1) = 
+  \begin{cases}
+    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0)\right)^2 - 2 \Phi^{-1}(y + 1 - \bar{h} | 0) + 2(y + 1 -  \bar{h} - h_0)}
+    & \text{for } y  \leq \bar{h} \\
+    \sqrt{\left(\Phi^{-1}(y - \bar{h}  | 0) - 1 \right)^2 + 2(y - \bar{h} - h_0)}
+    & \text{for } \bar{h} < y \leq 1 + \bar{h} \\
+    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0)\right)^2 -  2 \Phi^{-1}(y - 1 -\bar{h}|0) + 2(y -  \bar{h} - h_0)}
+    & \text{for } 1 + \bar{h} < y  \\
+
+  \end{cases}
+$$
+
+```{r}
+tfunc_test6_0 <- function(u) {
+  u^2
+  #1 - sqrt(1 - u)
+} 
+
+tfunc_test6_1 <- function(u) {
+  h0 <- uniroot(function(x) { tfunc_test6_0(x) - 1/2 }, c(0,1))$root 
+  stopifnot(abs(tfunc_test6_0(h0) - 1/2) < 1e-6)
+  
+  f_h1_larger <- function(h1) {
+    #\Phi^{-1}(1 - h_1 + h_0 | 0) = 1 - \sqrt{2h_1 - 1}
+    tfunc_test6_0(1 - h1 + h0) - 1 + sqrt(2*h1 - 1)
+  }
+  f_h1_smaller <- function(h1) {
+    #\Phi^{-1}(h_0 - h_1  | 0) = 1 - \sqrt{2h_1}
+    tfunc_test6_0(h0 - h1) - 1 + sqrt(2*h1)
+  }
+  h1_larger_low <- 1/2
+  h1_larger_high <- 1 - h0
+  h1_smaller_low <- 0
+  h1_smaller_high <- h0
+  if(h1_larger_low >= h1_larger_high) {
+    h1_larger_sign_diff <- FALSE
+  } else {
+    h1_larger_sign_diff <- sign(f_h1_larger(h1_larger_low)) != sign(f_h1_larger(h1_larger_high))  
+  }
+  if(h1_smaller_low >= h1_smaller_high) {
+    h1_smaller_sign_diff <- FALSE
+  } else {
+    h1_smaller_sign_diff <- sign(f_h1_smaller(h1_smaller_low)) != sign(f_h1_smaller(h1_smaller_high))  
+  }
+  
+  
+  if(h1_larger_sign_diff == h1_smaller_sign_diff) {
+    stop("Both sign diffs")
+  } else if(h1_larger_sign_diff) {
+    h1 <- uniroot(f_h1_larger, c(h1_larger_low,h1_larger_high))$root
+  } else {
+    h1 <- uniroot(f_h1_smaller, c(h1_smaller_low,h1_smaller_high))$root
+  }
+  hbar <- h1 - h0
+  
+  valp1 <- tfunc_test6_0(u + 1 - hbar)
+  val0 <- tfunc_test6_0(u - hbar)
+  valm1 <- tfunc_test6_0(u - 1 - hbar)
+  
+  
+  
+  dplyr::case_when(u < hbar ~ sqrt(valp1^2 - 2 * valp1 + 2 * (u + 1 - hbar - h0)),
+            u < 1 + hbar ~ sqrt((val0 - 1)^2 + 2 *( u - hbar - h0)),
+            TRUE ~ sqrt(valm1^2 - 2 * valm1 + 2 * (u - hbar - h0))
+  )
+}
+
+plot_transform_funs(tfunc_test6_0, tfunc_test6_1, "Counterexample for swap")
+```
+
+```{r}
+backend_simple_gq_test6 <- my_backend_func_invcdf(tfunc_test6_0, tfunc_test6_1)
+
+res_simple_gq_test6 <- compute_SBC(datasets_simple_gq_large, backend_simple_gq_test6, keep_fits = FALSE,
+                        gen_quants = gq_simple_gq, globals = c(my_globals, "tfunc_test6_0"))
+
+plot_rank_hist(res_simple_gq_test6)
+plot_ecdf_diff(res_simple_gq_test6)
+```
+
 ## Summary
 
 Of the quantities we use, we can construct counterexamples that satisfy any two of them, but combining `log_lik` with `theta` and a non-monotonic transformation of `theta` such as `sin(3/2*pi*theta)` manages to uncover all problems. At this point, I am not sure if those three restrict the solutions to only contain the correct posterior, or if a range of possible behaviours is still possible.
