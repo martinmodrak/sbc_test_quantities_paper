@@ -5,10 +5,6 @@ output: html_notebook
 
 ## Plans/further development
 
-Inverse transforms
-
-Swap example
-
 Example concentrating part of the values in a point
 
 Finish Lemma for building counterexamples
@@ -155,6 +151,10 @@ However, flipping the $y$ values, i.e. having:
 
 (and really any two functions that average to 1 over the whole $[0, 1]$ interval) Will satisfy \ref{eq:data_averaged_posterior_phi}.
 We can however show that the posterior family from \ref{eq:bernoulli_flipped} will not pass SBC. (I currently only did a quick simulation to check, but it should be easy to also show mathematically).
+
+
+
+## Value of Q
 
 
 
@@ -473,7 +473,7 @@ $$
 $$
 q_{\phi,f_3}(x | 0) = \begin{cases}
   \frac{1}{4} - \left(\Phi^{-1}(x + h_0 | 0) - 1 \right)^2 & \text{for }  x < 1 - h_0 \\
-  \frac{1}{4} + 2 \Phi^{-1}(x - 1 + h_0|0) - \left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2  & \text{ otherwise }
+  \frac{1}{4} - \left( \Phi^{-1}(x - 1 + h_0 | 0) - 1\right)^2 + 1  & \text{ otherwise }
 \end{cases}
 \\
 q_{\phi,f_3}(x | 1) = \begin{cases}
@@ -492,21 +492,21 @@ $$
 Second, when $1 - h_0 \leq x \leq 1 - h_1$
 
 $$
-2x =  2 \Phi^{-1}(x - 1 + h_0|0) - \left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2 + \left(\Phi^{-1}(x + h_1 | 1)\right)^2 \\
-\Phi^{-1}(x + h_1 | 1) = \sqrt{\left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2 -  2 \Phi^{-1}(x - 1 + h_0|0) + 2x}
+2x =  - \left( \Phi^{-1}(x - 1 + h_0 | 0) - 1\right)^2 + 1 + \left(\Phi^{-1}(x + h_1 | 1)\right)^2 \\
+\Phi^{-1}(x + h_1 | 1) = \sqrt{\left( \Phi^{-1}(x - 1 + h_0 | 0) - 1\right)^2 + 2x - 1}
 $$
 Third, when $1 - h_1 \leq x \leq 1 - h_0$
 
 $$
-2x = 2 \Phi^{-1}(x + h_0 | 0)  -\left(\Phi^{-1}(x + h_0 | 0)\right)^2 + \left( \Phi^{-1}(x - 1 + h_1|1)\right)^2 \\
-\Phi^{-1}(x - 1 + h_1|1) = \sqrt{\left(\Phi^{-1}(x + h_0 | 0)\right)^2 - 2 \Phi^{-1}(x + h_0 | 0) + 2x}
+2x = -\left(\Phi^{-1}(x + h_0 | 0) - 1\right)^2 + 1 + \left( \Phi^{-1}(x - 1 + h_1|1)\right)^2 \\
+\Phi^{-1}(x - 1 + h_1|1) = \sqrt{\left(\Phi^{-1}(x + h_0 | 0) - 1\right)^2 + 2x - 1}
 $$
 
 And lastly, when $x \geq \max\{1 - h_0, 1 - h_1\}$
 
 $$
-2x = 1 - \left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2 + 2 \Phi^{-1}(x - 1 + h_0|0) + \left( \Phi^{-1}(x - 1 + h_1|1)\right)^2 \\
-\Phi^{-1}(x - 1 + h_1|1) = \sqrt{\left( \Phi^{-1}(x - 1 + h_0 | 0)\right)^2 - 2 \Phi^{-1}(x - 1 + h_0|0) + 2x - 1} 
+2x = 1 - \left( \Phi^{-1}(x - 1 + h_0 | 0) - 1\right)^2 + 1 + \left( \Phi^{-1}(x - 1 + h_1|1)\right)^2 \\
+\Phi^{-1}(x - 1 + h_1|1) = \sqrt{\left( \Phi^{-1}(x - 1 + h_0 | 0) - 1\right)^2 + 2x - 2} 
 $$
 
 Substituting $\bar{h} = h_1 - h_0$ and $y = x + \bar{h} + h_0$ in the first two cases and $y = x - 1 + \bar{h} + h_0$ into the other cases as needed we obtain: 
@@ -521,11 +521,11 @@ $$
   \begin{cases}
     \sqrt{\left(\Phi^{-1}(y - \bar{h}  | 0) - 1 \right)^2 + 2(y - \bar{h} - h_0)}
     & \text{for } \bar{h} < y \leq 1 + \bar{h} \\
-    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0)\right)^2 -  2 \Phi^{-1}(y - 1 -\bar{h}|0) + 2(y -  \bar{h} - h_0)}
+    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0) - 1\right)^2 + 2(y -  \bar{h} - h_0) - 1}
     & \text{for } 1 + \bar{h} \leq y  \\
-    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0)\right)^2 - 2 \Phi^{-1}(y + 1 - \bar{h} | 0) + 2(y + 1 -  \bar{h} - h_0)}
+    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0) - 1\right)^2 + 2(y -  \bar{h} - h_0) + 1}
     & \text{for } y  \leq \bar{h} \\
-    \sqrt{\left( \Phi^{-1}(y - \bar{h} | 0)\right)^2 - 2 \Phi^{-1}(y - \bar{h}|0) + 2y - 2\bar{h} +  2h_0+1} 
+    \sqrt{\left( \Phi^{-1}(y - \bar{h} | 0) - 1\right)^2  + 2y - 2\bar{h} +  2h_0} 
     & \text{for } \bar{h} < y < 1 + \bar{h} \\
   \end{cases}
 $$
@@ -534,59 +534,164 @@ After the substitution, we notice that the 1st and 4th branches are identical, s
 $$
 \Phi^{-1}(y | 1) = 
   \begin{cases}
-    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0)\right)^2 - 2 \Phi^{-1}(y + 1 - \bar{h} | 0) + 2(y + 1 -  \bar{h} - h_0)}
-    & \text{for } y  \leq \bar{h} \\
     \sqrt{\left(\Phi^{-1}(y - \bar{h}  | 0) - 1 \right)^2 + 2(y - \bar{h} - h_0)}
     & \text{for } \bar{h} < y \leq 1 + \bar{h} \\
-    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0)\right)^2 -  2 \Phi^{-1}(y - 1 -\bar{h}|0) + 2(y -  \bar{h} - h_0)}
-    & \text{for } 1 + \bar{h} < y  \\
+    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0) - 1\right)^2 + 2(y -  \bar{h} - h_0) - 1}
+    & \text{for } 1 + \bar{h} \leq y  \\
+    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0) - 1\right)^2 + 2(y -  \bar{h} - h_0) + 1}
+    & \text{for } y  \leq \bar{h} 
   \end{cases}
 $$
 
-Since we need to ensure $\Phi^{-1}(0 | 1) = 1$ we obtain:
 
-$$
-1 =   
-  \begin{cases}
-    \sqrt{\left(\Phi^{-1}(1 - h_1 + h_0  | 0) - 1 \right)^2 + 2(1  - h_1)}
-    & \text{for }  0 \leq \bar{h} \\
-    \sqrt{\left( \Phi^{-1}(h_0  - h_1 | 0)\right)^2 -  2 \Phi^{-1}(  - h_1 + h_0|0) + 2(1 -  h_1)}
-    & \text{for } \bar{h} < 0  \\
-  \end{cases}
-$$
+
 
 Since we need to ensure $\Phi^{-1}(0 | 1) = 0$ we obtain:
 
 $$
-0 =   
 \begin{cases}
-    \left(\Phi^{-1}(1 - h_1 + h_0 | 0)\right)^2 - 2 \Phi^{-1}(1 - h_1 + h_0 | 0) + 2(1 - h_1)
-    & \text{for } 0  \leq \bar{h} \\
-    \left(\Phi^{-1}(h_0 - h_1  | 0) - 1 \right)^2 -2h_1
-    & \text{for } \bar{h} < 0 
+    0 = \left(\Phi^{-1}(1 - h_1 + h_0 | 0) - 1\right)^2  - 2h_1 + 1
+    & \text{for } h_0 \leq h_1 \\
+    0 = \left(\Phi^{-1}(h_0 - h_1  | 0) - 1 \right)^2 -2h_1
+    & \text{for } h_0 > h_1
+  \end{cases}
+$$
+
+Since $\Phi^{-1}$ is bounded within $[0,1]$ the above implies $h_0 \leq h_1 \iff  \frac{1}{2} \leq h_1$
+and we can rearrange as:
+
+$$
+h_0 \leq h_1 \iff  \frac{1}{2} \leq h_1 \\
+\begin{cases}
+    \Phi^{-1}(1 - h_1 + h_0 | 0) =  1 - \sqrt{2h_1 - 1}
+    & \text{for } h_0 \leq h_1 \\
+    \Phi^{-1}(h_0 - h_1  | 0) = 1 - \sqrt{2h_1}
+    & \text{for } h_0 > h_1
   \end{cases}
 $$
 
 $$
-\left(\Phi^{-1}(h_0 - h_1  | 0) - 1 \right)^2 -2h_1 = 0 \\
-1 - \Phi^{-1}(h_0 - h_1  | 0) = \sqrt{2h_1} \\
-\Phi^{-1}(h_0 - h_1  | 0) = 1 - \sqrt{2h_1}
-$$
-
-$$
-\left(\Phi^{-1}(1 - h_1 + h_0 | 0)\right)^2 - 2 \Phi^{-1}(1 - h_1 + h_0 | 0) + 2(1 - h_1) = 0 \\
-\left(\Phi^{-1}(1 - h_1 + h_0 | 0) - 1\right)^2 + 1 - 2h_1 = 0 \\
-1 - \Phi^{-1}(1 - h_1 + h_0 | 0) = \sqrt{2h_1 - 1} \\
-\Phi^{-1}(1 - h_1 + h_0 | 0) = 1 - \sqrt{2h_1 - 1}
-$$
-
-$$
-\sqrt{2h_1} < 1 \\
-h_1 < \frac{1}{2}
+h_0 \leq h_1 \implies (1 - h_1 + h_0 > h_0 \iff  1 - \sqrt{2h_1 - 1} > \frac{1}{2}) \\
 
 $$
 
-### Ties
+So to construct a posterior family satisfying SBC w.r.t. $f_3$, we can choose almost any $\Phi^{-1}(x | 0)$, calculate $h_0$, then use Equation~\ref{TODO} to determine $h_1$ and finally compute $\Phi^{-1}(x | 1)$ via Equation~\ref{TODO}.
+
+Now we can show that this is indeed a different condition than the one in Example~\ref{TODO}. Let us take $\phi_B$ from Example~\ref{TODO} - as discussed there, it passes SBC w.r.t $f_1$: 
+
+$$
+\begin{gather*}
+\Phi^{-1}_B(x | 0) = \begin{cases}
+   \frac{2}{3}x & x < \frac{3}{4} \\
+   \frac{1}{2} + 2(x - \frac{3}{4}) & x \geq \frac{3}{4} \\
+\end{cases} \\
+\Phi^{-1}_B(x | 1) = \begin{cases}
+   \frac{1}{3}\sqrt{6x + 4 x^2} & x < \frac{3}{4} \\
+   \sqrt{3 - 6x + 4 x ^2} & x \geq \frac{3}{4} \\
+\end{cases}    
+\end{gather*}
+$$
+In this case we obtain $h_0 = \frac{3}{4} > \frac{3}{4}(\sqrt{2} - 1) = h_1$ while 
+
+$$
+\Phi^{-1}_B(h_0 - h_1 | 0) =  \Phi^{-1}_B \left(\frac{3}{4}(2 - \sqrt{2}) | 0\right) = \frac{1}{2}(2 - \sqrt{2}) = 1 - \frac{1}{\sqrt{2}} \\
+1 - \sqrt{2h_1} = 1 - \sqrt{\frac{3}{2}(\sqrt{2} - 1)} = 1 - \frac{\sqrt{3(\sqrt{2} - 1)}}{\sqrt{2}} 
+$$
+so the condition in Equation~\ref{TODO} does not hold and $\phi_B$ cannot pass SBC w.r.t $f_3$.
+
+
+### Ties - continuous
+
+$$
+f_4(\theta, y) = \begin{cases}
+\theta & \theta < \frac{1}{2} \\
+\frac{1}{2} & \theta \geq \frac{1}{2} 
+\end{cases}
+$$
+$$
+C_{f_4}(s | 0) = \begin{cases}
+   \int_0^s \mathrm{d}\theta \: 2(1 - \theta)  =  2s - s^2  & s < \frac{1}{2}\\
+   1 & s \geq \frac{1}{2}
+\end{cases}\\
+D_{f_4}(s | 0) = \begin{cases}
+    0 & s < \frac{1}{2}\\
+   \int_{\frac{1}{2}}^1 \mathrm{d}\theta \: 2(1 - \theta)  =  \frac{1}{4} & s \geq \frac{1}{2}
+\end{cases}\\
+C_{f_4}(s | 1) = \begin{cases}
+  \int_0^s \mathrm{d}\theta \: 2\theta = s^2 & s < \frac{1}{2}\\
+  1 & s \geq \frac{1}{2}
+\end{cases} \\
+D_{f_4}(s | 1) = \begin{cases}
+    0 & s < \frac{1}{2}\\
+   \int_{\frac{1}{2}}^1 \mathrm{d}\theta \: 2\theta  =  \frac{3}{4} & s \geq \frac{1}{2}
+\end{cases}
+$$
+We'll reuse the notation $h_y = \Phi \left(\frac{1}{2}|y \right)$
+
+$$
+C^{-1}_{\phi, f_4}(x | y) = \begin{cases}
+   \Phi^{-1}(x | y) & x < h_y \\
+   \frac{1}{2} & x \geq h_y
+\end{cases}\\
+D_{\phi, f_4}(s | y) = \begin{cases}
+  \int_{\frac{1}{2}}^1 \mathrm{d}\theta \: \phi (\theta | y) = 1 - h_y & s = \frac{1}{2} \\
+  0 & s \neq \frac{1}{2}
+\end{cases}
+$$
+
+Using Lemma~\ref{le:value_of_q}
+
+$$
+q_{\phi,f_4}(x | y) = \begin{cases}
+  C_{f_4}(\Phi^{-1}(x | y) | y)  & x < h_y \\
+  C_{f_4}\left(\frac{1}{2}| y \right) + \frac{D_{f_4}\left(\frac{1}{2}| y \right)}{D_{\phi,f_4}\left(\frac{1}{2}| y \right)} \left(x - C_{\phi,f_4}\left(\frac{1}{2}|y \right) \right)& x \geq h_y
+\end{cases} = \\
+= \begin{cases}
+  C_{f_4}(\Phi^{-1}(x | y) | y)  & x < h_y \\
+  1 + \frac{D_{f_4}\left(\frac{1}{2}| y \right)}{1 - h_y} \left(x - 1 \right)& x \geq h_y
+\end{cases}
+$$
+
+$$
+q_{\phi,f_4}(x | 0) = \begin{cases}
+1 - \left(\Phi^{-1}(x | 0) - 1\right)^2 & x < h_0 \\
+1 + \frac{x - 1}{4(1 - h_0)} & x \geq h_0
+\end{cases} \\
+
+q_{\phi,f_4}(x | 1) = \begin{cases}
+\left(\Phi^{-1}(x | 1)\right)^2 & x < h_1 \\
+1 + \frac{3(x - 1)}{4(1 - h_1)} & x \geq h_1
+\end{cases}
+$$
+
+$$
+2x = \begin{cases}
+  - \left(\Phi^{-1}(x | 0) - 1\right)^2 + \left(\Phi^{-1}(x | 1)\right)^2 + 1 & x< \min\{h_0, h_1\} \\
+  - \left(\Phi^{-1}(x | 0) - 1\right)^2 + 2 + \frac{3(x - 1)}{4(1 - h_1)}& h_1 \leq x < h_0 \\
+ 1 + \frac{x - 1}{4(1 - h_0)} + \left(\Phi^{-1}(x | 1)\right)^2 & h_0 \leq x < h_1 \\
+ 2 + \frac{x - 1}{4(1 - h_0)} + \frac{3(x - 1)}{4(1 - h_1)} & \max\{h_0, h_1\} \leq x
+\end{cases}
+$$
+
+If $\max\{h_0, h_1\} = 1$ SBC fails (TODO) if not, then the last condition implies
+
+$$
+h_1 = \frac{20 h_0 - 4}{32 h_0 - 7}
+$$
+
+Substituting this into the second branch in \ref{TODO} we obtain a set of constraints on $\Phi^{-1}$:
+
+$$
+\begin{align*}
+x< \min\{h_0, h_1\} & \implies \Phi^{-1}(x | 1) = \sqrt{2x + (\Phi^{-1}(x | 0) - 1)^2 - 1} \\
+h_1 \leq x < h_0 & \implies \Phi^{-1}(x | 0) = 1 - \frac{1}{2}\sqrt{\frac{x - 1}{4  h_0 - 1}} \\
+h_0 \leq x < h_1 & \implies \Phi^{-1}(x | 1) = \frac{1}{2}\sqrt{\frac{(32 h_0 - 7)x - 16 h_0 + 3}{4 h_0 - 1}}
+\end{align*}
+$$
+Let's take $\Phi^{-1}(x | 0) = x^2, \Phi^{-1}(x | 1) = \sqrt{2x - 2x^2 + x^4}$. This will pass SBC w.r.t $f_1$. However, it will not pass SBC w.r.t $f_4$ for multiple reasons. Probably the easiest to see is that unless $h_0 = h_1$, some part of at least one of the inverse CDF functions is required to be a shifted and scaled square-root of $x$, which neither can satisfy. And indeed $\sqrt{\frac{1}{2}} = h_0 \neq h_1 \approx 0.15$. Also the relation between $h_0$ and $h_1$ from \ref{TODO} is violated.
+
+
+### Ties - discrete
 
 $$
 q_{\phi,f_1}(x | 0) = \begin{cases}
