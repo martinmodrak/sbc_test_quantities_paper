@@ -19,6 +19,36 @@ Can the lemma to create counterexamples for non-monotonous functions be used to 
 
 Test-function orthogonality.
 
+## Introduction
+
+$$
+   \pi_\text{joint}(y, \theta) = \pi_\text{obs}(y | \theta) \pi_\text{prior}(\theta)\\
+    \pi_\text{marg}\left(y \right) = \int_\Theta \mathrm{d} \theta \: \pi_{\text{obs}}(y | \theta) \pi_\text{prior}(\theta)\\
+    \pi_\text{post}(\theta | y) = \frac{\pi_\text{obs}(y | \theta) \pi_\text{prior}(\theta)}{\pi_\text{marg}\left(y \right)}
+$$
+
+$$
+\pi_\text{prior}(\theta) = \int_Y \mathrm{d} y \int_\Theta \mathrm{d}\tilde\theta  \: \pi_\text{post}(\theta |y) \pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde \theta)
+$$
+
+$$
+\pi_\text{obs}(y | \theta) \pi_\text{prior}(\theta) = \pi_\text{joint}(y, \theta) = \pi_\text{post}(\theta | y) \pi_\text{marg}(y)
+$$
+
+$$
+\pi_\text{obs}(y | \tilde\theta) \pi_\text{prior}(\tilde\theta) = \pi_\text{marg}\left(y \right)\pi_\text{post}(\tilde\theta | y)
+$$
+
+So we can consider
+
+$$
+\pi_\text{SBC}(y, \theta, \tilde\theta) = \pi_\text{prior}(\tilde\theta) \pi_\text{obs}(y | \tilde\theta) \pi_\text{post}(\theta | y)
+$$
+
+$$
+\pi_\text{SBC}(y, \theta, \tilde\theta) = \pi_\text{marg}(y) \pi_\text{post}(\theta | y) \pi_\text{post}(\tilde\theta | y)  
+$$
+
 ## Inverse transforms
 
 $$
