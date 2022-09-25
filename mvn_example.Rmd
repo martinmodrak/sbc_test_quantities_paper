@@ -1,8 +1,12 @@
 ---
 title: "Multivariate normal example"
-output: html_notebook
+output: html_document
+abstract: "This R Markdown document runs the simulations and recreates all the figures used in Section 4 of the paper TODO: final title."
 ---
 
+The examples are run using the [SBC](https://hyunjimoon.github.io/SBC/) R package.  - consult
+the [Getting Started with SBC](https://hyunjimoon.github.io/SBC/articles/SBC.html) vignette for basics of the package. 
+We will also use "custom backends" which are discussed and explaiend in the [Implementing a new backend](https://hyunjimoon.github.io/SBC/articles/implementing_backends.html).
 
 ```{r setup, message=FALSE,warning=FALSE, results="hide"}
 library(SBC)
@@ -17,8 +21,12 @@ options(mc.cores = parallel::detectCores())
 library(future)
 plan(multisession)
 
+# If true, additional test quantities based on energy score and variogram
+# score are included. Those were not very successful and are not discussed
+# in the paper.
 include_sampling_scores <- FALSE
 
+# Setup caching of SBC results for faster iterations
 if(include_sampling_scores) {
   cache_dir <- "./_samp_scores_SBC_cache"
 } else {
@@ -46,15 +54,19 @@ hist_plot_height <- 4
 We are using the model:
 
 $$
-\mathbf{\mu} \sim MVN(0, \mathbf{\Sigma})\\
-\mathbf{y}_1, \ldots, \mathbf{y}_N \sim MVN(\mathbf{\mu}, \mathbf{\Sigma})\\
-\mathbf{\Sigma} = \left(\begin{matrix}
+\begin{align}
+\mathbf{\mu} &\sim \mbox{MVN}(0, \mathbf{\Sigma}) \notag \\ 
+\mathbf{y}_1, \ldots, \mathbf{y}_n &\sim \mbox{MVN}(\mathbf{\mu}, \mathbf{\Sigma}) \notag\\
+\mathbf{\Sigma} &= \left(\begin{matrix}
  1 & 0.8 \\
  0.8 & 1 \\
 \end{matrix}\right)
+\end{align}
 $$
 
 where $MVN$ is the multivariate normal distribution. In this case the posterior has analytical solution and should also be multivariate normal.
+
+Now we draw 1000 simulated datasets from this model:
 
 ```{r}
 set.seed(266552)
@@ -74,6 +86,8 @@ ds <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3,
 
 ```
 
+We will use a custom backend that will directly generate draws using a function
+passed into the `sampling_func` argument.
 
 ```{r}
 my_backend_mvn <- function(sampling_func, N_samples = 100, func_extra_args = list()) {
@@ -100,6 +114,8 @@ my_backend_mvn_globals = c("SBC_fit.my_backend_mvn",
 ```
 
 
+By defualt, SBC will include the individual parameters (`mu[1]`, `mu[2]`) as test
+quantities. We now setup the additional test quantities:
 
 
 ```{r}
@@ -111,6 +127,7 @@ quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2],
                                `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE),
                                )
 
+# Ordering the quantities for neat plotting in the paper
 order_quants <- function(results) {
   quants_in_order <- c("mu[1]", "mu[2]", 
                     "mu[1] + mu[2]",
@@ -167,6 +184,8 @@ if(include_sampling_scores) {
 
 Introducing $\bar{\mathbf{y}} = \frac{1}{N}\sum_{i = 1}^{N} \mathbf{y}_i$, the posterior is $MVN\left(\frac{N\bar{\mathbf{y}}}{n + 1}, \frac{1}{N + 1}\mathbf{\Sigma}\right)  $
 
+Let's define the sampling function and backend corresponding to the correct posterior and run SBC.
+
 ```{r}
 sampling_func_correct <- function(y, N_samples, prior_sigma = mvn_sigma) {
   K <- ncol(y)
@@ -188,24 +207,34 @@ res_correct <- compute_SBC(ds, backend_correct, gen_quants = quants,
 res_correct <- order_quants(res_correct)
 ```
 
-```{r}
+Those are the diagnostic plots after `r N_sims` simulations.
+
+```{r res_correct_diag}
 plot_rank_hist(res_correct)
 plot_ecdf_diff(res_correct)
 ```
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+And here is the history of the gamma statistic (see the paper for exact definitons).
+
+```{r res_correct_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_correct <- plot_log_gamma_history(res_correct)
 p_hist_correct
 ggsave(file.path(fig_dir, "hist_correct.pdf"), p_hist_correct, width = hist_plot_width, height = hist_plot_height)
 ```
+For comparison also the history of the p-value for a Kolmogorov-Smirnov test for uniformity (blue horizontal line is 0.05).
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+```{r res_correct_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_correct)
 
 ```
 
+# Ignoring Data
 
-# Prior only
+Several examples of posteriors that ignore all or some of the data follow.
+
+## Prior only
+
+Now we run SBC for a backend that samples from the prior:
 
 ```{r}
 sampling_func_prior_only <- function(y, N_samples) {
@@ -221,22 +250,38 @@ res_prior_only <- compute_SBC(ds, backend_prior_only, gen_quants = quants,
 res_prior_only <- order_quants(res_prior_only)
 ```
 
-```{r}
+Now the diagnostic plots
+
+```{r res_prior_only_diag}
 plot_rank_hist(res_prior_only)
 plot_ecdf_diff(res_prior_only)
 ```
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+```{r res_prior_only_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_prior_only <- plot_log_gamma_history(res_prior_only, max_sim_id = 50)
 p_hist_prior_only
 ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = hist_plot_width, height = hist_plot_height)
 ```
 
-```{r}
+Here's the rest of the history showing that non-data dependent variables do
+not show any meaningful discrepancy:
+
+```{r res_prior_only_history_2}
 plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu|vario")
 ```
 
-```{r, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
+For comparison, here's the history of the KS p-value:
+
+
+```{r res_prior_only_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_ks_test_history(res_prior_only, max_sim_id = 50)
+```
+
+Additonally, we show that splitting the ranks for `mu[1]` and `mu[2]` by the 
+average of `y` results in strongly non-uniform histograms. 
+However the non-uniformity in each subgroup is much smaller than what e.g. the `mvn_log_lik` quantity provides.
+
+```{r res_prior_only_split, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
 mean1_positive <- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,1]) > 0 }))
 mean2_positive <- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,2]) > 0 }))
 stats_split <- res_prior_only$stats %>% filter(variable %in% c("mu[1]", "mu[2]")) %>%
@@ -245,6 +290,8 @@ stats_split <- res_prior_only$stats %>% filter(variable %in% c("mu[1]", "mu[2]")
                                    "positive", "negative"))
                             )
 
+# The visualisations in SBC package do not supprt different variables have different
+# number of simulations. We thus discard simulations to keep both groups of the same size.
 min_n <- stats_split %>% group_by(variable) %>% summarise(n = n()) %>% pull(n) %>% min()
 
 stats_split <- stats_split %>% group_by(variable) %>%
@@ -257,10 +304,13 @@ p_rank_hist_prior_only_split
 ggsave(file.path(fig_dir, "rank_hist_prior_only_split.pdf"), p_rank_hist_prior_only_split, width = hist_plot_width + 1, height = hist_plot_height / 2 )
 ```
 
-# One missing data point
+## One missing data point
+
+Now we have one data point missing:
 
 ```{r}
 sampling_func_one_missing <- function(y, N_samples) {
+  # Delegate to the correct posterior, just throw away data
   sampling_func_correct(y[2:nrow(y),], N_samples)
 }
 
@@ -275,24 +325,40 @@ res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants,
 res_one_missing <- order_quants(res_one_missing)
 ```
 
-```{r}
+The diagnostic plots:
+
+```{r res_one_missing_diag}
 plot_rank_hist(res_one_missing)
 plot_ecdf_diff(res_one_missing)
 ```
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+And the history of the gamma statistic
+
+```{r res_one_missing_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_one_missing <- plot_log_gamma_history(res_one_missing, max_sim_id = 100)
 p_hist_one_missing
 ggsave(file.path(fig_dir, "hist_one_missing.pdf"), p_hist_one_missing, width = hist_plot_width, height = hist_plot_height)
 ```
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+
+A bit longer window
+
+```{r res_one_missing_history_2, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_log_gamma_history(res_one_missing, max_sim_id = 500)
 ```
 
+And the KS p-value - note that the initial discrepancies in all of the quantities look more serious in this view (although the non-likelihood quantities in fact have uniform distribution)
 
-# One missing data point - larger N
+```{r res_one_missing_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_ks_test_history(res_one_missing, max_sim_id = 500)
+```
+
+
+## One missing data point - larger N
+
+Identical setup as above, but we have 20 data points.
 
 ```{r}
+# Generate datasets with 20 datapoints.
 set.seed(2665884)
 ds_20 <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 20, sigma = mvn_sigma), N_sims)
 
@@ -304,17 +370,26 @@ res_one_missing_20 <- compute_SBC(ds_20, backend_one_missing, gen_quants = quant
 res_one_missing_20 <- order_quants(res_one_missing_20)
 ```
 
-```{r}
+The final diagnostic plots
+
+```{r res_one_missing_20_diag}
 plot_rank_hist(res_one_missing_20)
 plot_ecdf_diff(res_one_missing_20)
 ```
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+History of gamma statistic
+
+```{r res_one_missing_20_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_one_missing_20 <- plot_log_gamma_history(res_one_missing_20)
 p_hist_one_missing_20
 ggsave(file.path(fig_dir, "hist_one_missing_20.pdf"), p_hist_one_missing_20, width = hist_plot_width, height = hist_plot_height)
 ```
 
+History of KS p-value
+
+```{r res_one_missing_20_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_ks_test_history(res_one_missing_20)
+```
 
 
 # Incorrect posterior correlations
@@ -352,51 +427,51 @@ res_uncorr <- order_quants(res_uncorr)
 ```
 
 
-Although the posterior is incorrect, the default univariate checks don't show any problem even with `r N_sims` simulations.
+Although the posterior is incorrect, the default univariate checks don't show any problem even with `r N_sims` simulations. 
+All of the other quantities however show issues.
 
 ```{r results_uncorr}
 plot_rank_hist(res_uncorr)
 plot_ecdf_diff(res_uncorr)
 ```
 
-We can however add derived quantities that depend on both elements of mu. We'll
-try their sum, difference, product and the multivarite normal log likelihood
+The history of the gamma statistic.
 
-```{r}
-res_corr_quants  <- compute_SBC(ds, backend_uncorr, keep_fits = FALSE,
-                        globals = my_backend_mvn_globals,
-                        gen_quants = quants,
-                        cache_mode = "results", 
-                        cache_location = file.path(cache_dir, "corr_quants"))
-```
-
-We see that all of the derived quantities show problems, but with different strength
-of signal. We'll especially note that the log likelihood is once again a very good
-choice, while sum is probably the worst of those tested.
-
-```{r results_corr_quants}
-plot_rank_hist(res_corr_quants)
-plot_ecdf_diff(res_corr_quants)
-```
-
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+```{r res_corr_quants_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_corr <- plot_log_gamma_history(res_corr_quants, max_sim_id = 100)
 p_hist_corr
 ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = hist_plot_width, height = hist_plot_height)
 ```
 
+A somewhat longer window shows how all the quantities produce issues:
+
+```{r res_corr_quants_history_2, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_log_gamma_history(res_corr_quants, max_sim_id = 250)
+```
+
+And KS p-value. Note the lowered sensitivity towards issues with `mu[1] * mu[2]` and `mu[1] + mu[2]`.
+
+```{r res_corr_quants_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
+plot_ks_test_history(res_corr_quants, max_sim_id = 250)
+```
 
 # Non-monotonous transform
 
+Finally our backend showing the (probably not very practical) utility of non-monotonous transformations.
+
 ```{r}
 set.seed(246855)
-
+# Generate even more datasets - same quantities take loooong to show problems
 ds_more <- bind_datasets(
   ds,
   generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma), n_sims = 5000)
 )
 ```
 
+
+Now let us build the sampling function. The overall idea is that we start with the correct posterior.
+We then use the CDF to transform the samples to [0,1], manipulate the value on this scale to
+achieve the desired CDF shape and than transform back with the quantile function.
 
 ```{r}
 sampling_func_non_mon <- function(y, N_samples, prior_sigma = mvn_sigma) {
@@ -429,6 +504,7 @@ sampling_func_non_mon <- function(y, N_samples, prior_sigma = mvn_sigma) {
 
 backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
 
+# Define different test quantities
 quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `abs(mu[1])` = abs(mu[1]),
                                        `drop(mu[1])` = ifelse(mu[1] < 1, mu[1], mu[1] - 5),
@@ -450,14 +526,18 @@ res_non_mon <- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon
 res_non_mon <- order_quants(res_non_mon)
 ```
 
+The diagnostic plots
 
 
-```{r}
+```{r res_non_mon_diag}
 plot_rank_hist(res_non_mon)
 plot_ecdf_diff(res_non_mon)
 ```
 
-```{r, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
+Show that the manipulation of the ranks was succesful - those are the ranks split by
+positive/negative mean of `y`.
+
+```{r res_non_mon_split, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
 mean1_positive <- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,1]) > 0 }))
 mean2_positive <- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,2]) > 0 }))
 stats_split <- res_non_mon$stats %>% filter(variable %in% c("mu[1]", "mu[2]")) %>%
@@ -465,7 +545,8 @@ stats_split <- res_non_mon$stats %>% filter(variable %in% c("mu[1]", "mu[2]")) %
                            if_else(if_else(variable == "mu[1]", sim_id %in% mean1_positive, sim_id %in% mean2_positive), 
                                    "positive", "negative"))
                             )
-
+# The visualisations in SBC package do not supprt different variables have different
+# number of simulations. We thus discard simulations to keep both groups of the same size.
 min_n <- stats_split %>% group_by(variable) %>% summarise(n = n()) %>% pull(n) %>% min()
 
 stats_split <- stats_split %>% group_by(variable) %>%
@@ -479,7 +560,10 @@ ggsave(file.path(fig_dir, "rank_hist_non_mon_split.pdf"), p_rank_hist_non_mon_sp
 ```
 
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+Now the history. To make everything well visible, show only a subset of the simulations
+for some quantities:
+
+```{r res_non_mon_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 shared_mark <- geom_vline(color = "red", linetype = "dashed", xintercept = 500)
 p_hist_non_mon_1 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = "abs|\\*|drop") +
   theme(axis.title = element_blank()) + shared_mark
@@ -497,13 +581,17 @@ p_hist_non_mon
 ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)
 ```
 
-```{r}
+This is the history without any modifications. Note that for several quantities the values crash too low and become NaN.
+
+```{r res_non_mon_history_simple}
 p_hist_non_mon_ext <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5))
 p_hist_non_mon_ext
 ggsave(file.path(fig_dir, "hist_non_mon_ext.pdf"), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)
 ```
 
 # Small changes compound
+
+Here we add small bias to the correct posterior.
 
 ```{r}
 K_changes <- 2
@@ -538,17 +626,22 @@ res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = q
 res_small_change <- order_quants(res_small_change)
 ```
 
-```{r}
+The diagnostic plots.
+
+```{r res_small_change_diag}
 plot_rank_hist(res_small_change)
 plot_ecdf_diff(res_small_change)
 ```
 
+And the history of the gamma statistic:
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+```{r res_small_change_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 p_hist_small_change <- plot_log_gamma_history(res_small_change, max_sim_id = 500)
 p_hist_small_change
 ggsave(file.path(fig_dir, "hist_small_change.pdf"), p_hist_small_change, width = hist_plot_width, height = hist_plot_height)
 ```
+
+And the KS p-value - note the reduced sensitivity for e.g. `mu[1]`, `mu[2]` and `mu[1] + mu[2]`.
 
 ```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)
