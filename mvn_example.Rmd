@@ -17,7 +17,7 @@ options(mc.cores = parallel::detectCores())
 library(future)
 plan(multisession)
 
-include_sampling_scores <- TRUE
+include_sampling_scores <- FALSE
 
 if(include_sampling_scores) {
   cache_dir <- "./_samp_scores_SBC_cache"
@@ -110,6 +110,28 @@ quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2],
                                `mvn_log_lik[1]` = mvtnorm::dmvnorm(y[1,], mean = mu, sigma = mvn_sigma, log = TRUE),
                                `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE),
                                )
+
+order_quants <- function(results) {
+  quants_in_order <- c("mu[1]", "mu[2]", 
+                    "mu[1] + mu[2]",
+                    "mu[1] - mu[2]",
+                    "mu[1] * mu[2]",
+                     "mvn_log_lik",
+                    "mvn_log_lik[1]",
+                    "mvn_log_lik[2]",
+                    "abs(mu[1])",
+                    "drop(mu[1])",
+                    "sin(1/mu[1])",
+                    "mu[1] * mean(y[,1])",
+                    "energy_score",
+                    "variogram_score")
+  if(!(all(results$stats$variable %in% quants_in_order))) {
+    print(setdiff(unique(results$stats$variable, quants_in_order)))
+    stop("Unrecognized quants")
+  }
+  results$stats <- results$stats %>% mutate(variable = factor(variable, levels = quants_in_order))
+  results
+}
 ```
 
 
@@ -163,6 +185,7 @@ res_correct <- compute_SBC(ds, backend_correct, gen_quants = quants,
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_correct"),
                            )
+res_correct <- order_quants(res_correct)
 ```
 
 ```{r}
@@ -195,6 +218,7 @@ res_prior_only <- compute_SBC(ds, backend_prior_only, gen_quants = quants,
                               globals = my_backend_mvn_globals,
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_prior_only"))
+res_prior_only <- order_quants(res_prior_only)
 ```
 
 ```{r}
@@ -212,6 +236,26 @@ ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = his
 plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu|vario")
 ```
 
+```{r, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
+mean1_positive <- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,1]) > 0 }))
+mean2_positive <- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,2]) > 0 }))
+stats_split <- res_prior_only$stats %>% filter(variable %in% c("mu[1]", "mu[2]")) %>%
+  mutate(variable = paste0(variable, " - mean y ", 
+                           if_else(if_else(variable == "mu[1]", sim_id %in% mean1_positive, sim_id %in% mean2_positive), 
+                                   "positive", "negative"))
+                            )
+
+min_n <- stats_split %>% group_by(variable) %>% summarise(n = n()) %>% pull(n) %>% min()
+
+stats_split <- stats_split %>% group_by(variable) %>%
+  mutate(sim_id = 1:n()) %>%
+  ungroup() %>%
+  filter(sim_id <= min_n)
+
+p_rank_hist_prior_only_split <- plot_rank_hist(stats_split) + facet_wrap(~variable, nrow = 1)
+p_rank_hist_prior_only_split
+ggsave(file.path(fig_dir, "rank_hist_prior_only_split.pdf"), p_rank_hist_prior_only_split, width = hist_plot_width + 1, height = hist_plot_height / 2 )
+```
 
 # One missing data point
 
@@ -227,6 +271,8 @@ res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants,
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_one_missing"))
+
+res_one_missing <- order_quants(res_one_missing)
 ```
 
 ```{r}
@@ -255,6 +301,7 @@ res_one_missing_20 <- compute_SBC(ds_20, backend_one_missing, gen_quants = quant
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_one_missing_20"))
+res_one_missing_20 <- order_quants(res_one_missing_20)
 ```
 
 ```{r}
@@ -267,6 +314,7 @@ p_hist_one_missing_20 <- plot_log_gamma_history(res_one_missing_20)
 p_hist_one_missing_20
 ggsave(file.path(fig_dir, "hist_one_missing_20.pdf"), p_hist_one_missing_20, width = hist_plot_width, height = hist_plot_height)
 ```
+
 
 
 # Incorrect posterior correlations
@@ -300,6 +348,7 @@ res_uncorr <- compute_SBC(ds, backend_uncorr,
                         gen_quants = quants,
                         cache_mode = "results", 
                         cache_location = file.path(cache_dir, "mvn_uncorr"))
+res_uncorr <- order_quants(res_uncorr)
 ```
 
 
@@ -314,24 +363,24 @@ We can however add derived quantities that depend on both elements of mu. We'll
 try their sum, difference, product and the multivarite normal log likelihood
 
 ```{r}
-res_corr_gq  <- compute_SBC(ds, backend_uncorr, keep_fits = FALSE,
+res_corr_quants  <- compute_SBC(ds, backend_uncorr, keep_fits = FALSE,
                         globals = my_backend_mvn_globals,
                         gen_quants = quants,
                         cache_mode = "results", 
-                        cache_location = file.path(cache_dir, "corr_gq"))
+                        cache_location = file.path(cache_dir, "corr_quants"))
 ```
 
 We see that all of the derived quantities show problems, but with different strength
 of signal. We'll especially note that the log likelihood is once again a very good
 choice, while sum is probably the worst of those tested.
 
-```{r results_corr_gq}
-plot_rank_hist(res_corr_gq)
-plot_ecdf_diff(res_corr_gq)
+```{r results_corr_quants}
+plot_rank_hist(res_corr_quants)
+plot_ecdf_diff(res_corr_quants)
 ```
 
 ```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
-p_hist_corr <- plot_log_gamma_history(res_corr_gq, max_sim_id = 100)
+p_hist_corr <- plot_log_gamma_history(res_corr_quants, max_sim_id = 100)
 p_hist_corr
 ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = hist_plot_width, height = hist_plot_height)
 ```
@@ -398,14 +447,17 @@ res_non_mon <- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_non_mon"))
+res_non_mon <- order_quants(res_non_mon)
 ```
+
+
 
 ```{r}
 plot_rank_hist(res_non_mon)
 plot_ecdf_diff(res_non_mon)
 ```
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height / 2}
+```{r, fig.width=hist_plot_width + 1, fig.height=hist_plot_height / 2}
 mean1_positive <- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,1]) > 0 }))
 mean2_positive <- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,2]) > 0 }))
 stats_split <- res_non_mon$stats %>% filter(variable %in% c("mu[1]", "mu[2]")) %>%
@@ -431,11 +483,16 @@ ggsave(file.path(fig_dir, "rank_hist_non_mon_split.pdf"), p_rank_hist_non_mon_sp
 shared_mark <- geom_vline(color = "red", linetype = "dashed", xintercept = 500)
 p_hist_non_mon_1 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = "abs|\\*|drop") +
   theme(axis.title = element_blank()) + shared_mark
-p_hist_non_mon_2 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = "(^mu\\[.\\]$)|lik|sin") + shared_mark
-p_hist_non_mon <- p_hist_non_mon_1 / p_hist_non_mon_2
+p_hist_non_mon_2 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = "(^mu\\[.\\]$)|lik|sin") + 
+  theme(axis.title = element_blank()) + shared_mark
 
-#TODO axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+#axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+p_label <- ggplot(data.frame(l = "Log Gamma - Threshold", x = 1, y = 1)) +
+      geom_text(aes(x, y, label = l), angle = 90, size = 5) + 
+      theme_void() +
+      coord_cartesian(clip = "off")
 
+p_hist_non_mon <- p_label + (p_hist_non_mon_1 / p_hist_non_mon_2) + plot_layout(widths = c(0.4, 25))
 p_hist_non_mon
 ggsave(file.path(fig_dir, "hist_non_mon.pdf"), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)
 ```
@@ -478,6 +535,7 @@ res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = q
                               globals = c(my_backend_mvn_globals, "sampling_func_correct", "mvn_sigma_changes"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, paste0("mvn_small_change_", K_changes)))
+res_small_change <- order_quants(res_small_change)
 ```
 
 ```{r}
