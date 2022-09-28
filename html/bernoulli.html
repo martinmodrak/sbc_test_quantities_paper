@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Simple Bernoulli Examples</title>
+
+<script src="site_libs/header-attrs-2.16/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SBC and various test quantities</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="mvn.html">MVN (Section 4)</a>
+</li>
+<li>
+  <a href="bernoulli.html">Bernoulli (Appendix B)</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Simple Bernoulli Examples</h1>
+<div class="abstract">
+<p class="abstract">Abstract</p>
+This R Markdown document runs the simulations accompanying Examples 1 -
+5 in Appendix B of paper TODO: final title.
+</div>
+
+</div>
+
+
+<p>The examples are run using the <a
+href="https://hyunjimoon.github.io/SBC/">SBC</a> R package. - consult
+the <a href="https://hyunjimoon.github.io/SBC/articles/SBC.html">Getting
+Started with SBC</a> vignette for basics of the package. We will also
+use “custom backends” which are discussed and explaiend in the <a
+href="https://hyunjimoon.github.io/SBC/articles/implementing_backends.html">Implementing
+a new backend</a>.</p>
+<pre class="r"><code>knitr::opts_chunk$set(cache = TRUE)
+library(SBC)
+library(tidyverse)
+library(patchwork)
+
+library(future)
+plan(multisession)
+
+theme_set(cowplot::theme_cowplot())
+
+# Setup cache
+cache_dir &lt;- &quot;./_SBC_cache_bernoulli&quot;
+if(!dir.exists(cache_dir)) {
+  dir.create(cache_dir)
+}</code></pre>
+<p>Recall that the model is:</p>
+<p><span class="math display">\[
+\begin{align}
+\Theta &amp;:= \mathbb{R} \notag\\
+Y &amp;:= \{0,1\} \notag\\
+\theta &amp;\sim \mathrm{uniform}(0,1) \notag\\
+y  &amp;\sim \mathrm{Bernoulli}(\theta) .\label{eq:bernoulli_model}
+\end{align}
+\]</span></p>
+<p>First, we generate a large number of datasets:</p>
+<pre class="r"><code>set.seed(1558655)
+
+N_sims_simple &lt;- 1000
+N_sims_simple_large &lt;- 10000
+N_samples_simple &lt;- 100
+
+variables_simple &lt;- runif(N_sims_simple_large)
+generated_simple &lt;- 
+  purrr::map(variables_simple, ~ list(y = rbinom(1, size = 1, .x)))
+
+ds_large &lt;- SBC_datasets(variables = posterior::draws_matrix(theta = variables_simple),
+                               generated = generated_simple)
+
+ds &lt;- ds_large[1 : N_sims_simple]</code></pre>
+<p>We then create two simple classes of SBC backends. First
+(<code>my_backend_func</code>) just uses one function to generate
+samples when <span class="math inline">\(y = 0\)</span> and another when
+<span class="math inline">\(y = 1\)</span>. The second one
+(<code>my_backend_func_invcdf</code>) is very similar, but takes the
+inverse CDF functions for <span class="math inline">\(y = 0\)</span> and
+<span class="math inline">\(y = 1\)</span> as input.</p>
+<pre class="r"><code>my_backend_func &lt;- function(func0, func1) {
+  structure(list(func0 = func0, func1 = func1), class = &quot;my_backend_func&quot;)
+}
+
+SBC_fit.my_backend_func &lt;- function(backend, generated, cores) {
+  if(generated$y == 0) {
+    posterior::draws_matrix(theta = backend$func0())
+  } else if (generated$y == 1) {
+    posterior::draws_matrix(theta = backend$func1())
+  } else {
+    stop(&quot;Invalid&quot;)
+  }
+}
+
+SBC_backend_iid_draws.my_backend_func &lt;- function(backend) {
+  TRUE
+}
+
+my_backend_func_invcdf &lt;- function(invcdf0, invcdf1) {
+  structure(list(invcdf0 = invcdf0, invcdf1 = invcdf1), class = &quot;my_backend_func_invcdf&quot;)
+}
+
+SBC_fit.my_backend_func_invcdf &lt;- function(backend, generated, cores) {
+  if(generated$y == 0) {
+    posterior::draws_matrix(theta = backend$invcdf0(runif(N_samples_simple)))
+  } else if (generated$y == 1) {
+    posterior::draws_matrix(theta = backend$invcdf1(runif(N_samples_simple)))
+  } else {
+    stop(&quot;Invalid&quot;)
+  }
+}
+
+SBC_backend_iid_draws.my_backend_func_invcdf &lt;- function(backend) {
+  TRUE
+}
+
+
+my_globals &lt;- c(&quot;SBC_fit.my_backend_func&quot;, &quot;SBC_backend_iid_draws.my_backend_func&quot;, &quot;SBC_fit.my_backend_func_invcdf&quot;,
+                &quot;SBC_backend_iid_draws.my_backend_func_invcdf&quot;, &quot;N_samples_simple&quot;)</code></pre>
+<p>Finally, we set a range of test quantities to monitor:</p>
+<pre class="r"><code>gq_simple &lt;- generated_quantities(
+   log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
+   sq = (theta - 0.5) ^ 2,
+   sin3_2 = sin(3/2 * pi * theta),
+   saw = ifelse(theta &lt; 1/2, theta, -1/2 + theta),
+   swap = ifelse(theta &lt; 1/2, theta, theta - 1),
+   saw_quad = ifelse(theta &lt; 1/2, theta^2, -1/2 + theta^3),
+   clamp = ifelse(theta &lt; 1/2, theta, 1/2)
+   # CRPS was suggested, but seems not really useful
+   # Following equation (8) at https://arxiv.org/pdf/2002.09578v1.pdf for CRPS
+   # CRPS = (1 - dbinom(y, size = 1, prob = theta)) - 0.5 * dbinom(1, size = 2, prob = theta)
+   )</code></pre>
+<div id="correct-posterior" class="section level1">
+<h1>Correct posterior</h1>
+<p>Setup a backend using the correct analytic posterior - it passes SBC
+including all GQs</p>
+<pre class="r"><code>backend_ok &lt;- my_backend_func(
+  func0 = rlang::as_function(~ rbeta(N_samples_simple, 1, 2)),
+  func1 = rlang::as_function(~ rbeta(N_samples_simple, 2, 1)))
+
+
+res_ok &lt;- compute_SBC(ds, backend_ok, keep_fits = FALSE,
+                      gen_quants = gq_simple, globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;ok&quot;)
+)</code></pre>
+<pre><code>## Results loaded from cache file &#39;ok&#39;</code></pre>
+<pre class="r"><code>plot_rank_hist(res_ok)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_ok-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_ok)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_ok-2.png" width="672" /></p>
+</div>
+<div id="example-1---projection" class="section level1">
+<h1>Example 1 - Projection</h1>
+<p>We now demonstrate some incorrect posteriors that however satisfy SBC
+w.r.t. the projection function (<span class="math inline">\(f_1\)</span>
+in the paper, <code>theta</code> in the code and plots here). The
+counterexamples are most naturally expressed vie inverse CDFs, so for
+this and all the following examples, we will show the inverse CDFs. For
+the first counterexample we will take <span
+class="math inline">\(\Phi^{-1}(x | 0) = x^2\)</span> and then use the
+formula <span class="math inline">\(\Phi^{-1}(x | 1) = \sqrt{2x +
+(\Phi^{-1}(x | 0) - 1)^2 - 1}\)</span> to calculate the other inverse
+CDF.</p>
+<pre class="r"><code>invcdf_ex1_square_0 &lt;- function(u) {
+  u^2
+}
+
+invcdf_ex1_square_1 &lt;- function(u) {
+  sqrt(u * (2-2*u+u^3))
+}</code></pre>
+<p>This is how the inverse CDFs of the counterexample compare to the
+correct ones - the top two panels show the actual inverse CDFs and the
+bottom two panels the difference from the correct CDF.</p>
+<pre class="r"><code>plot_invcdfs &lt;- function(invcdf0, invcdf1, name) {
+  u &lt;- seq(from = 0, to = 1,length.out = 100)
+  plot1 &lt;- rbind(data.frame(y = 0, u = u, invphi = invcdf0(u), type = name),
+        data.frame(y = 1, u = u, invphi = invcdf1(u), type = name),
+        data.frame(y = 0, u = u, invphi = 1 - sqrt(1 - u), type = &quot;Correct&quot;),
+        data.frame(y = 1, u = u, invphi = sqrt(u), type = &quot;Correct&quot;)
+        ) %&gt;%
+    ggplot(aes(x = u, y = invphi, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) +
+    scale_y_continuous(&quot;Inverse CDF of theta&quot;) +
+    scale_x_continuous(&quot;Quantile&quot;)
+  
+  plot2 &lt;- 
+    rbind(data.frame(y = 0, u = u, invphi_diff = invcdf0(u) - ( 1 - sqrt(1 - u)), type = name),
+        data.frame(y = 1, u = u, invphi_diff = invcdf1(u) - sqrt(u), type = name),
+        crossing(y = c(0,1), u = u, invphi_diff = 0, type = &quot;Correct&quot;)) %&gt;%
+    ggplot(aes(x = u, y = invphi_diff, color = type)) + geom_line(size = 2) + facet_wrap(~y, labeller = label_both) +
+    scale_y_continuous(&quot;Diff. inverse CDF of theta&quot;) +
+    scale_x_continuous(&quot;Quantile&quot;)
+  
+  plot1 / plot2
+}
+
+plot_invcdfs(invcdf_ex1_square_0, invcdf_ex1_square_1, &quot;Example 1 - Square&quot;)</code></pre>
+<p><img src="bernoulli_files/figure-html/funcs_ex1-1.png" width="672" /></p>
+<p>Now we can run SBC. We see that for <code>theta</code> SBC passes
+with no problems while for all the other test quantities it fails.</p>
+<pre class="r"><code>backend_ex1_square &lt;- my_backend_func_invcdf(invcdf_ex1_square_0, invcdf_ex1_square_1)
+
+
+res_ex1_square &lt;- compute_SBC(ds_large, backend_ex1_square, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;ex1_square&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_ex1_square)</code></pre>
+<p><img src="bernoulli_files/figure-html/ex1_square-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_ex1_square)</code></pre>
+<p><img src="bernoulli_files/figure-html/ex1_square-2.png" width="672" /></p>
+</div>
+<div id="example-2---projection-and-data-averaged-posterior"
+class="section level1">
+<h1>Example 2 - Projection and Data-Averaged Posterior</h1>
+<div id="flipped-0-and-1-outcomes" class="section level2">
+<h2>Flipped 0 and 1 outcomes</h2>
+<p>Here we take the correct posterior and flip the functions for 0 and
+1. In paper, this is designated as <span
+class="math inline">\(\phi_A\)</span>. This still satisfies the
+“data-averaged posterior = prior” condition but actually fails SBC for
+the projection function (i.e. the <code>theta</code> subplot) and many
+other test quantities. Interestingly, the <code>sq</code> quantity is
+completely insensitive to this flipping, because it is symmetric to
+flips in <code>theta</code> around <span
+class="math inline">\(\frac{1}{2}\)</span>.</p>
+<pre class="r"><code>backend_flip &lt;- my_backend_func(
+  func0 = rlang::as_function(~ rbeta(N_samples_simple, 2, 1)),
+  func1 = rlang::as_function(~ rbeta(N_samples_simple, 1, 2)))
+
+
+res_flip &lt;- compute_SBC(ds, backend_flip, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals)
+
+plot_rank_hist(res_flip)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_flip-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_flip)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_flip-2.png" width="672" /></p>
+</div>
+<div id="satisfy-sbc-fail-data-averaged-posterior"
+class="section level2">
+<h2>Satisfy SBC, fail data-averaged posterior</h2>
+<p>Now, we recreate the example denoted <span
+class="math inline">\(\Phi_B\)</span> in the paper - we take</p>
+<p><span class="math display">\[
+\Phi^{-1}_B(x | 0) := \begin{cases}
+   \frac{2}{3}x &amp; x &lt; \frac{3}{4} \\
+   \frac{1}{2} + 2(x - \frac{3}{4}) &amp; x \geq \frac{3}{4} \\
+\end{cases} \\
+\]</span></p>
+<p>and then use the formula <span class="math inline">\(\Phi^{-1}(x | 1)
+= \sqrt{2x + (\Phi^{-1}(x | 0) - 1)^2 - 1}\)</span> to calculate the
+other inverse CDF.</p>
+<pre class="r"><code>invcdf_phiB_0 &lt;- function(u) {
+  ifelse(u &lt; 3/4, (2/3) * u, 0.5 + (u - 0.75)*2)
+}
+
+invcdf_phiB_1 &lt;- function(u) {
+  ifelse(u &lt; 3/4, (1/3) * sqrt(2) * sqrt(u * (3 + 2 * u)), sqrt(3 - 6*u + 4*u^2))
+}
+
+
+plot_invcdfs(invcdf_phiB_0, invcdf_phiB_1, &quot;Example 2 - phiB&quot;)</code></pre>
+<p><img src="bernoulli_files/figure-html/funcs_phiB-1.png" width="672" /></p>
+<p>Let’s run SBC. As designed, no problem with <code>theta</code>
+(projection function), but many test quantities signal problems.</p>
+<pre class="r"><code>backend_phiB &lt;- my_backend_func_invcdf(invcdf_phiB_0, invcdf_phiB_1)
+
+
+# We use a bit more simulations to clearly show some of the problems
+res_phiB &lt;- compute_SBC(ds_large[1:2500], backend_phiB, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;phiB&quot;)
+                        )</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_phiB)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_phiB-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_phiB)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_phiB-2.png" width="672" /></p>
+</div>
+<div id="linear-combinations" class="section level2">
+<h2>Linear combinations</h2>
+<p>Here we take a linear combination of the prior and posterior (both
+passing SBC and data-averaged posterior for <code>theta</code> - the
+projection function). This is denoted as <span
+class="math inline">\(\Phi_C\)</span> in the paper. Note that this does
+not quite strongly pass SBC for <code>theta</code> (the projection
+function) as well as many other quantities.</p>
+<pre class="r"><code>invcdf_lincomb_0 &lt;- function(u) {
+  1.5 - 0.5 * sqrt(9 - 8 * u)
+}
+
+invcdf_lincomb_1 &lt;- function(u) {
+  -0.5 + 0.5 * sqrt(1 + 8 * u)
+}
+
+plot_invcdfs(invcdf_lincomb_0, invcdf_lincomb_1, &quot;Linear combination&quot;)</code></pre>
+<p><img src="bernoulli_files/figure-html/func_lincomb-1.png" width="672" /></p>
+<pre class="r"><code>backend_lincomb &lt;- my_backend_func_invcdf(invcdf_lincomb_0, invcdf_lincomb_1)
+
+
+res_lincomb &lt;- compute_SBC(ds_large, backend_lincomb, keep_fits = FALSE,
+                        gen_quants = gq_simple, 
+                        globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;lincomb&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_lincomb)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_lincomb-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_lincomb)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_lincomb-2.png" width="672" /></p>
+</div>
+</div>
+<div id="example-3---likelihood" class="section level1">
+<h1>Example 3 - Likelihood</h1>
+<p>Now let us simulate posteriors passing SBC w.r.t. the likelihood
+(denoted <span class="math inline">\(f_2\)</span> in the paper).</p>
+<div id="passing-sbc-just-for-likelihood" class="section level2">
+<h2>Passing SBC just for likelihood</h2>
+<p>Here we will use <span class="math inline">\(\Phi^{-1}(x | 1) = 1 -
+(1 - x)^2\)</span> and then use the formula <span
+class="math inline">\(\Phi^{-1}(1 - x | 0) = 1 - \sqrt{2x -
+(\Phi^{-1}(x|1) ^ 2)}\)</span> to complete the posterior.</p>
+<pre class="r"><code>invcdf_lik1_0 &lt;- function(u) {
+  #1 - sqrt((1 - u))
+  #1 - sqrt(2*(1-u) - invcdf_lik1_1(1-u) ^ 2)
+  1 - sqrt(1-u*(2 - 2*u + u^3))
+}
+
+invcdf_lik1_1 &lt;- function(u) {
+   1 - (1 - u)^2
+}
+
+plot_invcdfs(invcdf_lik1_0, invcdf_lik1_1, &quot;Example 3 - Likelihood 1&quot;)</code></pre>
+<p><img src="bernoulli_files/figure-html/func_lik-1.png" width="672" /></p>
+<p>And we can compute SBC - note that this posterior passes SBC for the
+likelihood (<code>log_lik</code>), but it does not pass it for
+<code>theta</code> and many other quantities.</p>
+<pre class="r"><code>backend_lik1 &lt;- my_backend_func_invcdf(invcdf_lik1_0, invcdf_lik1_1)
+
+res_lik1 &lt;- compute_SBC(ds, backend_lik1, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;loglik1&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_lik1)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_lik-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_lik1)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_lik-2.png" width="672" /></p>
+</div>
+<div id="passing-sbc-for-both-projection-and-likelihood"
+class="section level2">
+<h2>Passing SBC for both projection and likelihood</h2>
+<p>We can construct counterexamples that satisfy both <code>theta</code>
+and <code>log_lik</code>, the full formula is in the paper here is one,
+starting from <span class="math inline">\(0 &lt; x &lt; \frac{1}{2}:
+\Phi^{-1}(x | 0) = 2 (2 - \sqrt{2}) u^2\)</span> and computing the rest
+as needed:</p>
+<pre class="r"><code>invcdf_loglik2_0 &lt;- function(u) {
+  ifelse(u &lt; 0.5, u^2 * 2 *(2 - sqrt(2)),
+           1 - 2 * abs(u - 1) * sqrt(-4 + 3 * sqrt(2) + (-6 + 4*sqrt(2)) * (u -2) * u) 
+           )  
+} 
+
+invcdf_loglik2_1 &lt;- function(u) {
+  ifelse(u &lt; 0.5, sqrt(2 * u *(1 + 2*u *(-2 + sqrt(2) + (6 - 4*sqrt(2)) * u^2))),
+           sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * (-34 + 23 * sqrt(2) + (-6+4*sqrt(2)) * (u - 4) * u))))
+}
+
+plot_invcdfs(invcdf_loglik2_0, invcdf_loglik2_1, &quot;Example 3 - likelihood 2&quot;)</code></pre>
+<pre><code>## Warning in sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * : NaNs produced
+
+## Warning in sqrt(-17 + 12 * sqrt(2) + 2 * u * (41 - 28 * sqrt(2) + 2 * u * : NaNs produced</code></pre>
+<p><img src="bernoulli_files/figure-html/func_loglik2-1.png" width="672" /></p>
+<p>The SBC for both <code>theta</code> and <code>log_lik</code> passes.
+All the other quantities however do show the failure. This shows the
+space of useful quantities is not exhausted by a univariate marginal
+distribution and the (log)likelihood and that non-monotonous
+transformation of the univariate marginal can provide additional power
+to SBC.</p>
+<pre class="r"><code>backend_loglik2 &lt;- my_backend_func_invcdf(invcdf_loglik2_0, invcdf_loglik2_1)
+
+res_loglik2 &lt;- compute_SBC(ds, backend_loglik2, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals,
+                      cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;loglik2&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_loglik2)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_loglik2-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_loglik2)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_loglik2-2.png" width="672" /></p>
+</div>
+</div>
+<div id="example-4---non-monotonous-bijection" class="section level1">
+<h1>Example 4 - Non-monotonous bijection</h1>
+<p>Now, we try to build incorrect posterior satisfying SBC for the
+<code>swap</code> test quantity (called <span
+class="math inline">\(f_3\)</span> in the paper). Here, we start once
+again with <span class="math inline">\(\Phi^{-1}(x | 0) = x^2\)</span>
+and then use the formula</p>
+$$ ^{-1}(y | 1) =
+<span class="math display">\[\begin{cases}
+    \sqrt{\left(\Phi^{-1}(y + 1 - \bar{h} | 0)\right)^2 - 2 \Phi^{-1}(y
++ 1 - \bar{h} | 0) + 2(y + 1 -  \bar{h} - h_0)}
+    &amp; \text{for } y  \leq \bar{h} \\
+    \sqrt{\left(\Phi^{-1}(y - \bar{h}  | 0) - 1 \right)^2 + 2(y -
+\bar{h} - h_0)}
+    &amp; \text{for } \bar{h} &lt; y \leq 1 + \bar{h} \\
+    \sqrt{\left( \Phi^{-1}(y - 1 -\bar{h} | 0)\right)^2 -  2 \Phi^{-1}(y
+- 1 -\bar{h}|0) + 2(y -  \bar{h} - h_0)}
+    &amp; \text{for } 1 + \bar{h} &lt; y  \\
+
+  \end{cases}\]</span>
+<p>$$</p>
+<p>to create a posterior passing SBC.</p>
+<pre class="r"><code>invcdf_swap_0 &lt;- function(u) {
+  u^2
+} 
+
+invcdf_swap_1 &lt;- function(u) {
+  h0 &lt;- uniroot(function(x) { invcdf_swap_0(x) - 1/2 }, c(0,1))$root 
+  stopifnot(abs(invcdf_swap_0(h0) - 1/2) &lt; 1e-6)
+  
+  f_h1_larger &lt;- function(h1) {
+    #\Phi^{-1}(1 - h_1 + h_0 | 0) = 1 - \sqrt{2h_1 - 1}
+    invcdf_swap_0(1 - h1 + h0) - 1 + sqrt(2*h1 - 1)
+  }
+  f_h1_smaller &lt;- function(h1) {
+    #\Phi^{-1}(h_0 - h_1  | 0) = 1 - \sqrt{2h_1}
+    invcdf_swap_0(h0 - h1) - 1 + sqrt(2*h1)
+  }
+  h1_larger_low &lt;- 1/2
+  h1_larger_high &lt;- 1 - h0
+  h1_smaller_low &lt;- 0
+  h1_smaller_high &lt;- h0
+  if(h1_larger_low &gt;= h1_larger_high) {
+    h1_larger_sign_diff &lt;- FALSE
+  } else {
+    h1_larger_sign_diff &lt;- sign(f_h1_larger(h1_larger_low)) != sign(f_h1_larger(h1_larger_high))  
+  }
+  if(h1_smaller_low &gt;= h1_smaller_high) {
+    h1_smaller_sign_diff &lt;- FALSE
+  } else {
+    h1_smaller_sign_diff &lt;- sign(f_h1_smaller(h1_smaller_low)) != sign(f_h1_smaller(h1_smaller_high))  
+  }
+  
+  
+  if(h1_larger_sign_diff == h1_smaller_sign_diff) {
+    stop(&quot;Both sign diffs&quot;)
+  } else if(h1_larger_sign_diff) {
+    h1 &lt;- uniroot(f_h1_larger, c(h1_larger_low,h1_larger_high))$root
+  } else {
+    h1 &lt;- uniroot(f_h1_smaller, c(h1_smaller_low,h1_smaller_high))$root
+  }
+  hbar &lt;- h1 - h0
+  
+  valp1 &lt;- invcdf_swap_0(u + 1 - hbar)
+  val0 &lt;- invcdf_swap_0(u - hbar)
+  valm1 &lt;- invcdf_swap_0(u - 1 - hbar)
+  
+  
+  
+  dplyr::case_when(u &lt; hbar ~ sqrt(valp1^2 - 2 * valp1 + 2 * (u + 1 - hbar - h0)),
+            u &lt; 1 + hbar ~ sqrt((val0 - 1)^2 + 2 *( u - hbar - h0)),
+            TRUE ~ sqrt(valm1^2 - 2 * valm1 + 2 * (u - hbar - h0))
+  )
+}
+
+plot_invcdfs(invcdf_swap_0, invcdf_swap_1, &quot;Example 4 - swap&quot;)</code></pre>
+<pre><code>## Warning in sqrt((val0 - 1)^2 + 2 * (u - hbar - h0)): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt(valm1^2 - 2 * valm1 + 2 * (u - hbar - h0)): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt((val0 - 1)^2 + 2 * (u - hbar - h0)): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt(valm1^2 - 2 * valm1 + 2 * (u - hbar - h0)): NaNs produced</code></pre>
+<p><img src="bernoulli_files/figure-html/func_swap-1.png" width="672" /></p>
+<p>And we run SBC - no problems are seen for <code>swap</code>, while
+other quantities do show the problem.</p>
+<pre class="r"><code>backend_swap &lt;- my_backend_func_invcdf(invcdf_swap_0, invcdf_swap_1)
+
+res_swap &lt;- compute_SBC(ds_large, backend_swap, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = c(my_globals, &quot;invcdf_swap_0&quot;),
+                        cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;swap&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_swap)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_swap-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_swap)</code></pre>
+<p><img src="bernoulli_files/figure-html/res_swap-2.png" width="672" /></p>
+</div>
+<div id="example-5---ties-continuous" class="section level1">
+<h1>Example 5 - Ties, continuous</h1>
+<p>Finally, we’ll use what’s called <span
+class="math inline">\(f_4\)</span> in the paper and which is called
+<code>clamp</code> in our plots. That is collapsing a range of values
+into a single number:</p>
+$$ f_4(, y) :=
+<span class="math display">\[\begin{cases}
+\theta &amp; \theta &lt; \frac{1}{2} \\
+\frac{1}{2} &amp; \theta \geq \frac{1}{2}.
+\end{cases}\]</span>
+<p>$$</p>
+<p>The overall idea is that we can pick <span class="math inline">\(h_0
+= \Phi(\frac{1}{2} | 0)\)</span>, compute <span
+class="math inline">\(h_1 = \Phi(\frac{1}{2} | 1) = \frac{5 h_0 - 4}{8
+h_0 - 7}\)</span> and then <span class="math inline">\(\Phi^{-1}(x |
+0)\)</span> for <span class="math inline">\(x &lt; \min\{h_0,
+h_1\}\)</span> quite freely. The problem is that we need to ensure that
+<span class="math inline">\(\Phi^{-1}(h_y | y) = \frac{1}{2}\)</span>
+which introduces some complications - see the paper for details.</p>
+<p>Here we take <span class="math inline">\(\Phi^{-1}(x | 0) = a
+x^{1.5}\)</span> for <span class="math inline">\(x &lt; \min\{h_0,
+h_1\}\)</span> and suitable <span class="math inline">\(a\)</span>.</p>
+<pre class="r"><code>invcdf_clamp_base &lt;- function() {
+  #h0 and basefunc can be +/- freely chosen
+  # The basefunc will be appropriately scaled to meet the conditions implied
+  # by the choice of h0 (i.e. to ensure invphi(h[y] | y) = 1/2)
+  
+  # h0 &lt;- 5/8
+  # base_func &lt;- function(x) { x }
+  h0 &lt;- 0.5
+  base_func &lt;- function(x) { x^1.5 }
+
+  stopifnot(h0 &lt; 4/5)
+
+  h1 &lt;- (5*h0 - 4) / (8 *h0 - 7)
+  stopifnot( 1/8 &lt; h1 &amp;&amp; h1 &lt; 1)
+  
+  if(h0 &lt; h1) {
+    stopifnot(h0 &gt;= 3/8 &amp;&amp; h0 &lt; 1/2)
+    scale = 0.5 / base_func(h0)
+  } else {
+    stopifnot(h0 &gt;= 1/2 &amp;&amp; h0 &lt; 25/32)
+    scale = (1 - 0.5 * sqrt(3/(7 - 8 * h0))) / base_func(h1)
+  }
+  
+  list(
+    h0 = h0,
+    h1 = h1,
+    f =  function(x) { base_func(x) * scale }
+  )
+}
+
+invcdf_clamp_0 &lt;- function(u) {
+  base &lt;- invcdf_clamp_base()
+  h0 &lt;- base$h0
+  h1 &lt;- base$h1
+  
+  dplyr::case_when(u &lt;= h0 &amp; u &lt; h1 ~ base$f(u),
+            u &lt;= h0 ~ 1 - 0.5 * sqrt((u - 1)/(h0 - 1) ),
+            # The value above h0 can be arbitrary as long as it is valid inverse CDF
+            # Here we linearly interpolate to 1
+            TRUE ~ 0.5 + 0.5 * (u - h0) / (1 - h0))
+} 
+
+invcdf_clamp_1 &lt;- function(u) {
+  base &lt;- invcdf_clamp_base()
+  h0 &lt;- base$h0
+  h1 &lt;- base$h1
+
+
+  val_low &lt;- function(x) {
+    sqrt(2 * x  + (base$f(x) - 1 )^2 - 1)
+  }
+  val_between &lt;- function(x) {
+    0.5 * sqrt( ((8 * h0 - 7) * x - 4 * h0 + 3) / (h0 - 1))
+  }
+
+  # Check monotonicity
+  d &lt;- diff(val_low(seq(0, min(h0, h1), length.out = 200)))
+  if(any(is.na(d))) {
+    stop(&quot;Undefined values for invphi1&quot;)
+  }
+  if(any(d &lt; 0)) {
+    stop(&quot;Implied invphi1 not increasing&quot;)
+  }
+
+  dplyr::case_when(u &lt;= h0 &amp; u &lt; h1 ~ val_low(u),
+            u &lt;= h1 ~ val_between(u),
+            # The value above h1 can be arbitrary as long as it is valid inverse CDF
+            # Here we linearly interpolate to 1
+            TRUE ~  0.5 + 0.5 * (u - h1) / (1 - h1)
+  )
+}
+
+plot_invcdfs(invcdf_clamp_0, invcdf_clamp_1, &quot;Example 4 - clamp&quot;)</code></pre>
+<pre><code>## Warning in sqrt(((8 * h0 - 7) * x - 4 * h0 + 3)/(h0 - 1)): NaNs produced
+
+## Warning in sqrt(((8 * h0 - 7) * x - 4 * h0 + 3)/(h0 - 1)): NaNs produced</code></pre>
+<p><img src="bernoulli_files/figure-html/funcclamp-1.png" width="672" /></p>
+<pre class="r"><code>backend_clamp &lt;- my_backend_func_invcdf(invcdf_clamp_0, invcdf_clamp_1)
+
+# We use a bit more datasets to amplify some of the failures
+res_clamp &lt;- compute_SBC(ds_large[1:2500], backend_clamp, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = c(my_globals, &quot;invcdf_clamp_base&quot;),
+                        cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;clamp&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_clamp)</code></pre>
+<p><img src="bernoulli_files/figure-html/resclamp-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_clamp)</code></pre>
+<p><img src="bernoulli_files/figure-html/resclamp-2.png" width="672" /></p>
+<p>So this posterior passes SBC for clamp and fails for most of the
+other test quantities. However, recall that almost all of the previous
+examples failed SBC for <code>clamp</code>.</p>
+</div>
+<div id="additional-examples-not-in-the-paper" class="section level1">
+<h1>Additional examples not in the paper</h1>
+<div id="prior-only" class="section level2">
+<h2>Prior only</h2>
+<p>Using just the prior as posterior passes SBC for <code>theta</code>
+and all test quantities that depend only on <code>theta</code>, however
+the <code>log_lik</code> test quantity comes to the rescue!</p>
+<pre class="r"><code>backend_prior&lt;- my_backend_func(
+  func0 = rlang::as_function(~ runif(N_samples_simple)),
+  func1 = rlang::as_function(~ runif(N_samples_simple)))
+
+
+res_prior &lt;- compute_SBC(ds, backend_prior, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals)
+
+plot_rank_hist(res_prior)</code></pre>
+<p><img src="bernoulli_files/figure-html/resprioronly-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_prior)</code></pre>
+<p><img src="bernoulli_files/figure-html/resprioronly-2.png" width="672" /></p>
+</div>
+<div id="passing-dap-and-vanilla-sbc" class="section level2">
+<h2>Passing DAP and vanilla SBC</h2>
+<p>We can in fact build an incorrect posterior that satisfies SBC for
+projection (<code>theta</code>) and has correct data-averaged posterior.
+Here is an example:</p>
+<pre class="r"><code>invcdf_DAP_proj_0 &lt;- function(u) {
+  lb = 1/6 * (3 - sqrt(6))
+  ub = 1/6 * (3 + sqrt(6))
+  ifelse(lb &lt; u &amp; u &lt; ub, 1 - sqrt(11 - 12 * u)/sqrt(12), u)  
+} 
+
+invcdf_DAP_proj_1 &lt;- function(u) {
+  lb = 1/6 * (3 - sqrt(6))
+  ub = 1/6 * (3 + sqrt(6))
+  ifelse(lb &lt; u &amp; u &lt; ub, 0.5*sqrt(-1/3 +4* u) , u)  
+}
+
+plot_invcdfs(invcdf_DAP_proj_0, invcdf_DAP_proj_1, &quot;Passing SBC and DAP for theta&quot;)</code></pre>
+<pre><code>## Warning in sqrt(11 - 12 * u): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt(-1/3 + 4 * u): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt(11 - 12 * u): NaNs produced</code></pre>
+<pre><code>## Warning in sqrt(-1/3 + 4 * u): NaNs produced</code></pre>
+<p><img src="bernoulli_files/figure-html/funcdapproj-1.png" width="672" /></p>
+<pre class="r"><code>backend_DAP_proj &lt;- my_backend_func_invcdf(invcdf_DAP_proj_0, invcdf_DAP_proj_1)
+
+res_DAP_proj &lt;- compute_SBC(ds_large, backend_DAP_proj, keep_fits = FALSE,
+                        gen_quants = gq_simple, globals = my_globals,
+                        cache_mode = &quot;results&quot;,
+                      cache_location = file.path(cache_dir, &quot;DAP_proj&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_DAP_proj)</code></pre>
+<p><img src="bernoulli_files/figure-html/resdapproj-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_DAP_proj)</code></pre>
+<p><img src="bernoulli_files/figure-html/resdapproj-2.png" width="672" /></p>
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

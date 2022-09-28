@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Multivariate normal example</title>
+
+<script src="site_libs/header-attrs-2.16/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SBC and various test quantities</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="mvn.html">MVN (Section 4)</a>
+</li>
+<li>
+  <a href="bernoulli.html">Bernoulli (Appendix B)</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Multivariate normal example</h1>
+<div class="abstract">
+<p class="abstract">Abstract</p>
+This R Markdown document runs the simulations and recreates all the
+figures used in Section 4 of the paper TODO: final title.
+</div>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#setting-up" id="toc-setting-up">Setting up</a></li>
+<li><a href="#correct-posterior" id="toc-correct-posterior">Correct
+posterior</a></li>
+<li><a href="#ignoring-data" id="toc-ignoring-data">Ignoring Data</a>
+<ul>
+<li><a href="#prior-only" id="toc-prior-only">Prior only</a></li>
+<li><a href="#one-missing-data-point"
+id="toc-one-missing-data-point">One missing data point</a></li>
+<li><a href="#one-missing-data-point---larger-n"
+id="toc-one-missing-data-point---larger-n">One missing data point -
+larger N</a></li>
+</ul></li>
+<li><a href="#incorrect-posterior-correlations"
+id="toc-incorrect-posterior-correlations">Incorrect posterior
+correlations</a></li>
+<li><a href="#non-monotonous-transform"
+id="toc-non-monotonous-transform">Non-monotonous transform</a></li>
+<li><a href="#small-changes-compound"
+id="toc-small-changes-compound">Small changes compound</a></li>
+</ul>
+</div>
+
+<div id="setting-up" class="section level1">
+<h1>Setting up</h1>
+<p>The examples are run using the <a
+href="https://hyunjimoon.github.io/SBC/">SBC</a> R package. - consult
+the <a href="https://hyunjimoon.github.io/SBC/articles/SBC.html">Getting
+Started with SBC</a> vignette for basics of the package. We will also
+use “custom backends” which are discussed and explaiend in the <a
+href="https://hyunjimoon.github.io/SBC/articles/implementing_backends.html">Implementing
+a new backend</a>.</p>
+<pre class="r"><code>knitr::opts_chunk$set(cache = TRUE)
+library(SBC)
+library(ggplot2)
+library(mvtnorm)
+library(patchwork)
+library(tidyverse)
+theme_set(cowplot::theme_cowplot())
+
+options(mc.cores = parallel::detectCores())
+
+library(future)
+plan(multisession)
+
+# If true, additional test quantities based on energy score and variogram
+# score are included. Those were not very successful and are not discussed
+# in the paper.
+include_sampling_scores &lt;- FALSE
+
+# Setup caching of SBC results for faster iterations
+if(include_sampling_scores) {
+  cache_dir &lt;- &quot;./_samp_scores_SBC_cache&quot;
+} else {
+  cache_dir &lt;- &quot;./_SBC_cache&quot;
+}
+
+fig_dir &lt;- &quot;./_figs&quot; 
+
+if(!dir.exists(cache_dir)) {
+  dir.create(cache_dir)
+}
+if(!dir.exists(fig_dir)) {
+  dir.create(fig_dir)
+}
+
+devtools::load_all()
+
+hist_plot_width &lt;- 8
+hist_plot_height &lt;- 4</code></pre>
+<p>We are using the model:</p>
+<p><span class="math display">\[
+\begin{align}
+\mathbf{\mu} &amp;\sim \mbox{MVN}(0, \mathbf{\Sigma}) \notag \\
+\mathbf{y}_1, \ldots, \mathbf{y}_n &amp;\sim \mbox{MVN}(\mathbf{\mu},
+\mathbf{\Sigma}) \notag\\
+\mathbf{\Sigma} &amp;= \left(\begin{matrix}
+1 &amp; 0.8 \\
+0.8 &amp; 1 \\
+\end{matrix}\right)
+\end{align}
+\]</span></p>
+<p>where <span class="math inline">\(MVN\)</span> is the multivariate
+normal distribution. In this case the posterior has analytical solution
+and should also be multivariate normal.</p>
+<p>Now we draw 1000 simulated datasets from this model:</p>
+<pre class="r"><code>set.seed(266552)
+
+mvn_sigma &lt;- matrix(c(1, 0.8,0.8,1), nrow = 2)
+
+generator_func_correlated &lt;- function(N, sigma = mvn_sigma) {
+  mu &lt;- rmvnorm(1, sigma = sigma)
+  y &lt;- rmvnorm(N, mean = mu, sigma = sigma)
+  list(variables = list(mu = mu[1,]),
+       generated = list(y = y))
+}
+
+N_sims &lt;- 1000
+
+ds &lt;- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma), N_sims)</code></pre>
+<p>We will use a custom backend that will directly generate draws using
+a function passed into the <code>sampling_func</code> argument.</p>
+<pre class="r"><code>my_backend_mvn &lt;- function(sampling_func, N_samples = 100, func_extra_args = list()) {
+  structure(list(sampling_func = sampling_func, N_samples = N_samples, 
+                 func_extra_args = func_extra_args), class = &quot;my_backend_mvn&quot;)
+}
+
+SBC_fit.my_backend_mvn &lt;- function(backend, generated, cores) {
+  all_args &lt;- c(list(y = generated$y, N_samples = backend$N_samples), backend$func_extra_args)
+  res_raw &lt;- do.call(backend$sampling_func, all_args)
+  
+  K &lt;- ncol(generated$y)
+  colnames(res_raw) &lt;- paste0(&quot;mu[&quot;, 1:K, &quot;]&quot;)
+  posterior::as_draws_matrix(res_raw)
+}
+
+SBC_backend_iid_draws.my_backend_mvn &lt;- function(backend) {
+  TRUE
+}
+
+my_backend_mvn_globals = c(&quot;SBC_fit.my_backend_mvn&quot;,
+                                    &quot;SBC_backend_iid_draws.my_backend_mvn&quot;,
+                                    &quot;mvn_sigma&quot;)</code></pre>
+<p>By defualt, SBC will include the individual parameters
+(<code>mu[1]</code>, <code>mu[2]</code>) as test quantities. We now
+setup the additional test quantities:</p>
+<pre class="r"><code>quants &lt;- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
+                               `mu[1] - mu[2]` = mu[1] - mu[2],
+                               `mu[1] * mu[2]` = mu[1] * mu[2],
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
+                               `mvn_log_lik[1]` = mvtnorm::dmvnorm(y[1,], mean = mu, sigma = mvn_sigma, log = TRUE),
+                               `mvn_log_lik[2]` = mvtnorm::dmvnorm(y[2,], mean = mu, sigma = mvn_sigma, log = TRUE),
+                               )
+
+# Ordering the quantities for neat plotting in the paper
+order_quants &lt;- function(results) {
+  quants_in_order &lt;- c(&quot;mu[1]&quot;, &quot;mu[2]&quot;, 
+                    &quot;mu[1] + mu[2]&quot;,
+                    &quot;mu[1] - mu[2]&quot;,
+                    &quot;mu[1] * mu[2]&quot;,
+                     &quot;mvn_log_lik&quot;,
+                    &quot;mvn_log_lik[1]&quot;,
+                    &quot;mvn_log_lik[2]&quot;,
+                    &quot;abs(mu[1])&quot;,
+                    &quot;drop(mu[1])&quot;,
+                    &quot;sin(1/mu[1])&quot;,
+                    &quot;mu[1] * mean(y[,1])&quot;,
+                    &quot;energy_score&quot;,
+                    &quot;variogram_score&quot;)
+  if(!(all(results$stats$variable %in% quants_in_order))) {
+    print(setdiff(unique(results$stats$variable, quants_in_order)))
+    stop(&quot;Unrecognized quants&quot;)
+  }
+  results$stats &lt;- results$stats %&gt;% mutate(variable = factor(variable, levels = quants_in_order))
+  results
+}</code></pre>
+<pre class="r"><code>if(include_sampling_scores) {
+  sampled_score_mvnorm &lt;- function(y, mu, sigma, score, ...) {
+    sim_data &lt;- t(mvtnorm::rmvnorm(200, mean = mu, sigma = sigma))
+    res_single &lt;- numeric(nrow(y))
+    for(i in 1:nrow(y)) {
+      res_single &lt;- score(y[i,], sim_data, ...)
+    }
+    mean(res_single)
+  }
+  
+  es_mvnorm &lt;- function(y, mu, sigma) {
+    sampled_score_mvnorm(y, mu, sigma, scoringRules::es_sample)
+  }
+  
+  vs_mvnorm &lt;- function(y, mu, sigma) {
+    sampled_score_mvnorm(y, mu, sigma, scoringRules::vs_sample)
+  }
+  
+  quants_sampled &lt;- generated_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
+                               `variogram score` =  vs_mvnorm(y, mu, mvn_sigma),
+                               .globals = c(&quot;sampled_score_mvnorm&quot;, &quot;es_mvnorm&quot;, &quot;vs_mvnorm&quot;))
+  
+  quants &lt;- bind_generated_quantities(quants, quants_sampled)
+}</code></pre>
+</div>
+<div id="correct-posterior" class="section level1">
+<h1>Correct posterior</h1>
+<p>Introducing <span class="math inline">\(\bar{\mathbf{y}} =
+\frac{1}{N}\sum_{i = 1}^{N} \mathbf{y}_i\)</span>, the posterior is
+<span class="math inline">\(MVN\left(\frac{N\bar{\mathbf{y}}}{n + 1},
+\frac{1}{N + 1}\mathbf{\Sigma}\right)\)</span></p>
+<p>Let’s define the sampling function and backend corresponding to the
+correct posterior and run SBC.</p>
+<pre class="r"><code>sampling_func_correct &lt;- function(y, N_samples, prior_sigma = mvn_sigma) {
+  K &lt;- ncol(y)
+  N &lt;- nrow(y)
+  
+  ybar = colMeans(y)
+
+  post_mean &lt;- N * ybar / (N  + 1)
+  post_sigma &lt;- prior_sigma / (N + 1) 
+  res_raw &lt;- mvtnorm::rmvnorm(N_samples, mean = post_mean, sigma = post_sigma)
+}
+backend_correct &lt;- my_backend_mvn(sampling_func_correct)
+
+res_correct &lt;- compute_SBC(ds, backend_correct, gen_quants = quants, 
+                              globals = my_backend_mvn_globals,
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, &quot;mvn_correct&quot;),
+                           )</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_correct &lt;- order_quants(res_correct)</code></pre>
+<p>Those are the diagnostic plots after 1000 simulations.</p>
+<pre class="r"><code>plot_rank_hist(res_correct)</code></pre>
+<p><img src="mvn_files/figure-html/res_correct_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_correct)</code></pre>
+<p><img src="mvn_files/figure-html/res_correct_diag-2.png" width="672" /></p>
+<p>And here is the history of the gamma statistic (see the paper for
+exact definitons).</p>
+<pre class="r"><code>p_hist_correct &lt;- plot_log_gamma_history(res_correct)
+p_hist_correct</code></pre>
+<p><img src="mvn_files/figure-html/res_correct_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_correct.pdf&quot;), p_hist_correct, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>For comparison also the history of the p-value for a
+Kolmogorov-Smirnov test for uniformity (blue horizontal line is
+0.05).</p>
+<pre class="r"><code>plot_ks_test_history(res_correct)</code></pre>
+<p><img src="mvn_files/figure-html/res_correct_history_ks-1.png" width="768" /></p>
+</div>
+<div id="ignoring-data" class="section level1">
+<h1>Ignoring Data</h1>
+<p>Several examples of posteriors that ignore all or some of the data
+follow.</p>
+<div id="prior-only" class="section level2">
+<h2>Prior only</h2>
+<p>Now we run SBC for a backend that samples from the prior:</p>
+<pre class="r"><code>sampling_func_prior_only &lt;- function(y, N_samples) {
+  mvtnorm::rmvnorm(n = N_samples, sigma = mvn_sigma)
+}
+
+backend_prior_only &lt;- my_backend_mvn(sampling_func_prior_only)
+
+res_prior_only &lt;- compute_SBC(ds, backend_prior_only, gen_quants = quants, 
+                              globals = my_backend_mvn_globals,
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, &quot;mvn_prior_only&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_prior_only &lt;- order_quants(res_prior_only)</code></pre>
+<p>Now the diagnostic plots</p>
+<pre class="r"><code>plot_rank_hist(res_prior_only)</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_prior_only)</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_diag-2.png" width="672" /></p>
+<pre class="r"><code>p_hist_prior_only &lt;- plot_log_gamma_history(res_prior_only, max_sim_id = 50)
+p_hist_prior_only</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_prior_only.pdf&quot;), p_hist_prior_only, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>Here’s the rest of the history showing that non-data dependent
+variables do not show any meaningful discrepancy:</p>
+<pre class="r"><code>plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = &quot;^mu|vario&quot;)</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_history_2-1.png" width="768" /></p>
+<p>For comparison, here’s the history of the KS p-value:</p>
+<pre class="r"><code>plot_ks_test_history(res_prior_only, max_sim_id = 50)</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_history_ks-1.png" width="768" /></p>
+<p>Additonally, we show that splitting the ranks for <code>mu[1]</code>
+and <code>mu[2]</code> by the average of <code>y</code> results in
+strongly non-uniform histograms. However the non-uniformity in each
+subgroup is much smaller than what e.g. the <code>mvn_log_lik</code>
+quantity provides.</p>
+<pre class="r"><code>mean1_positive &lt;- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,1]) &gt; 0 }))
+mean2_positive &lt;- which(purrr::map_lgl(ds$generated, function(x) { mean(x$y[,2]) &gt; 0 }))
+stats_split &lt;- res_prior_only$stats %&gt;% filter(variable %in% c(&quot;mu[1]&quot;, &quot;mu[2]&quot;)) %&gt;%
+  mutate(variable = paste0(variable, &quot; - mean y &quot;, 
+                           if_else(if_else(variable == &quot;mu[1]&quot;, sim_id %in% mean1_positive, sim_id %in% mean2_positive), 
+                                   &quot;positive&quot;, &quot;negative&quot;))
+                            )
+
+# The visualisations in SBC package do not supprt different variables have different
+# number of simulations. We thus discard simulations to keep both groups of the same size.
+min_n &lt;- stats_split %&gt;% group_by(variable) %&gt;% summarise(n = n()) %&gt;% pull(n) %&gt;% min()
+
+stats_split &lt;- stats_split %&gt;% group_by(variable) %&gt;%
+  mutate(sim_id = 1:n()) %&gt;%
+  ungroup() %&gt;%
+  filter(sim_id &lt;= min_n)
+
+p_rank_hist_prior_only_split &lt;- plot_rank_hist(stats_split) + facet_wrap(~variable, nrow = 1)
+p_rank_hist_prior_only_split</code></pre>
+<p><img src="mvn_files/figure-html/res_prior_only_split-1.png" width="864" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;rank_hist_prior_only_split.pdf&quot;), p_rank_hist_prior_only_split, width = hist_plot_width + 1, height = hist_plot_height / 2 )</code></pre>
+</div>
+<div id="one-missing-data-point" class="section level2">
+<h2>One missing data point</h2>
+<p>Now we have one data point missing:</p>
+<pre class="r"><code>sampling_func_one_missing &lt;- function(y, N_samples) {
+  # Delegate to the correct posterior, just throw away data
+  sampling_func_correct(y[2:nrow(y),], N_samples)
+}
+
+backend_one_missing &lt;- my_backend_mvn(sampling_func_one_missing)
+
+set.seed(5652265)
+res_one_missing &lt;- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_one_missing &lt;- order_quants(res_one_missing)</code></pre>
+<p>The diagnostic plots:</p>
+<pre class="r"><code>plot_rank_hist(res_one_missing)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_one_missing)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_diag-2.png" width="672" /></p>
+<p>And the history of the gamma statistic</p>
+<pre class="r"><code>p_hist_one_missing &lt;- plot_log_gamma_history(res_one_missing, max_sim_id = 100)
+p_hist_one_missing</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_one_missing.pdf&quot;), p_hist_one_missing, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>A bit longer window</p>
+<pre class="r"><code>plot_log_gamma_history(res_one_missing, max_sim_id = 500)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_history_2-1.png" width="768" /></p>
+<p>And the KS p-value - note that the initial discrepancies in all of
+the quantities look more serious in this view (although the
+non-likelihood quantities in fact have uniform distribution)</p>
+<pre class="r"><code>plot_ks_test_history(res_one_missing, max_sim_id = 500)</code></pre>
+<pre><code>## Warning: Transformation introduced infinite values in continuous y-axis</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_history_ks-1.png" width="768" /></p>
+</div>
+<div id="one-missing-data-point---larger-n" class="section level2">
+<h2>One missing data point - larger N</h2>
+<p>Identical setup as above, but we have 20 data points.</p>
+<pre class="r"><code># Generate datasets with 20 datapoints.
+set.seed(2665884)
+ds_20 &lt;- generate_datasets(SBC_generator_function(generator_func_correlated, N = 20, sigma = mvn_sigma), N_sims)
+
+
+res_one_missing_20 &lt;- compute_SBC(ds_20, backend_one_missing, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing_20&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_one_missing_20 &lt;- order_quants(res_one_missing_20)</code></pre>
+<p>The final diagnostic plots</p>
+<pre class="r"><code>plot_rank_hist(res_one_missing_20)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_20_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_one_missing_20)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_20_diag-2.png" width="672" /></p>
+<p>History of gamma statistic</p>
+<pre class="r"><code>p_hist_one_missing_20 &lt;- plot_log_gamma_history(res_one_missing_20)
+p_hist_one_missing_20</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_20_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_one_missing_20.pdf&quot;), p_hist_one_missing_20, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>History of KS p-value</p>
+<pre class="r"><code>plot_ks_test_history(res_one_missing_20)</code></pre>
+<p><img src="mvn_files/figure-html/res_one_missing_20_history_ks-1.png" width="768" /></p>
+</div>
+</div>
+<div id="incorrect-posterior-correlations" class="section level1">
+<h1>Incorrect posterior correlations</h1>
+<p>Especially when the number of data points is small, the correlations
+in the prior should persist in the posterior.</p>
+<p>We however generate posterior samples from a set of independent
+normal distributions that happen to have the correct mean and standard
+deviation, just the correlation is missing.</p>
+<pre class="r"><code>sampling_func_uncorr &lt;- function(y, N_samples, prior_sigma = 1) {
+  K &lt;- ncol(y)
+  N &lt;- nrow(y)
+  
+  ybar = colMeans(y)
+
+  res_raw &lt;- matrix(nrow = N_samples, ncol = K)
+  for(k in 1:K) {
+    post_mean &lt;- N * ybar[k] / (N  + 1)
+    post_sd &lt;- sqrt(1 / (N + 1)) * prior_sigma 
+    res_raw[,k] &lt;- rnorm(N_samples, mean = post_mean, sd = post_sd)
+  }
+  res_raw
+}
+
+backend_uncorr &lt;- my_backend_mvn(sampling_func_uncorr)
+
+
+res_uncorr &lt;- compute_SBC(ds, backend_uncorr, 
+                        globals = my_backend_mvn_globals,
+                        gen_quants = quants,
+                        cache_mode = &quot;results&quot;, 
+                        cache_location = file.path(cache_dir, &quot;mvn_uncorr&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_uncorr &lt;- order_quants(res_uncorr)</code></pre>
+<p>Although the posterior is incorrect, the default univariate checks
+don’t show any problem even with 1000 simulations. All of the other
+quantities however show issues.</p>
+<pre class="r"><code>plot_rank_hist(res_uncorr)</code></pre>
+<p><img src="mvn_files/figure-html/results_uncorr-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_uncorr)</code></pre>
+<p><img src="mvn_files/figure-html/results_uncorr-2.png" width="672" /></p>
+<p>The history of the gamma statistic.</p>
+<pre class="r"><code>p_hist_corr &lt;- plot_log_gamma_history(res_uncorr, max_sim_id = 100)
+p_hist_corr</code></pre>
+<p><img src="mvn_files/figure-html/res_uncorr_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_corr.pdf&quot;), p_hist_corr, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>A somewhat longer window shows how all the quantities produce
+issues:</p>
+<pre class="r"><code>plot_log_gamma_history(res_uncorr, max_sim_id = 250)</code></pre>
+<p><img src="mvn_files/figure-html/res_corr_quants_history_2-1.png" width="768" /></p>
+<p>And KS p-value. Note the lowered sensitivity towards issues with
+<code>mu[1] * mu[2]</code> and <code>mu[1] + mu[2]</code>.</p>
+<pre class="r"><code>plot_ks_test_history(res_uncorr, max_sim_id = 250)</code></pre>
+<p><img src="mvn_files/figure-html/res_corr_quants_history_ks-1.png" width="768" /></p>
+</div>
+<div id="non-monotonous-transform" class="section level1">
+<h1>Non-monotonous transform</h1>
+<p>Finally our backend showing the (probably not very practical) utility
+of non-monotonous transformations.</p>
+<pre class="r"><code>set.seed(246855)
+# Generate even more datasets - same quantities take loooong to show problems
+ds_more &lt;- bind_datasets(
+  ds,
+  generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma), n_sims = 5000)
+)</code></pre>
+<p>Now let us build the sampling function. The overall idea is that we
+start with the correct posterior. We then use the CDF to transform the
+samples to [0,1], manipulate the value on this scale to achieve the
+desired CDF shape and than transform back with the quantile
+function.</p>
+<pre class="r"><code>sampling_func_non_mon &lt;- function(y, N_samples, prior_sigma = mvn_sigma) {
+  # Sample as if correct
+  K &lt;- ncol(y)
+  N &lt;- nrow(y)
+  
+  ybar = colMeans(y)
+
+  post_mean &lt;- N * ybar / (N  + 1)
+  post_sigma &lt;- prior_sigma / (N + 1) 
+  res &lt;- mvtnorm::rmvnorm(N_samples, mean = post_mean, sigma = post_sigma)
+
+  # Modify
+  for(k in 1:K) {
+    res_k &lt;- res[,k]
+    
+    uniform_q &lt;- pnorm(res_k, post_mean[k], sqrt(post_sigma[k,k]))
+    if(mean(y[,k]) &gt; 0) {
+      transformed_q &lt;- dplyr::if_else(uniform_q &lt; 0.5, 1.5 * uniform_q, 0.75 + (uniform_q - 0.5)*0.5)
+    } else {
+      transformed_q &lt;- dplyr::if_else(uniform_q &lt; 0.5, 0.5 * uniform_q, 0.25 + (uniform_q - 0.5)*1.5)
+    }
+    res_k &lt;- qnorm(transformed_q, post_mean[k], sqrt(post_sigma[k,k]))
+    
+    res[,k] &lt;- res_k
+  }
+  res
+}
+
+backend_non_mon &lt;- my_backend_mvn(sampling_func_non_mon)
+
+# Define different test quantities
+quants_non_mon &lt;- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
+                                       `abs(mu[1])` = abs(mu[1]),
+                                       `drop(mu[1])` = ifelse(mu[1] &lt; 1, mu[1], mu[1] - 5),
+                                       `sin(1/mu[1])` = sin(1/mu[1]),
+                                       `mu[1] * mean(y[,1])` = mu[1] * mean(y[,1]),
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
+
+if(include_sampling_scores) {
+  quants_non_mon &lt;- bind_generated_quantities(quants_non_mon, quants_sampled)
+}
+
+
+
+  
+res_non_mon &lt;- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon, 
+                              globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, &quot;mvn_non_mon&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_non_mon &lt;- order_quants(res_non_mon)</code></pre>
+<p>The diagnostic plots</p>
+<pre class="r"><code>plot_rank_hist(res_non_mon)</code></pre>
+<p><img src="mvn_files/figure-html/res_non_mon_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_non_mon)</code></pre>
+<p><img src="mvn_files/figure-html/res_non_mon_diag-2.png" width="672" /></p>
+<p>Show that the manipulation of the ranks was succesful - those are the
+ranks split by positive/negative mean of <code>y</code>.</p>
+<pre class="r"><code>mean1_positive &lt;- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,1]) &gt; 0 }))
+mean2_positive &lt;- which(purrr::map_lgl(ds_more$generated, function(x) { mean(x$y[,2]) &gt; 0 }))
+stats_split &lt;- res_non_mon$stats %&gt;% filter(variable %in% c(&quot;mu[1]&quot;, &quot;mu[2]&quot;)) %&gt;%
+  mutate(variable = paste0(variable, &quot; - mean y &quot;, 
+                           if_else(if_else(variable == &quot;mu[1]&quot;, sim_id %in% mean1_positive, sim_id %in% mean2_positive), 
+                                   &quot;positive&quot;, &quot;negative&quot;))
+                            )
+# The visualisations in SBC package do not supprt different variables have different
+# number of simulations. We thus discard simulations to keep both groups of the same size.
+min_n &lt;- stats_split %&gt;% group_by(variable) %&gt;% summarise(n = n()) %&gt;% pull(n) %&gt;% min()
+
+stats_split &lt;- stats_split %&gt;% group_by(variable) %&gt;%
+  mutate(sim_id = 1:n()) %&gt;%
+  ungroup() %&gt;%
+  filter(sim_id &lt;= min_n)
+
+p_rank_hist_non_mon_split &lt;- plot_rank_hist(stats_split) + facet_wrap(~variable, nrow = 1)
+p_rank_hist_non_mon_split</code></pre>
+<p><img src="mvn_files/figure-html/res_non_mon_split-1.png" width="864" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;rank_hist_non_mon_split.pdf&quot;), p_rank_hist_non_mon_split, width = hist_plot_width + 1, height = hist_plot_height / 2 )</code></pre>
+<p>Now the history. To make everything well visible, show only a subset
+of the simulations for some quantities:</p>
+<pre class="r"><code>shared_mark &lt;- geom_vline(color = &quot;red&quot;, linetype = &quot;dashed&quot;, xintercept = 500)
+p_hist_non_mon_1 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = &quot;(^mu\\[.\\]$)|lik|sin&quot;) + 
+  theme(axis.title = element_blank()) + shared_mark
+p_hist_non_mon_2 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = &quot;abs|\\*|drop&quot;) +
+  theme(axis.title = element_blank()) + shared_mark
+
+#axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+p_label &lt;- ggplot(data.frame(l = &quot;Log Gamma - Threshold&quot;, x = 1, y = 1)) +
+      geom_text(aes(x, y, label = l), angle = 90, size = 5) + 
+      theme_void() +
+      coord_cartesian(clip = &quot;off&quot;)
+
+p_hist_non_mon &lt;- p_label + (p_hist_non_mon_1 / p_hist_non_mon_2) + plot_layout(widths = c(0.4, 25))
+p_hist_non_mon</code></pre>
+<pre><code>## Warning: Removed 665 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 252 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="mvn_files/figure-html/res_non_mon_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_non_mon.pdf&quot;), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<pre><code>## Warning: Removed 665 row(s) containing missing values (geom_path).
+## Removed 252 row(s) containing missing values (geom_path).</code></pre>
+<p>This is the history without any modifications. Note that for several
+quantities the values crash too low and become NaN.</p>
+<pre class="r"><code>p_hist_non_mon_ext &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5))
+p_hist_non_mon_ext</code></pre>
+<pre><code>## Warning: Removed 5752 row(s) containing missing values (geom_path).</code></pre>
+<p><img src="mvn_files/figure-html/res_non_mon_history_simple-1.png" width="672" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_non_mon_ext.pdf&quot;), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<pre><code>## Warning: Removed 5752 row(s) containing missing values (geom_path).</code></pre>
+</div>
+<div id="small-changes-compound" class="section level1">
+<h1>Small changes compound</h1>
+<p>Here we add small bias to the correct posterior.</p>
+<pre class="r"><code>K_changes &lt;- 2
+set.seed(5665525)
+mvn_sigma_changes &lt;- matrix(0.8, nrow = K_changes, ncol = K_changes)
+diag(mvn_sigma_changes) &lt;- 1
+
+ds_changes &lt;- generate_datasets(SBC_generator_function(generator_func_correlated, N = 3, sigma = mvn_sigma_changes), n_sims = 1000)
+
+sampling_func_small_change &lt;- function(y, N_samples, prior_sigma) {
+  res_correct &lt;- sampling_func_correct(y, N_samples, prior_sigma)
+  K = nrow(prior_sigma)
+  bias &lt;- rnorm(K, mean = 0, sd = 0.3)
+  res &lt;- res_correct
+  for(k in 1:K) {
+    res[,k] &lt;- res[,k] + bias[k]  
+  }
+  res
+}
+
+backend_small_change &lt;- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_changes))
+
+quants_change &lt;- generated_quantities(sum = sum(mu),
+                                      sum_abs = sum(abs(mu)),
+                                mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma_changes, log = TRUE)))
+
+res_small_change &lt;- compute_SBC(ds_changes, backend_small_change, gen_quants = quants, 
+                              globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;, &quot;mvn_sigma_changes&quot;),
+                              cache_mode = &quot;results&quot;,
+                              cache_location = file.path(cache_dir, paste0(&quot;mvn_small_change_&quot;, K_changes)))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_small_change &lt;- order_quants(res_small_change)</code></pre>
+<p>The diagnostic plots.</p>
+<pre class="r"><code>plot_rank_hist(res_small_change)</code></pre>
+<p><img src="mvn_files/figure-html/res_small_change_diag-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_small_change)</code></pre>
+<p><img src="mvn_files/figure-html/res_small_change_diag-2.png" width="672" /></p>
+<p>And the history of the gamma statistic:</p>
+<pre class="r"><code>p_hist_small_change &lt;- plot_log_gamma_history(res_small_change, max_sim_id = 500)
+p_hist_small_change</code></pre>
+<p><img src="mvn_files/figure-html/res_small_change_history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_small_change.pdf&quot;), p_hist_small_change, width = hist_plot_width, height = hist_plot_height)</code></pre>
+<p>And the KS p-value - note the reduced sensitivity for
+e.g. <code>mu[1]</code>, <code>mu[2]</code> and
+<code>mu[1] + mu[2]</code>.</p>
+<pre class="r"><code>plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)</code></pre>
+<p><img src="mvn_files/figure-html/historysmallchangesks-1.png" width="768" /></p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
