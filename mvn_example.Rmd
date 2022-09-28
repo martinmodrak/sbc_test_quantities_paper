@@ -1,8 +1,12 @@
 ---
 title: "Multivariate normal example"
-output: html_document
+output: 
+  html_document:
+    toc: TRUE
 abstract: "This R Markdown document runs the simulations and recreates all the figures used in Section 4 of the paper TODO: final title."
 ---
+
+# Setting up
 
 The examples are run using the [SBC](https://hyunjimoon.github.io/SBC/) R package.  - consult
 the [Getting Started with SBC](https://hyunjimoon.github.io/SBC/articles/SBC.html) vignette for basics of the package. 
@@ -266,7 +270,7 @@ ggsave(file.path(fig_dir, "hist_prior_only.pdf"), p_hist_prior_only, width = his
 Here's the rest of the history showing that non-data dependent variables do
 not show any meaningful discrepancy:
 
-```{r res_prior_only_history_2}
+```{r res_prior_only_history_2, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_log_gamma_history(res_prior_only, max_sim_id = 1000, variables_regex = "^mu|vario")
 ```
 
@@ -437,8 +441,8 @@ plot_ecdf_diff(res_uncorr)
 
 The history of the gamma statistic.
 
-```{r res_corr_quants_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
-p_hist_corr <- plot_log_gamma_history(res_corr_quants, max_sim_id = 100)
+```{r res_uncorr_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
+p_hist_corr <- plot_log_gamma_history(res_uncorr, max_sim_id = 100)
 p_hist_corr
 ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = hist_plot_width, height = hist_plot_height)
 ```
@@ -446,13 +450,13 @@ ggsave(file.path(fig_dir, "hist_corr.pdf"), p_hist_corr, width = hist_plot_width
 A somewhat longer window shows how all the quantities produce issues:
 
 ```{r res_corr_quants_history_2, fig.width=hist_plot_width, fig.height=hist_plot_height}
-plot_log_gamma_history(res_corr_quants, max_sim_id = 250)
+plot_log_gamma_history(res_uncorr, max_sim_id = 250)
 ```
 
 And KS p-value. Note the lowered sensitivity towards issues with `mu[1] * mu[2]` and `mu[1] + mu[2]`.
 
 ```{r res_corr_quants_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
-plot_ks_test_history(res_corr_quants, max_sim_id = 250)
+plot_ks_test_history(res_uncorr, max_sim_id = 250)
 ```
 
 # Non-monotonous transform
@@ -565,9 +569,9 @@ for some quantities:
 
 ```{r res_non_mon_history, fig.width=hist_plot_width, fig.height=hist_plot_height}
 shared_mark <- geom_vline(color = "red", linetype = "dashed", xintercept = 500)
-p_hist_non_mon_1 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = "abs|\\*|drop") +
+p_hist_non_mon_1 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = "(^mu\\[.\\]$)|lik|sin") + 
   theme(axis.title = element_blank()) + shared_mark
-p_hist_non_mon_2 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = "(^mu\\[.\\]$)|lik|sin") + 
+p_hist_non_mon_2 <- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = "abs|\\*|drop") +
   theme(axis.title = element_blank()) + shared_mark
 
 #axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
@@ -609,7 +613,6 @@ sampling_func_small_change <- function(y, N_samples, prior_sigma) {
   for(k in 1:K) {
     res[,k] <- res[,k] + bias[k]  
   }
-  #res_correct * matrix(ifelse(runif(K * N_samples) < 0.1, 0, 1), nrow = N_samples, ncol = K)
   res
 }
 
