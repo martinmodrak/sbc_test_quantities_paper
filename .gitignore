@@ -41,5 +41,7 @@ vignettes/*.pdf
 .Rproj.user
 
 _figs/
+/*_files/
+/*.html/
 
 *.nb.html

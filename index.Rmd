@@ -1,0 +1,14 @@
+---
+title: "SBC and various test quantities"
+output: html_document
+---
+
+This website contains rendered simulations for the paper TODO final name. Written in
+R markdown, using the [SBC](https://hyunjimoon.github.io/SBC/) R package.
+
+Source code can be found at: https://github.com/martinmodrak/sbc_test_quantities_paper/
+
+Contents:
+
+- [MVN](mvn.html) - the examples for the main body of the paper (Section 4 - Numerical Experiments)
+- [Bernoulli](bernoulli.html) - Examples in the Appendix B

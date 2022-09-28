@@ -1,5 +1,5 @@
 ---
-title: "Simple Bernoulli Examples - Continuous"
+title: "Simple Bernoulli Examples"
 output: html_document
 abstract: "This R Markdown document runs the simulations accompanying Examples 1 - 5 in Appendix B of paper TODO: final title."
 ---
@@ -11,6 +11,7 @@ We will also use "custom backends" which are discussed and explaiend in the [Imp
 
 
 ```{r setup}
+knitr::opts_chunk$set(cache = TRUE)
 library(SBC)
 library(tidyverse)
 library(patchwork)
@@ -114,7 +115,6 @@ gq_simple <- generated_quantities(
    log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
    sq = (theta - 0.5) ^ 2,
    sin3_2 = sin(3/2 * pi * theta),
-   abs = abs(theta - 1/2),
    saw = ifelse(theta < 1/2, theta, -1/2 + theta),
    swap = ifelse(theta < 1/2, theta, theta - 1),
    saw_quad = ifelse(theta < 1/2, theta^2, -1/2 + theta^3),
@@ -164,7 +164,7 @@ invcdf_ex1_square_1 <- function(u) {
 This is how the inverse CDFs of the counterexample compare to the correct ones - the top
 two panels show the actual inverse CDFs and the bottom two panels the difference from the correct CDF.
 
-```{r}
+```{r funcs_ex1}
 plot_invcdfs <- function(invcdf0, invcdf1, name) {
   u <- seq(from = 0, to = 1,length.out = 100)
   plot1 <- rbind(data.frame(y = 0, u = u, invphi = invcdf0(u), type = name),
@@ -215,7 +215,7 @@ plot_ecdf_diff(res_ex1_square)
 
 Here we take the correct posterior and flip the functions for 0 and 1. In paper, this is designated as $\phi_A$.  This still satisfies the "data-averaged posterior = prior" condition but actually fails SBC for the projection function (i.e. the `theta` subplot) and many other test quantities. Interestingly, the `sq` quantity is completely insensitive to this flipping, because it is symmetric to flips in `theta` around $\frac{1}{2}$.
 
-```{r}
+```{r res_flip}
 backend_flip <- my_backend_func(
   func0 = rlang::as_function(~ rbeta(N_samples_simple, 2, 1)),
   func1 = rlang::as_function(~ rbeta(N_samples_simple, 1, 2)))
@@ -243,7 +243,7 @@ $$
 
  and then use the formula $\Phi^{-1}(x | 1) = \sqrt{2x + (\Phi^{-1}(x | 0) - 1)^2 - 1}$ to calculate the other inverse CDF.
 
-```{r}
+```{r funcs_phiB}
 invcdf_phiB_0 <- function(u) {
   ifelse(u < 3/4, (2/3) * u, 0.5 + (u - 0.75)*2)
 }
@@ -263,7 +263,8 @@ Let's run SBC. As designed, no problem with `theta` (projection function), but m
 backend_phiB <- my_backend_func_invcdf(invcdf_phiB_0, invcdf_phiB_1)
 
 
-res_phiB <- compute_SBC(ds, backend_phiB, keep_fits = FALSE,
+# We use a bit more simulations to clearly show some of the problems
+res_phiB <- compute_SBC(ds_large[1:2500], backend_phiB, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "phiB")
@@ -281,28 +282,30 @@ plot_ecdf_diff(res_phiB)
 
 Here we take a linear combination of the prior and posterior (both passing SBC and data-averaged posterior for `theta` - the projection function). This is denoted as $\Phi_C$ in the paper. Note that this does not quite strongly pass SBC for `theta` (the projection function) as well as many other quantities.
 
-```{r}
-invcdf_test_lincomb_0 <- function(u) {
+```{r func_lincomb}
+invcdf_lincomb_0 <- function(u) {
   1.5 - 0.5 * sqrt(9 - 8 * u)
 }
 
-invcdf_test_lincomb_1 <- function(u) {
+invcdf_lincomb_1 <- function(u) {
   -0.5 + 0.5 * sqrt(1 + 8 * u)
 }
 
-backend_test_lincomb <- my_backend_func_invcdf(invcdf_test_lincomb_0, invcdf_test_lincomb_1)
+plot_invcdfs(invcdf_lincomb_0, invcdf_lincomb_1, "Linear combination")
+```
+
+```{r res_lincomb}
+backend_lincomb <- my_backend_func_invcdf(invcdf_lincomb_0, invcdf_lincomb_1)
 
 
-res_test_lincomb <- compute_SBC(ds_large, backend_test_lincomb, keep_fits = FALSE,
+res_lincomb <- compute_SBC(ds_large, backend_lincomb, keep_fits = FALSE,
                         gen_quants = gq_simple, 
                         globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "lincomb"))
 
-plot_rank_hist(res_test_lincomb)
-plot_ecdf_diff(res_test_lincomb)
-
-
+plot_rank_hist(res_lincomb)
+plot_ecdf_diff(res_lincomb)
 ```
 
 
@@ -314,7 +317,7 @@ Now let us simulate posteriors passing SBC w.r.t. the likelihood (denoted $f_2$ 
 
 Here we will use $\Phi^{-1}(x | 1) = 1 - (1 - x)^2$ and then use the formula $\Phi^{-1}(1 - x | 0) = 1 - \sqrt{2x - (\Phi^{-1}(x|1) ^ 2)}$ to complete the posterior.
 
-```{r}
+```{r func_lik}
 invcdf_lik1_0 <- function(u) {
   #1 - sqrt((1 - u))
   #1 - sqrt(2*(1-u) - invcdf_lik1_1(1-u) ^ 2)
@@ -331,7 +334,7 @@ plot_invcdfs(invcdf_lik1_0, invcdf_lik1_1, "Example 3 - Likelihood 1")
 And we can compute SBC - note that this posterior passes SBC for the likelihood
 (`log_lik`), but it does not pass it for `theta` and many other quantities.
 
-```{r}
+```{r res_lik}
 backend_lik1 <- my_backend_func_invcdf(invcdf_lik1_0, invcdf_lik1_1)
 
 res_lik1 <- compute_SBC(ds, backend_lik1, keep_fits = FALSE,
@@ -349,7 +352,7 @@ plot_ecdf_diff(res_lik1)
 We can construct counterexamples that satisfy both `theta` and `log_lik`, the full formula is in the paper
 here is one, starting from $0 < x < \frac{1}{2}: \Phi^{-1}(x | 0) = 2 (2 - \sqrt{2}) u^2$ and computing the rest as needed:
 
-```{r}
+```{r func_loglik2}
 invcdf_loglik2_0 <- function(u) {
   ifelse(u < 0.5, u^2 * 2 *(2 - sqrt(2)),
            1 - 2 * abs(u - 1) * sqrt(-4 + 3 * sqrt(2) + (-6 + 4*sqrt(2)) * (u -2) * u) 
@@ -369,7 +372,7 @@ plot_invcdfs(invcdf_loglik2_0, invcdf_loglik2_1, "Example 3 - likelihood 2")
 
 The SBC for both `theta` and `log_lik` passes. All the other quantities however do show the failure. This shows the space of useful quantities is not exhausted by a univariate marginal distribution and the (log)likelihood and that non-monotonous transformation of the univariate marginal can provide additional power to SBC.
 
-```{r}
+```{r res_loglik2}
 backend_loglik2 <- my_backend_func_invcdf(invcdf_loglik2_0, invcdf_loglik2_1)
 
 res_loglik2 <- compute_SBC(ds, backend_loglik2, keep_fits = FALSE,
@@ -402,7 +405,7 @@ $$
 
 to create a posterior passing SBC.
 
-```{r}
+```{r func_swap}
 invcdf_swap_0 <- function(u) {
   u^2
 } 
@@ -461,7 +464,7 @@ plot_invcdfs(invcdf_swap_0, invcdf_swap_1, "Example 4 - swap")
 
 And we run SBC - no problems are seen for `swap`, while other quantities do show the problem.
 
-```{r}
+```{r res_swap}
 backend_swap <- my_backend_func_invcdf(invcdf_swap_0, invcdf_swap_1)
 
 res_swap <- compute_SBC(ds_large, backend_swap, keep_fits = FALSE,
@@ -472,6 +475,8 @@ res_swap <- compute_SBC(ds_large, backend_swap, keep_fits = FALSE,
 plot_rank_hist(res_swap)
 plot_ecdf_diff(res_swap)
 ```
+
+
 # Example 5 - Ties, continuous
 
 Finally, we'll use what's called $f_4$ in the paper and which is called `clamp` in our plots. That is collapsing a range of values into 
@@ -489,7 +494,7 @@ The overall idea is that we can pick $h_0 = \Phi(\frac{1}{2} | 0)$, compute $h_1
 
 Here we take  $\Phi^{-1}(x | 0) = a x^{1.5}$ for $x < \min\{h_0, h_1\}$ and suitable $a$.
 
-```{r}
+```{r funcclamp}
 invcdf_clamp_base <- function() {
   #h0 and basefunc can be +/- freely chosen
   # The basefunc will be appropriately scaled to meet the conditions implied
@@ -566,7 +571,7 @@ plot_invcdfs(invcdf_clamp_0, invcdf_clamp_1, "Example 4 - clamp")
 ```
 
 
-```{r}
+```{r resclamp}
 backend_clamp <- my_backend_func_invcdf(invcdf_clamp_0, invcdf_clamp_1)
 
 # We use a bit more datasets to amplify some of the failures
@@ -588,7 +593,7 @@ However, recall that almost all of the previous examples failed SBC for `clamp`.
 
 Using just the prior as posterior passes SBC for `theta` and all test quantities that depend only on `theta`, however the `log_lik` test quantity comes to the rescue! 
 
-```{r}
+```{r resprioronly}
 backend_prior<- my_backend_func(
   func0 = rlang::as_function(~ runif(N_samples_simple)),
   func1 = rlang::as_function(~ runif(N_samples_simple)))
@@ -606,7 +611,7 @@ plot_ecdf_diff(res_prior)
 
 We can in fact build an incorrect posterior that satisfies SBC for projection (`theta`) and has correct data-averaged posterior. Here is an example:
 
-```{r}
+```{r funcdapproj}
 invcdf_DAP_proj_0 <- function(u) {
   lb = 1/6 * (3 - sqrt(6))
   ub = 1/6 * (3 + sqrt(6))
@@ -622,7 +627,7 @@ invcdf_DAP_proj_1 <- function(u) {
 plot_invcdfs(invcdf_DAP_proj_0, invcdf_DAP_proj_1, "Passing SBC and DAP for theta")
 ```
 
-```{r}
+```{r resdapproj}
 backend_DAP_proj <- my_backend_func_invcdf(invcdf_DAP_proj_0, invcdf_DAP_proj_1)
 
 res_DAP_proj <- compute_SBC(ds_large, backend_DAP_proj, keep_fits = FALSE,

@@ -1,0 +1,13 @@
+name: "sbc-test-quantities-paper"
+navbar:
+  title: "SBC and various test quantities"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "MVN (Section 4)"
+      href: mvn.html
+    - text: "Bernoulli (Appendix B)"
+      href: bernoulli.html
+output_dir: html
+include: ["*.html", "*.png"]
+exclude: ["R", "*.R", "*.Rmd", "wolfram", "DESCRIPTION", "NAMESPACE", "renv.lock", "LICENSE", "tests"]

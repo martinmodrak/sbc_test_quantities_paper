@@ -13,6 +13,7 @@ the [Getting Started with SBC](https://hyunjimoon.github.io/SBC/articles/SBC.htm
 We will also use "custom backends" which are discussed and explaiend in the [Implementing a new backend](https://hyunjimoon.github.io/SBC/articles/implementing_backends.html).
 
 ```{r setup, message=FALSE,warning=FALSE, results="hide"}
+knitr::opts_chunk$set(cache = TRUE)
 library(SBC)
 library(ggplot2)
 library(mvtnorm)
@@ -72,7 +73,7 @@ where $MVN$ is the multivariate normal distribution. In this case the posterior 
 
 Now we draw 1000 simulated datasets from this model:
 
-```{r}
+```{r, cache=FALSE}
 set.seed(266552)
 
 mvn_sigma <- matrix(c(1, 0.8,0.8,1), nrow = 2)
@@ -186,7 +187,7 @@ if(include_sampling_scores) {
 
 # Correct posterior
 
-Introducing $\bar{\mathbf{y}} = \frac{1}{N}\sum_{i = 1}^{N} \mathbf{y}_i$, the posterior is $MVN\left(\frac{N\bar{\mathbf{y}}}{n + 1}, \frac{1}{N + 1}\mathbf{\Sigma}\right)  $
+Introducing $\bar{\mathbf{y}} = \frac{1}{N}\sum_{i = 1}^{N} \mathbf{y}_i$, the posterior is $MVN\left(\frac{N\bar{\mathbf{y}}}{n + 1}, \frac{1}{N + 1}\mathbf{\Sigma}\right)$
 
 Let's define the sampling function and backend corresponding to the correct posterior and run SBC.
 
@@ -646,7 +647,7 @@ ggsave(file.path(fig_dir, "hist_small_change.pdf"), p_hist_small_change, width =
 
 And the KS p-value - note the reduced sensitivity for e.g. `mu[1]`, `mu[2]` and `mu[1] + mu[2]`.
 
-```{r, fig.width=hist_plot_width, fig.height=hist_plot_height}
+```{r historysmallchangesks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)
 ```
 

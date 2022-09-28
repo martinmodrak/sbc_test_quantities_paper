@@ -78,14 +78,15 @@
       "RemoteRepo": "SBC",
       "RemoteUsername": "hyunjimoon",
       "RemoteRef": "HEAD",
-      "RemoteSha": "9ded19466121b6eb41dc9896fb0013ddd7ddbbfe",
-      "Hash": "598135d7efbfdd27112805ecb85bdd6e",
+      "RemoteSha": "1c5638d008f46968d3c964c6283326002a6905b8",
+      "Hash": "4114fd2075e0f5b56d817f15bceb1e02",
       "Requirements": [
         "R6",
         "abind",
         "dplyr",
         "future.apply",
         "ggplot2",
+        "memoise",
         "posterior",
         "purrr",
         "stringi",
@@ -560,21 +561,6 @@
       "Repository": "CRAN",
       "Hash": "7c89603d81793f0d5486d91ab1fc6f1d",
       "Requirements": []
-    },
-    "furrr": {
-      "Package": "furrr",
-      "Version": "0.3.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c7cf394610e3aaf086fa4b66c382016e",
-      "Requirements": [
-        "future",
-        "globals",
-        "lifecycle",
-        "purrr",
-        "rlang",
-        "vctrs"
-      ]
     },
     "future": {
       "Package": "future",
@@ -1316,10 +1302,10 @@
     },
     "rmarkdown": {
       "Package": "rmarkdown",
-      "Version": "2.13",
+      "Version": "2.16",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "ac78f4d2e0289d4cba73b88af567b8b1",
+      "Hash": "0f3eaa1547e2c6880d4de1c043ac6826",
       "Requirements": [
         "bslib",
         "evaluate",

@@ -2,10 +2,15 @@
 
 Simulations for the paper TODO final name. Written in
 R markdown, using the [SBC](https://hyunjimoon.github.io/SBC/) R package.
-Files shared both as R markdown (`.Rmd`) as well as rendered HTML.
+Code is written in R markdown (`.Rmd`), rendered HTML can be found at
+https://martinmodrak.github.io/sbc_test_quantities_paper.
 
-- `mvn_example` - the examples for the main body of the paper (Section 4 - Numerical Experiments)
-- `simple_bernoulli` - Examples 1 - 5 in the Appendix B
-- `simple_bernoulli_discrete` - Example 6 in the Appendix B 
+Contents:
+
+- `mvn.Rmd` - the examples for the main body of the paper (Section 4 - Numerical Experiments)
+- `bernoulli.Rmd` - Examples in the Appendix B
 
 The code uses `renv` to recreate the same environment as we used to run the examples.
+Run `renv::restore()` after loading the project.
+
+The rendered site can be rebuilt with `rmarkdown::render_site()`.
