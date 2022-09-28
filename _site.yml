@@ -8,6 +8,6 @@ navbar:
       href: mvn.html
     - text: "Bernoulli (Appendix B)"
       href: bernoulli.html
-output_dir: html
+output_dir: docs
 include: ["*.html", "*.png"]
 exclude: ["R", "*.R", "*.Rmd", "wolfram", "DESCRIPTION", "NAMESPACE", "renv.lock", "LICENSE", "tests"]
