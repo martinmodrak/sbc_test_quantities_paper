@@ -1,7 +1,7 @@
 ---
 title: "Simple Bernoulli Examples"
 output: html_document
-abstract: "This R Markdown document runs the simulations accompanying Examples 1 - 5 in Appendix B of paper TODO: final title."
+abstract: "This R Markdown document runs the simulations accompanying Examples 1 - 5 in Appendix B of paper 'Simulation-Based Calibration Checking for Bayesian Computation: The Choice of Test Quantities Shapes Sensitivity'"
 ---
 
 

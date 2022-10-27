@@ -284,7 +284,8 @@ $(document).ready(function () {
 <div class="abstract">
 <p class="abstract">Abstract</p>
 This R Markdown document runs the simulations accompanying Examples 1 -
-5 in Appendix B of paper TODO: final title.
+5 in Appendix B of paper ‘Simulation-Based Calibration Checking for
+Bayesian Computation: The Choice of Test Quantities Shapes Sensitivity’
 </div>
 
 </div>
@@ -299,8 +300,16 @@ href="https://hyunjimoon.github.io/SBC/articles/implementing_backends.html">Impl
 a new backend</a>.</p>
 <pre class="r"><code>knitr::opts_chunk$set(cache = TRUE)
 library(SBC)
-library(tidyverse)
-library(patchwork)
+library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>## ✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+## ✔ tibble  3.1.6     ✔ dplyr   1.0.8
+## ✔ tidyr   1.2.0     ✔ stringr 1.4.0
+## ✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+## ✖ dplyr::filter() masks stats::filter()
+## ✖ dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(patchwork)
 
 library(future)
 plan(multisession)
@@ -408,9 +417,9 @@ res_ok &lt;- compute_SBC(ds, backend_ok, keep_fits = FALSE,
                       gen_quants = gq_simple, globals = my_globals,
                       cache_mode = &quot;results&quot;,
                       cache_location = file.path(cache_dir, &quot;ok&quot;)
-)</code></pre>
-<pre><code>## Results loaded from cache file &#39;ok&#39;</code></pre>
-<pre class="r"><code>plot_rank_hist(res_ok)</code></pre>
+)
+
+plot_rank_hist(res_ok)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_ok-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_ok)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_ok-2.png" width="672" /></p>
@@ -469,9 +478,9 @@ with no problems while for all the other test quantities it fails.</p>
 res_ex1_square &lt;- compute_SBC(ds_large, backend_ex1_square, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                       cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;ex1_square&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_ex1_square)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;ex1_square&quot;))
+
+plot_rank_hist(res_ex1_square)</code></pre>
 <p><img src="bernoulli_files/figure-html/ex1_square-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_ex1_square)</code></pre>
 <p><img src="bernoulli_files/figure-html/ex1_square-2.png" width="672" /></p>
@@ -538,9 +547,9 @@ res_phiB &lt;- compute_SBC(ds_large[1:2500], backend_phiB, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                       cache_mode = &quot;results&quot;,
                       cache_location = file.path(cache_dir, &quot;phiB&quot;)
-                        )</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_phiB)</code></pre>
+                        )
+
+plot_rank_hist(res_phiB)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_phiB-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_phiB)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_phiB-2.png" width="672" /></p>
@@ -570,9 +579,9 @@ res_lincomb &lt;- compute_SBC(ds_large, backend_lincomb, keep_fits = FALSE,
                         gen_quants = gq_simple, 
                         globals = my_globals,
                       cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;lincomb&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_lincomb)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;lincomb&quot;))
+
+plot_rank_hist(res_lincomb)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_lincomb-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_lincomb)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_lincomb-2.png" width="672" /></p>
@@ -608,9 +617,9 @@ likelihood (<code>log_lik</code>), but it does not pass it for
 res_lik1 &lt;- compute_SBC(ds, backend_lik1, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                       cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;loglik1&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_lik1)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;loglik1&quot;))
+
+plot_rank_hist(res_lik1)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_lik-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_lik1)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_lik-2.png" width="672" /></p>
@@ -650,9 +659,9 @@ to SBC.</p>
 res_loglik2 &lt;- compute_SBC(ds, backend_loglik2, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                       cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;loglik2&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_loglik2)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;loglik2&quot;))
+
+plot_rank_hist(res_loglik2)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_loglik2-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_loglik2)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_loglik2-2.png" width="672" /></p>
@@ -746,9 +755,9 @@ other quantities do show the problem.</p>
 res_swap &lt;- compute_SBC(ds_large, backend_swap, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = c(my_globals, &quot;invcdf_swap_0&quot;),
                         cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;swap&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_swap)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;swap&quot;))
+
+plot_rank_hist(res_swap)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_swap-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_swap)</code></pre>
 <p><img src="bernoulli_files/figure-html/res_swap-2.png" width="672" /></p>
@@ -859,9 +868,9 @@ plot_invcdfs(invcdf_clamp_0, invcdf_clamp_1, &quot;Example 4 - clamp&quot;)</cod
 res_clamp &lt;- compute_SBC(ds_large[1:2500], backend_clamp, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = c(my_globals, &quot;invcdf_clamp_base&quot;),
                         cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;clamp&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_clamp)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;clamp&quot;))
+
+plot_rank_hist(res_clamp)</code></pre>
 <p><img src="bernoulli_files/figure-html/resclamp-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_clamp)</code></pre>
 <p><img src="bernoulli_files/figure-html/resclamp-2.png" width="672" /></p>
@@ -917,9 +926,9 @@ plot_invcdfs(invcdf_DAP_proj_0, invcdf_DAP_proj_1, &quot;Passing SBC and DAP for
 res_DAP_proj &lt;- compute_SBC(ds_large, backend_DAP_proj, keep_fits = FALSE,
                         gen_quants = gq_simple, globals = my_globals,
                         cache_mode = &quot;results&quot;,
-                      cache_location = file.path(cache_dir, &quot;DAP_proj&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>plot_rank_hist(res_DAP_proj)</code></pre>
+                      cache_location = file.path(cache_dir, &quot;DAP_proj&quot;))
+
+plot_rank_hist(res_DAP_proj)</code></pre>
 <p><img src="bernoulli_files/figure-html/resdapproj-1.png" width="672" /></p>
 <pre class="r"><code>plot_ecdf_diff(res_DAP_proj)</code></pre>
 <p><img src="bernoulli_files/figure-html/resdapproj-2.png" width="672" /></p>

@@ -3,7 +3,7 @@ title: "Multivariate normal example"
 output: 
   html_document:
     toc: TRUE
-abstract: "This R Markdown document runs the simulations and recreates all the figures used in Section 4 of the paper TODO: final title."
+abstract: "This R Markdown document runs the simulations and recreates all the figures used in Section 4 of the paper 'Simulation-Based Calibration Checking for Bayesian Computation: The Choice of Test Quantities Shapes Sensitivity'"
 ---
 
 # Setting up

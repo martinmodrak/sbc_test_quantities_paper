@@ -284,7 +284,9 @@ $(document).ready(function () {
 <div class="abstract">
 <p class="abstract">Abstract</p>
 This R Markdown document runs the simulations and recreates all the
-figures used in Section 4 of the paper TODO: final title.
+figures used in Section 4 of the paper ‘Simulation-Based Calibration
+Checking for Bayesian Computation: The Choice of Test Quantities Shapes
+Sensitivity’
 </div>
 
 </div>
@@ -495,9 +497,8 @@ res_correct &lt;- compute_SBC(ds, backend_correct, gen_quants = quants,
                               globals = my_backend_mvn_globals,
                               cache_mode = &quot;results&quot;,
                               cache_location = file.path(cache_dir, &quot;mvn_correct&quot;),
-                           )</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_correct &lt;- order_quants(res_correct)</code></pre>
+                           )
+res_correct &lt;- order_quants(res_correct)</code></pre>
 <p>Those are the diagnostic plots after 1000 simulations.</p>
 <pre class="r"><code>plot_rank_hist(res_correct)</code></pre>
 <p><img src="mvn_files/figure-html/res_correct_diag-1.png" width="672" /></p>
@@ -505,8 +506,9 @@ res_correct &lt;- compute_SBC(ds, backend_correct, gen_quants = quants,
 <p><img src="mvn_files/figure-html/res_correct_diag-2.png" width="672" /></p>
 <p>And here is the history of the gamma statistic (see the paper for
 exact definitons).</p>
-<pre class="r"><code>p_hist_correct &lt;- plot_log_gamma_history(res_correct)
-p_hist_correct</code></pre>
+<pre class="r"><code>p_hist_correct &lt;- plot_log_gamma_history(res_correct)</code></pre>
+<pre><code>## Precomputing gamma thresholds</code></pre>
+<pre class="r"><code>p_hist_correct</code></pre>
 <p><img src="mvn_files/figure-html/res_correct_history-1.png" width="768" /></p>
 <pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_correct.pdf&quot;), p_hist_correct, width = hist_plot_width, height = hist_plot_height)</code></pre>
 <p>For comparison also the history of the p-value for a
@@ -531,9 +533,8 @@ backend_prior_only &lt;- my_backend_mvn(sampling_func_prior_only)
 res_prior_only &lt;- compute_SBC(ds, backend_prior_only, gen_quants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_prior_only&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_prior_only &lt;- order_quants(res_prior_only)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_prior_only&quot;))
+res_prior_only &lt;- order_quants(res_prior_only)</code></pre>
 <p>Now the diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_prior_only)</code></pre>
 <p><img src="mvn_files/figure-html/res_prior_only_diag-1.png" width="672" /></p>
@@ -592,9 +593,9 @@ set.seed(5652265)
 res_one_missing &lt;- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_one_missing&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_one_missing &lt;- order_quants(res_one_missing)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing&quot;))
+
+res_one_missing &lt;- order_quants(res_one_missing)</code></pre>
 <p>The diagnostic plots:</p>
 <pre class="r"><code>plot_rank_hist(res_one_missing)</code></pre>
 <p><img src="mvn_files/figure-html/res_one_missing_diag-1.png" width="672" /></p>
@@ -626,9 +627,8 @@ ds_20 &lt;- generate_datasets(SBC_generator_function(generator_func_correlated, 
 res_one_missing_20 &lt;- compute_SBC(ds_20, backend_one_missing, gen_quants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_one_missing_20&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_one_missing_20 &lt;- order_quants(res_one_missing_20)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing_20&quot;))
+res_one_missing_20 &lt;- order_quants(res_one_missing_20)</code></pre>
 <p>The final diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_one_missing_20)</code></pre>
 <p><img src="mvn_files/figure-html/res_one_missing_20_diag-1.png" width="672" /></p>
@@ -673,9 +673,8 @@ res_uncorr &lt;- compute_SBC(ds, backend_uncorr,
                         globals = my_backend_mvn_globals,
                         gen_quants = quants,
                         cache_mode = &quot;results&quot;, 
-                        cache_location = file.path(cache_dir, &quot;mvn_uncorr&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_uncorr &lt;- order_quants(res_uncorr)</code></pre>
+                        cache_location = file.path(cache_dir, &quot;mvn_uncorr&quot;))
+res_uncorr &lt;- order_quants(res_uncorr)</code></pre>
 <p>Although the posterior is incorrect, the default univariate checks
 don’t show any problem even with 1000 simulations. All of the other
 quantities however show issues.</p>
@@ -760,9 +759,8 @@ if(include_sampling_scores) {
 res_non_mon &lt;- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_non_mon&quot;))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_non_mon &lt;- order_quants(res_non_mon)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_non_mon&quot;))
+res_non_mon &lt;- order_quants(res_non_mon)</code></pre>
 <p>The diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_non_mon)</code></pre>
 <p><img src="mvn_files/figure-html/res_non_mon_diag-1.png" width="672" /></p>
@@ -794,8 +792,9 @@ p_rank_hist_non_mon_split</code></pre>
 of the simulations for some quantities:</p>
 <pre class="r"><code>shared_mark &lt;- geom_vline(color = &quot;red&quot;, linetype = &quot;dashed&quot;, xintercept = 500)
 p_hist_non_mon_1 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = &quot;(^mu\\[.\\]$)|lik|sin&quot;) + 
-  theme(axis.title = element_blank()) + shared_mark
-p_hist_non_mon_2 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = &quot;abs|\\*|drop&quot;) +
+  theme(axis.title = element_blank()) + shared_mark</code></pre>
+<pre><code>## Precomputing gamma thresholds</code></pre>
+<pre class="r"><code>p_hist_non_mon_2 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = &quot;abs|\\*|drop&quot;) +
   theme(axis.title = element_blank()) + shared_mark
 
 #axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
@@ -806,11 +805,11 @@ p_label &lt;- ggplot(data.frame(l = &quot;Log Gamma - Threshold&quot;, x = 1, y 
 
 p_hist_non_mon &lt;- p_label + (p_hist_non_mon_1 / p_hist_non_mon_2) + plot_layout(widths = c(0.4, 25))
 p_hist_non_mon</code></pre>
-<pre><code>## Warning: Removed 665 row(s) containing missing values (geom_path).</code></pre>
+<pre><code>## Warning: Removed 676 row(s) containing missing values (geom_path).</code></pre>
 <pre><code>## Warning: Removed 252 row(s) containing missing values (geom_path).</code></pre>
 <p><img src="mvn_files/figure-html/res_non_mon_history-1.png" width="768" /></p>
 <pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_non_mon.pdf&quot;), p_hist_non_mon, width = hist_plot_width, height = hist_plot_height)</code></pre>
-<pre><code>## Warning: Removed 665 row(s) containing missing values (geom_path).
+<pre><code>## Warning: Removed 676 row(s) containing missing values (geom_path).
 ## Removed 252 row(s) containing missing values (geom_path).</code></pre>
 <p>This is the history without any modifications. Note that for several
 quantities the values crash too low and become NaN.</p>
@@ -851,9 +850,8 @@ quants_change &lt;- generated_quantities(sum = sum(mu),
 res_small_change &lt;- compute_SBC(ds_changes, backend_small_change, gen_quants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;, &quot;mvn_sigma_changes&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, paste0(&quot;mvn_small_change_&quot;, K_changes)))</code></pre>
-<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
-<pre class="r"><code>res_small_change &lt;- order_quants(res_small_change)</code></pre>
+                              cache_location = file.path(cache_dir, paste0(&quot;mvn_small_change_&quot;, K_changes)))
+res_small_change &lt;- order_quants(res_small_change)</code></pre>
 <p>The diagnostic plots.</p>
 <pre class="r"><code>plot_rank_hist(res_small_change)</code></pre>
 <p><img src="mvn_files/figure-html/res_small_change_diag-1.png" width="672" /></p>
