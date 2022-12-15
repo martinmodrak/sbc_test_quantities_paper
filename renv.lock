@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.1.0",
+    "Version": "4.2.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -71,15 +71,15 @@
     },
     "SBC": {
       "Package": "SBC",
-      "Version": "0.1.1.9000",
+      "Version": "0.2.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "SBC",
       "RemoteUsername": "hyunjimoon",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "1c5638d008f46968d3c964c6283326002a6905b8",
-      "Hash": "4114fd2075e0f5b56d817f15bceb1e02",
+      "RemoteRepo": "SBC",
+      "RemoteRef": "v0.2.0",
+      "RemoteSha": "0436db20fc6371ca60144203c66063d838ed54ff",
+      "Hash": "1351dfd93e5aa24963351ba128cd7e6e",
       "Requirements": [
         "R6",
         "abind",

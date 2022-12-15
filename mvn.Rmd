@@ -10,7 +10,7 @@ abstract: "This R Markdown document runs the simulations and recreates all the f
 
 The examples are run using the [SBC](https://hyunjimoon.github.io/SBC/) R package.  - consult
 the [Getting Started with SBC](https://hyunjimoon.github.io/SBC/articles/SBC.html) vignette for basics of the package. 
-We will also use "custom backends" which are discussed and explaiend in the [Implementing a new backend](https://hyunjimoon.github.io/SBC/articles/implementing_backends.html).
+We will also use "custom backends" which are discussed and explained in the [Implementing a new backend](https://hyunjimoon.github.io/SBC/articles/implementing_backends.html).
 
 ```{r setup, message=FALSE,warning=FALSE, results="hide"}
 knitr::opts_chunk$set(cache = TRUE)
@@ -124,7 +124,7 @@ quantities. We now setup the additional test quantities:
 
 
 ```{r}
-quants <- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
+quants <- derived_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
                                `mu[1] - mu[2]` = mu[1] - mu[2],
                                `mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
@@ -176,11 +176,11 @@ if(include_sampling_scores) {
     sampled_score_mvnorm(y, mu, sigma, scoringRules::vs_sample)
   }
   
-  quants_sampled <- generated_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
+  quants_sampled <- derived_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
                                `variogram score` =  vs_mvnorm(y, mu, mvn_sigma),
                                .globals = c("sampled_score_mvnorm", "es_mvnorm", "vs_mvnorm"))
   
-  quants <- bind_generated_quantities(quants, quants_sampled)
+  quants <- bind_derived_quantities(quants, quants_sampled)
 }
 ```
 
@@ -204,7 +204,7 @@ sampling_func_correct <- function(y, N_samples, prior_sigma = mvn_sigma) {
 }
 backend_correct <- my_backend_mvn(sampling_func_correct)
 
-res_correct <- compute_SBC(ds, backend_correct, gen_quants = quants, 
+res_correct <- compute_SBC(ds, backend_correct, dquants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_correct"),
@@ -248,7 +248,7 @@ sampling_func_prior_only <- function(y, N_samples) {
 
 backend_prior_only <- my_backend_mvn(sampling_func_prior_only)
 
-res_prior_only <- compute_SBC(ds, backend_prior_only, gen_quants = quants, 
+res_prior_only <- compute_SBC(ds, backend_prior_only, dquants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_prior_only"))
@@ -322,7 +322,7 @@ sampling_func_one_missing <- function(y, N_samples) {
 backend_one_missing <- my_backend_mvn(sampling_func_one_missing)
 
 set.seed(5652265)
-res_one_missing <- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
+res_one_missing <- compute_SBC(ds, backend_one_missing, dquants = quants, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_one_missing"))
@@ -368,7 +368,7 @@ set.seed(2665884)
 ds_20 <- generate_datasets(SBC_generator_function(generator_func_correlated, N = 20, sigma = mvn_sigma), N_sims)
 
 
-res_one_missing_20 <- compute_SBC(ds_20, backend_one_missing, gen_quants = quants, 
+res_one_missing_20 <- compute_SBC(ds_20, backend_one_missing, dquants = quants, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_one_missing_20"))
@@ -425,7 +425,7 @@ backend_uncorr <- my_backend_mvn(sampling_func_uncorr)
 
 res_uncorr <- compute_SBC(ds, backend_uncorr, 
                         globals = my_backend_mvn_globals,
-                        gen_quants = quants,
+                        dquants = quants,
                         cache_mode = "results", 
                         cache_location = file.path(cache_dir, "mvn_uncorr"))
 res_uncorr <- order_quants(res_uncorr)
@@ -510,7 +510,7 @@ sampling_func_non_mon <- function(y, N_samples, prior_sigma = mvn_sigma) {
 backend_non_mon <- my_backend_mvn(sampling_func_non_mon)
 
 # Define different test quantities
-quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
+quants_non_mon <- derived_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `abs(mu[1])` = abs(mu[1]),
                                        `drop(mu[1])` = ifelse(mu[1] < 1, mu[1], mu[1] - 5),
                                        `sin(1/mu[1])` = sin(1/mu[1]),
@@ -518,13 +518,13 @@ quants_non_mon <- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
 
 if(include_sampling_scores) {
-  quants_non_mon <- bind_generated_quantities(quants_non_mon, quants_sampled)
+  quants_non_mon <- bind_derived_quantities(quants_non_mon, quants_sampled)
 }
 
 
 
   
-res_non_mon <- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon, 
+res_non_mon <- compute_SBC(ds_more, backend_non_mon, dquants = quants_non_mon, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, "mvn_non_mon"))
@@ -619,11 +619,11 @@ sampling_func_small_change <- function(y, N_samples, prior_sigma) {
 
 backend_small_change <- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_changes))
 
-quants_change <- generated_quantities(sum = sum(mu),
+quants_change <- derived_quantities(sum = sum(mu),
                                       sum_abs = sum(abs(mu)),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma_changes, log = TRUE)))
 
-res_small_change <- compute_SBC(ds_changes, backend_small_change, gen_quants = quants, 
+res_small_change <- compute_SBC(ds_changes, backend_small_change, dquants = quants, 
                               globals = c(my_backend_mvn_globals, "sampling_func_correct", "mvn_sigma_changes"),
                               cache_mode = "results",
                               cache_location = file.path(cache_dir, paste0("mvn_small_change_", K_changes)))

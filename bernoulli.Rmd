@@ -111,7 +111,7 @@ my_globals <- c("SBC_fit.my_backend_func", "SBC_backend_iid_draws.my_backend_fun
 Finally, we set a range of test quantities to monitor:
 
 ```{r}
-gq_simple <- generated_quantities(
+gq_simple <- derived_quantities(
    log_lik = dbinom(y, size = 1, prob = theta, log = TRUE),
    sq = (theta - 0.5) ^ 2,
    sin3_2 = sin(3/2 * pi * theta),
@@ -137,7 +137,7 @@ backend_ok <- my_backend_func(
 
 
 res_ok <- compute_SBC(ds, backend_ok, keep_fits = FALSE,
-                      gen_quants = gq_simple, globals = my_globals,
+                      dquants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "ok")
 )
@@ -198,7 +198,7 @@ backend_ex1_square <- my_backend_func_invcdf(invcdf_ex1_square_0, invcdf_ex1_squ
 
 
 res_ex1_square <- compute_SBC(ds_large, backend_ex1_square, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals,
+                        dquants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "ex1_square"))
 
@@ -222,7 +222,7 @@ backend_flip <- my_backend_func(
 
 
 res_flip <- compute_SBC(ds, backend_flip, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals)
+                        dquants = gq_simple, globals = my_globals)
 
 plot_rank_hist(res_flip)
 plot_ecdf_diff(res_flip)
@@ -265,7 +265,7 @@ backend_phiB <- my_backend_func_invcdf(invcdf_phiB_0, invcdf_phiB_1)
 
 # We use a bit more simulations to clearly show some of the problems
 res_phiB <- compute_SBC(ds_large[1:2500], backend_phiB, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals,
+                        dquants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "phiB")
                         )
@@ -299,7 +299,7 @@ backend_lincomb <- my_backend_func_invcdf(invcdf_lincomb_0, invcdf_lincomb_1)
 
 
 res_lincomb <- compute_SBC(ds_large, backend_lincomb, keep_fits = FALSE,
-                        gen_quants = gq_simple, 
+                        dquants = gq_simple, 
                         globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "lincomb"))
@@ -338,7 +338,7 @@ And we can compute SBC - note that this posterior passes SBC for the likelihood
 backend_lik1 <- my_backend_func_invcdf(invcdf_lik1_0, invcdf_lik1_1)
 
 res_lik1 <- compute_SBC(ds, backend_lik1, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals,
+                        dquants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "loglik1"))
 
@@ -376,7 +376,7 @@ The SBC for both `theta` and `log_lik` passes. All the other quantities however 
 backend_loglik2 <- my_backend_func_invcdf(invcdf_loglik2_0, invcdf_loglik2_1)
 
 res_loglik2 <- compute_SBC(ds, backend_loglik2, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals,
+                        dquants = gq_simple, globals = my_globals,
                       cache_mode = "results",
                       cache_location = file.path(cache_dir, "loglik2"))
 
@@ -468,7 +468,7 @@ And we run SBC - no problems are seen for `swap`, while other quantities do show
 backend_swap <- my_backend_func_invcdf(invcdf_swap_0, invcdf_swap_1)
 
 res_swap <- compute_SBC(ds_large, backend_swap, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = c(my_globals, "invcdf_swap_0"),
+                        dquants = gq_simple, globals = c(my_globals, "invcdf_swap_0"),
                         cache_mode = "results",
                       cache_location = file.path(cache_dir, "swap"))
 
@@ -576,7 +576,7 @@ backend_clamp <- my_backend_func_invcdf(invcdf_clamp_0, invcdf_clamp_1)
 
 # We use a bit more datasets to amplify some of the failures
 res_clamp <- compute_SBC(ds_large[1:2500], backend_clamp, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = c(my_globals, "invcdf_clamp_base"),
+                        dquants = gq_simple, globals = c(my_globals, "invcdf_clamp_base"),
                         cache_mode = "results",
                       cache_location = file.path(cache_dir, "clamp"))
 
@@ -600,7 +600,7 @@ backend_prior<- my_backend_func(
 
 
 res_prior <- compute_SBC(ds, backend_prior, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals)
+                        dquants = gq_simple, globals = my_globals)
 
 plot_rank_hist(res_prior)
 plot_ecdf_diff(res_prior)
@@ -631,7 +631,7 @@ plot_invcdfs(invcdf_DAP_proj_0, invcdf_DAP_proj_1, "Passing SBC and DAP for thet
 backend_DAP_proj <- my_backend_func_invcdf(invcdf_DAP_proj_0, invcdf_DAP_proj_1)
 
 res_DAP_proj <- compute_SBC(ds_large, backend_DAP_proj, keep_fits = FALSE,
-                        gen_quants = gq_simple, globals = my_globals,
+                        dquants = gq_simple, globals = my_globals,
                         cache_mode = "results",
                       cache_location = file.path(cache_dir, "DAP_proj"))
 
