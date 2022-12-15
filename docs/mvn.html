@@ -321,7 +321,7 @@ id="toc-small-changes-compound">Small changes compound</a></li>
 href="https://hyunjimoon.github.io/SBC/">SBC</a> R package. - consult
 the <a href="https://hyunjimoon.github.io/SBC/articles/SBC.html">Getting
 Started with SBC</a> vignette for basics of the package. We will also
-use “custom backends” which are discussed and explaiend in the <a
+use “custom backends” which are discussed and explained in the <a
 href="https://hyunjimoon.github.io/SBC/articles/implementing_backends.html">Implementing
 a new backend</a>.</p>
 <pre class="r"><code>knitr::opts_chunk$set(cache = TRUE)
@@ -418,7 +418,7 @@ my_backend_mvn_globals = c(&quot;SBC_fit.my_backend_mvn&quot;,
 <p>By defualt, SBC will include the individual parameters
 (<code>mu[1]</code>, <code>mu[2]</code>) as test quantities. We now
 setup the additional test quantities:</p>
-<pre class="r"><code>quants &lt;- generated_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
+<pre class="r"><code>quants &lt;- derived_quantities(`mu[1] + mu[2]` = mu[1] + mu[2], 
                                `mu[1] - mu[2]` = mu[1] - mu[2],
                                `mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)),
@@ -466,11 +466,11 @@ order_quants &lt;- function(results) {
     sampled_score_mvnorm(y, mu, sigma, scoringRules::vs_sample)
   }
   
-  quants_sampled &lt;- generated_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
+  quants_sampled &lt;- derived_quantities(`energy score` = es_mvnorm(y, mu, mvn_sigma),
                                `variogram score` =  vs_mvnorm(y, mu, mvn_sigma),
                                .globals = c(&quot;sampled_score_mvnorm&quot;, &quot;es_mvnorm&quot;, &quot;vs_mvnorm&quot;))
   
-  quants &lt;- bind_generated_quantities(quants, quants_sampled)
+  quants &lt;- bind_derived_quantities(quants, quants_sampled)
 }</code></pre>
 </div>
 <div id="correct-posterior" class="section level1">
@@ -493,12 +493,13 @@ correct posterior and run SBC.</p>
 }
 backend_correct &lt;- my_backend_mvn(sampling_func_correct)
 
-res_correct &lt;- compute_SBC(ds, backend_correct, gen_quants = quants, 
+res_correct &lt;- compute_SBC(ds, backend_correct, dquants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = &quot;results&quot;,
                               cache_location = file.path(cache_dir, &quot;mvn_correct&quot;),
-                           )
-res_correct &lt;- order_quants(res_correct)</code></pre>
+                           )</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_correct &lt;- order_quants(res_correct)</code></pre>
 <p>Those are the diagnostic plots after 1000 simulations.</p>
 <pre class="r"><code>plot_rank_hist(res_correct)</code></pre>
 <p><img src="mvn_files/figure-html/res_correct_diag-1.png" width="672" /></p>
@@ -530,11 +531,12 @@ follow.</p>
 
 backend_prior_only &lt;- my_backend_mvn(sampling_func_prior_only)
 
-res_prior_only &lt;- compute_SBC(ds, backend_prior_only, gen_quants = quants, 
+res_prior_only &lt;- compute_SBC(ds, backend_prior_only, dquants = quants, 
                               globals = my_backend_mvn_globals,
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_prior_only&quot;))
-res_prior_only &lt;- order_quants(res_prior_only)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_prior_only&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_prior_only &lt;- order_quants(res_prior_only)</code></pre>
 <p>Now the diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_prior_only)</code></pre>
 <p><img src="mvn_files/figure-html/res_prior_only_diag-1.png" width="672" /></p>
@@ -590,12 +592,12 @@ p_rank_hist_prior_only_split</code></pre>
 backend_one_missing &lt;- my_backend_mvn(sampling_func_one_missing)
 
 set.seed(5652265)
-res_one_missing &lt;- compute_SBC(ds, backend_one_missing, gen_quants = quants, 
+res_one_missing &lt;- compute_SBC(ds, backend_one_missing, dquants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_one_missing&quot;))
-
-res_one_missing &lt;- order_quants(res_one_missing)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_one_missing &lt;- order_quants(res_one_missing)</code></pre>
 <p>The diagnostic plots:</p>
 <pre class="r"><code>plot_rank_hist(res_one_missing)</code></pre>
 <p><img src="mvn_files/figure-html/res_one_missing_diag-1.png" width="672" /></p>
@@ -624,11 +626,12 @@ set.seed(2665884)
 ds_20 &lt;- generate_datasets(SBC_generator_function(generator_func_correlated, N = 20, sigma = mvn_sigma), N_sims)
 
 
-res_one_missing_20 &lt;- compute_SBC(ds_20, backend_one_missing, gen_quants = quants, 
+res_one_missing_20 &lt;- compute_SBC(ds_20, backend_one_missing, dquants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_one_missing_20&quot;))
-res_one_missing_20 &lt;- order_quants(res_one_missing_20)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_one_missing_20&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_one_missing_20 &lt;- order_quants(res_one_missing_20)</code></pre>
 <p>The final diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_one_missing_20)</code></pre>
 <p><img src="mvn_files/figure-html/res_one_missing_20_diag-1.png" width="672" /></p>
@@ -671,10 +674,11 @@ backend_uncorr &lt;- my_backend_mvn(sampling_func_uncorr)
 
 res_uncorr &lt;- compute_SBC(ds, backend_uncorr, 
                         globals = my_backend_mvn_globals,
-                        gen_quants = quants,
+                        dquants = quants,
                         cache_mode = &quot;results&quot;, 
-                        cache_location = file.path(cache_dir, &quot;mvn_uncorr&quot;))
-res_uncorr &lt;- order_quants(res_uncorr)</code></pre>
+                        cache_location = file.path(cache_dir, &quot;mvn_uncorr&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_uncorr &lt;- order_quants(res_uncorr)</code></pre>
 <p>Although the posterior is incorrect, the default univariate checks
 don’t show any problem even with 1000 simulations. All of the other
 quantities however show issues.</p>
@@ -742,7 +746,7 @@ function.</p>
 backend_non_mon &lt;- my_backend_mvn(sampling_func_non_mon)
 
 # Define different test quantities
-quants_non_mon &lt;- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
+quants_non_mon &lt;- derived_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                        `abs(mu[1])` = abs(mu[1]),
                                        `drop(mu[1])` = ifelse(mu[1] &lt; 1, mu[1], mu[1] - 5),
                                        `sin(1/mu[1])` = sin(1/mu[1]),
@@ -750,17 +754,18 @@ quants_non_mon &lt;- generated_quantities(`mu[1] * mu[2]` = mu[1] * mu[2],
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma, log = TRUE)))
 
 if(include_sampling_scores) {
-  quants_non_mon &lt;- bind_generated_quantities(quants_non_mon, quants_sampled)
+  quants_non_mon &lt;- bind_derived_quantities(quants_non_mon, quants_sampled)
 }
 
 
 
   
-res_non_mon &lt;- compute_SBC(ds_more, backend_non_mon, gen_quants = quants_non_mon, 
+res_non_mon &lt;- compute_SBC(ds_more, backend_non_mon, dquants = quants_non_mon, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, &quot;mvn_non_mon&quot;))
-res_non_mon &lt;- order_quants(res_non_mon)</code></pre>
+                              cache_location = file.path(cache_dir, &quot;mvn_non_mon&quot;))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_non_mon &lt;- order_quants(res_non_mon)</code></pre>
 <p>The diagnostic plots</p>
 <pre class="r"><code>plot_rank_hist(res_non_mon)</code></pre>
 <p><img src="mvn_files/figure-html/res_non_mon_diag-1.png" width="672" /></p>
@@ -843,15 +848,16 @@ sampling_func_small_change &lt;- function(y, N_samples, prior_sigma) {
 
 backend_small_change &lt;- my_backend_mvn(sampling_func_small_change, func_extra_args = list(prior_sigma = mvn_sigma_changes))
 
-quants_change &lt;- generated_quantities(sum = sum(mu),
+quants_change &lt;- derived_quantities(sum = sum(mu),
                                       sum_abs = sum(abs(mu)),
                                 mvn_log_lik = sum(mvtnorm::dmvnorm(y, mean = mu, sigma = mvn_sigma_changes, log = TRUE)))
 
-res_small_change &lt;- compute_SBC(ds_changes, backend_small_change, gen_quants = quants, 
+res_small_change &lt;- compute_SBC(ds_changes, backend_small_change, dquants = quants, 
                               globals = c(my_backend_mvn_globals, &quot;sampling_func_correct&quot;, &quot;mvn_sigma_changes&quot;),
                               cache_mode = &quot;results&quot;,
-                              cache_location = file.path(cache_dir, paste0(&quot;mvn_small_change_&quot;, K_changes)))
-res_small_change &lt;- order_quants(res_small_change)</code></pre>
+                              cache_location = file.path(cache_dir, paste0(&quot;mvn_small_change_&quot;, K_changes)))</code></pre>
+<pre><code>## Cache file exists but the backend hash differs. Will recompute.</code></pre>
+<pre class="r"><code>res_small_change &lt;- order_quants(res_small_change)</code></pre>
 <p>The diagnostic plots.</p>
 <pre class="r"><code>plot_rank_hist(res_small_change)</code></pre>
 <p><img src="mvn_files/figure-html/res_small_change_diag-1.png" width="672" /></p>
