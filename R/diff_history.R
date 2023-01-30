@@ -86,6 +86,16 @@ compute_ks_test_history <- function(ranks, max_rank) {
 }
 
 
+compute_ks_test_history_dgof <- function(ranks, max_rank) {
+  ks_p <- rep(NA_real_, length(ranks))
+  reference <- ecdf(0:max_rank)
+  for(i in 1:length(ranks)) {
+    ks_p[i] <- dgof::ks.test(ranks[1:i], reference)$p.value
+  }
+  ks_p
+}
+
+
 plot_log_gamma_history <- function(results, min_sim_id = 0, max_sim_id = Inf, wrap_cols = 4, variables_regex = NULL, ylim = NULL) {
   unique_max_rank <- unique(results$stats$max_rank)
   if(length(unique_max_rank) > 1) {
@@ -129,3 +139,18 @@ plot_ks_test_history <- function(results, min_sim_id = 0, max_sim_id = Inf, wrap
     scale_x_continuous("Number of simulations") +
     facet_wrap(~variable, ncol = wrap_cols)
 }
+
+plot_ks_test_history_dgof <- function(results, min_sim_id = 0, max_sim_id = Inf, wrap_cols = 4, ylim = NULL) {
+  results$stats %>%
+    filter(sim_id <= max_sim_id) %>%
+    group_by(variable) %>%
+    mutate(ks_p = compute_ks_test_history_dgof(rank, unique(max_rank))) %>%
+    filter(sim_id >= min_sim_id) %>%
+    ggplot(aes(x = sim_id, y = ks_p)) +
+    geom_hline(yintercept = 0.05,  color = "lightblue") +
+    geom_line() +
+    scale_y_log10("P - value (KS test)", limits = ylim) +
+    scale_x_continuous("Number of simulations") +
+    facet_wrap(~variable, ncol = wrap_cols)
+}
+

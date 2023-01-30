@@ -226,10 +226,12 @@ p_hist_correct <- plot_log_gamma_history(res_correct)
 p_hist_correct
 ggsave(file.path(fig_dir, "hist_correct.pdf"), p_hist_correct, width = hist_plot_width, height = hist_plot_height)
 ```
+
 For comparison also the history of the p-value for a Kolmogorov-Smirnov test for uniformity (blue horizontal line is 0.05).
 
 ```{r res_correct_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_correct)
+plot_ks_test_history_dgof(res_correct)
 
 ```
 
@@ -280,6 +282,7 @@ For comparison, here's the history of the KS p-value:
 
 ```{r res_prior_only_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_prior_only, max_sim_id = 50)
+plot_ks_test_history_dgof(res_prior_only, max_sim_id = 50)
 ```
 
 Additonally, we show that splitting the ranks for `mu[1]` and `mu[2]` by the 
@@ -355,6 +358,7 @@ And the KS p-value - note that the initial discrepancies in all of the quantitie
 
 ```{r res_one_missing_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_one_missing, max_sim_id = 500)
+plot_ks_test_history_dgof(res_one_missing, max_sim_id = 500)
 ```
 
 
@@ -394,6 +398,7 @@ History of KS p-value
 
 ```{r res_one_missing_20_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_one_missing_20)
+plot_ks_test_history_dgof(res_one_missing_20)
 ```
 
 
@@ -458,6 +463,7 @@ And KS p-value. Note the lowered sensitivity towards issues with `mu[1] * mu[2]`
 
 ```{r res_corr_quants_history_ks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_uncorr, max_sim_id = 250)
+plot_ks_test_history_dgof(res_uncorr, max_sim_id = 250)
 ```
 
 # Non-monotonous transform
@@ -594,6 +600,12 @@ p_hist_non_mon_ext
 ggsave(file.path(fig_dir, "hist_non_mon_ext.pdf"), p_hist_non_mon_ext, width = hist_plot_width, height = hist_plot_height)
 ```
 
+```{r}
+plot_ks_test_history(res_non_mon)
+plot_ks_test_history_dgof(res_non_mon)
+```
+
+
 # Small changes compound
 
 Here we add small bias to the correct posterior.
@@ -649,6 +661,7 @@ And the KS p-value - note the reduced sensitivity for e.g. `mu[1]`, `mu[2]` and 
 
 ```{r historysmallchangesks, fig.width=hist_plot_width, fig.height=hist_plot_height}
 plot_ks_test_history(res_small_change, min_sim_id = 0, max_sim_id = 500)
+plot_ks_test_history_dgof(res_small_change, min_sim_id = 0, max_sim_id = 500)
 ```
 
 
