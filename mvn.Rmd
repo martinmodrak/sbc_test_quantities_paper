@@ -31,9 +31,15 @@ plan(multisession)
 # in the paper.
 include_sampling_scores <- FALSE
 
+# If true, additional test quantities using data simulated from the
+# samples and their distance to ture data are used.
+include_sims <- FALSE
+
 # Setup caching of SBC results for faster iterations
 if(include_sampling_scores) {
   cache_dir <- "./_samp_scores_SBC_cache"
+} else if(include_sims) {
+  cache_dir <- "./_SBC_cache_sims"
 } else {
   cache_dir <- "./_SBC_cache"
 }
@@ -145,10 +151,14 @@ order_quants <- function(results) {
                     "drop(mu[1])",
                     "sin(1/mu[1])",
                     "mu[1] * mean(y[,1])",
+                    "sim abs",
+                    "sim sq",
+                    "sim abs 10",
+                    "sim sq 10",
                     "energy_score",
                     "variogram_score")
   if(!(all(results$stats$variable %in% quants_in_order))) {
-    print(setdiff(unique(results$stats$variable, quants_in_order)))
+    print(setdiff(unique(results$stats$variable), quants_in_order))
     stop("Unrecognized quants")
   }
   results$stats <- results$stats %>% mutate(variable = factor(variable, levels = quants_in_order))
@@ -181,6 +191,27 @@ if(include_sampling_scores) {
                                .globals = c("sampled_score_mvnorm", "es_mvnorm", "vs_mvnorm"))
   
   quants <- bind_derived_quantities(quants, quants_sampled)
+}
+
+if(include_sims) {
+  sim_distance_f <- function(y, mu, sigma, K, fun) {
+      y_times <- matrix(rep(t(y),K),ncol=ncol(y),byrow=TRUE)
+      N <- nrow(y_times)
+      yrep <- mvtnorm::rmvnorm(N, mean = mu, sigma = sigma)
+      stopifnot(identical(dim(y_times), dim(yrep)))
+      mean(fun(yrep - y_times))
+  }
+  
+  square <- function(x) {x^2}
+  
+  quants_sims <- derived_quantities(`sim abs` = sim_distance_f(y, mu, mvn_sigma, 1, abs),
+                                    `sim sq` = sim_distance_f(y, mu, mvn_sigma, 1, square),
+                                    `sim abs 10` = sim_distance_f(y, mu, mvn_sigma, 10, abs),
+                                    `sim sq 10` = sim_distance_f(y, mu, mvn_sigma, 10, square),
+                                    .globals = c("sim_distance_f", "square"))
+
+  quants <- bind_derived_quantities(quants, quants_sims)
+  
 }
 ```
 
@@ -521,6 +552,9 @@ if(include_sampling_scores) {
   quants_non_mon <- bind_derived_quantities(quants_non_mon, quants_sampled)
 }
 
+if(include_sims) {
+  quants_non_mon <- bind_derived_quantities(quants_non_mon, quants_sims)
+}
 
 
   
