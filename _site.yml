@@ -6,6 +6,8 @@ navbar:
       href: index.html
     - text: "MVN (Section 4)"
       href: mvn.html
+    - text: "Ordered simplex (Section 5)"
+      href: ordered_simplex.html
     - text: "Bernoulli (Appendix B)"
       href: bernoulli.html
 output_dir: docs

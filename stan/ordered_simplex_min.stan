@@ -1,27 +1,27 @@
+
+
 functions {
  //Input: vector of numbers constrained to [0,1]
- vector ordered_simplex_constrain_min_lp(vector y) {
-    int Km1 = rows(y);
+ vector ordered_simplex_constrain_min_lp(vector u) {
+    int Km1 = rows(u);
     vector[Km1 + 1] x;
     real remaining = 1; // Remaining amount to be distributed
     real base = 0; // The minimum for the next element
     for(i in 1:Km1) {
-      if(y[i] <= 0 || y[i] >= 1) {
-        reject("All elements of y have to be in [0,1]");
+      if(u[i] <= 0 || u[i] >= 1) {
+        reject("All elements of u have to be in [0,1]");
       }
       int K_prime = Km1 + 2 - i; // Number of remaining elements
-      //First constrain to [0; 1 / K_prime]
-      real x_cons = inv(K_prime) * y[i];
+      //First constrain to [0; remaining / K_prime]
+      real x_cons = remaining * inv(K_prime) * u[i];
       // Jacobian for the constraint
-      target += -log(K_prime);
+      target += log(remaining) - log(K_prime);
 
-      // Add the lowest element log density
-      target += log(K_prime - 1) +  log(K_prime) + (K_prime - 2) * log1m(K_prime*x_cons);
-
-      x[i] = base + remaining * x_cons;
+      x[i] = base + x_cons;
       base = x[i];
-      //We added  remaining * x_cons to each of the K_prime elements yet to be processed
-      remaining -= remaining * x_cons * K_prime;
+      //We added  x_cons to each of the K_prime elements yet to be processed
+      //remaining -= x_cons * K_prime;
+      remaining *= 1 - u[i];
     }
     x[Km1 + 1] = base + remaining;
 
@@ -35,12 +35,13 @@ data {
 }
 
 
+
 parameters {
-  vector<lower=0, upper=1>[K - 1] y;
+  vector<lower=0, upper=1>[K - 1] u;
 }
 
 transformed parameters {
-  simplex[K] x = ordered_simplex_constrain_min_lp(y);
+  simplex[K] x = ordered_simplex_constrain_min_lp(u);
 }
 
 model {

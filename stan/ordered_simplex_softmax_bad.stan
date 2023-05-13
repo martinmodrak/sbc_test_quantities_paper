@@ -3,7 +3,7 @@ functions {
      int K = size(v) + 1;
      vector[K] v0 = append_row(0, v);
      // Jacobian
-     target += sum(v) - K * log_sum_exp(v0);
+     target += sum(v) - (K - 1) * log_sum_exp(v0);
      return softmax(v0);
   }
 }

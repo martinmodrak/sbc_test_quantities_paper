@@ -5,14 +5,14 @@ data {
 }
 
 parameters {
-  positive_ordered[K] lambda;
+  positive_ordered[K] w;
 }
 
 transformed parameters {
-  simplex[K] x = lambda / sum(lambda);
+  simplex[K] x = w / sum(w);
 }
 
 model {
-  lambda ~ gamma(prior_alpha, 1);
+  w ~ gamma(prior_alpha, 1);
   observed ~ multinomial(x);
 }

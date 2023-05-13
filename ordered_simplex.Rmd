@@ -58,46 +58,12 @@ generate_one_dataset <- function(N, K, prior_alpha = 1) {
 }
 
 set.seed(56823974)
-datasets_flat <- generate_datasets(
-    SBC_generator_function(generate_one_dataset, N = 20, K = 4),
-    n_sims = 1000)
-
-datasets_conc <- generate_datasets(
+ds <- generate_datasets(
     SBC_generator_function(generate_one_dataset, N = 10, K = 4, prior_alpha = 3),
     n_sims = 1000)
 
 
 dq <- derived_quantities(log_lik = dmultinom(observed, prob = x, log = TRUE))
-```
-
-
-# Gamma
-
-```{r}
-m_gamma <- cmdstan_model("stan/ordered_simplex_gamma.stan")
-backend_gamma <- SBC_backend_cmdstan_sample(m_gamma, chains = 2)
-```
-
-```{r}
-res_gamma_flat <- compute_SBC(datasets_flat, backend_gamma, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_gamma_flat.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_gamma_flat)
-plot_ecdf_diff(res_gamma_flat)
-
-plot_sim_estimated(res_gamma_flat, alpha = 0.2)
-```
-
-```{r}
-res_gamma_conc <- compute_SBC(datasets_conc, backend_gamma, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_gamma_conc.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_gamma_conc)
-plot_ecdf_diff(res_gamma_conc)
-
-plot_sim_estimated(res_gamma_conc, alpha = 0.2)
 ```
 
 # Min
@@ -109,249 +75,116 @@ backend_min <- SBC_backend_cmdstan_sample(m_min, chains = 2)
 
 
 ```{r}
-res_min_flat <- compute_SBC(datasets_flat, backend_min, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_min_flat.rds"),
+res_min <- compute_SBC(ds, backend_min, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_min.rds"),
                               cache_mode = "results")
   
-plot_rank_hist(res_min_flat)
-plot_ecdf_diff(res_min_flat)
+plot_rank_hist(res_min)
+plot_ecdf_diff(res_min)
 
-plot_sim_estimated(res_min_flat, alpha = 0.2)
+plot_sim_estimated(res_min, alpha = 0.2)
 ```
 
+# Softmax Bad
+
 ```{r}
-res_min_conc <- compute_SBC(datasets_conc, backend_min, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_min_conc.rds"),
+m_softmax_bad <- cmdstan_model("stan/ordered_simplex_softmax_bad.stan")
+backend_softmax_bad <- SBC_backend_cmdstan_sample(m_softmax_bad, chains = 2)
+```
+
+
+```{r}
+res_softmax_bad <- compute_SBC(ds, backend_softmax_bad, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_softmax_bad.rds"),
                               cache_mode = "results")
   
-plot_rank_hist(res_min_conc)
-plot_ecdf_diff(res_min_conc)
+plot_rank_hist(res_softmax_bad)
+plot_ecdf_diff(res_softmax_bad)
 
-plot_sim_estimated(res_min_conc, alpha = 0.2)
+plot_sim_estimated(res_softmax_bad, alpha = 0.2)
 ```
 
-
-
-
-# Min nodens
+# Softmax - corrected
 
 ```{r}
-m_min_nodens <- cmdstan_model("stan/ordered_simplex_min_nodens.stan")
-backend_min_nodens <- SBC_backend_cmdstan_sample(m_min_nodens, chains = 2)
+m_softmax <- cmdstan_model("stan/ordered_simplex_softmax.stan")
+backend_softmax <- SBC_backend_cmdstan_sample(m_softmax, chains = 2)
 ```
 
 
 ```{r}
-res_min_nodens_flat <- compute_SBC(datasets_flat, backend_min_nodens, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_min_nodens_flat.rds"),
+res_softmax <- compute_SBC(ds, backend_softmax, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_softmax.rds"),
                               cache_mode = "results")
   
-plot_rank_hist(res_min_nodens_flat)
-plot_ecdf_diff(res_min_nodens_flat)
+plot_rank_hist(res_softmax)
+plot_ecdf_diff(res_softmax)
 
-plot_sim_estimated(res_min_nodens_flat, alpha = 0.2)
+plot_sim_estimated(res_softmax, alpha = 0.2)
 ```
 
+
+# Gamma
+
 ```{r}
-res_min_nodens_conc <- compute_SBC(datasets_conc, backend_min_nodens, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_min_nodens_conc.rds"),
+m_gamma <- cmdstan_model("stan/ordered_simplex_gamma.stan")
+backend_gamma <- SBC_backend_cmdstan_sample(m_gamma, chains = 2)
+```
+
+
+```{r}
+res_gamma <- compute_SBC(ds, backend_gamma, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_gamma.rds"),
                               cache_mode = "results")
   
-plot_rank_hist(res_min_nodens_conc)
-plot_ecdf_diff(res_min_nodens_conc)
+plot_rank_hist(res_gamma)
+plot_ecdf_diff(res_gamma)
 
-plot_sim_estimated(res_min_nodens_conc, alpha = 0.2)
+plot_sim_estimated(res_gamma, alpha = 0.2)
+```
+
+# Summary Figure
+
+```{r, fig.width=8, fig.height=6}
+vars_regex <- "log_lik|x\\[[123]"
+plot_min <- plot_log_gamma_history(res_min, variables_regex = vars_regex)
+plot_softmax_bad <- plot_log_gamma_history(res_softmax_bad, variables_regex = vars_regex)
+plot_softmax <- plot_log_gamma_history(res_softmax, variables_regex = vars_regex)
+plot_gamma <- plot_log_gamma_history(res_gamma, variables_regex = vars_regex)
+
+#axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+p_label <- ggplot(data.frame(l = "Log Gamma - Threshold", x = 1, y = 1)) +
+      geom_text(aes(x, y, label = l), angle = 90, size = 5) + 
+      theme_void() +
+      coord_cartesian(clip = "off")
+
+th <- theme(axis.title = element_blank(), plot.title = element_text(size = 10), plot.margin = unit(c(0,0,5,5), "pt"))
+# th <- theme(axis.title = element_blank(), plot.title = element_blank(), plot.margin = unit(c(0,0,5,5), "pt"), plot.tag = element_text(size = 10, angle = 90, hjust = 1), plot.tag.position = c(-0.015,1))
+
+
+p_summary <- p_label +( (plot_min + th + ggtitle("A - min")) / (plot_softmax_bad + th + ggtitle("B - softmax (incorrect)")) / (plot_gamma + th + ggtitle("C - gamma")) / (plot_softmax + th + ggtitle("D - softmax (corrected)")) + plot_layout(tag_level = "new")) + #plot_annotation(tag_levels = list(c("A - min", "B - softmax", "C - gamma", "D - softmax corr."))) + 
+  plot_layout(widths = c(0.4, 25))
+p_summary
+
+
+ggsave(file.path(fig_dir, "hist_ordered_simplex.pdf"), p_summary, width = 8, height = 6)
 ```
 
 
-
-
-# Bad
-
-```{r}
-m_bad <- cmdstan_model("stan/ordered_simplex_bad.stan")
-backend_bad <- SBC_backend_cmdstan_sample(m_bad, chains = 2)
-```
-
-```{r}
-res1bad <- m_bad$sample(datasets_flat$generated[[1]], chains = 4, refresh = 0)
-# res1rvars <- posterior::as_draws_rvars(res1bad$draws())
-# res1_uncons <- posterior::draws_rvars(y1 = log(res1rvars$y[1]),
-#                                       y2 = log(res1rvars$y[2] - res1rvars$y[1]),
-#                                       y3 = log(res1rvars$y[3] - res1rvars$y[2]))
-# bayesplot::mcmc_pairs(res1_uncons)
-#bayesplot::mcmc_pairs(res1bad$draws()
-```
-```{r}
-res1min <- m_min$sample(datasets_flat$generated[[1]], chains = 4, refresh = 0)
-bayesplot::mcmc_pairs(res1min$draws("y"), transformations = "qlogis")
-```
-
-
-```{r}
-res_bad_flat <- compute_SBC(datasets_flat, backend_bad, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_bad_flat.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_bad_flat)
-plot_ecdf_diff(res_bad_flat)
-
-plot_sim_estimated(res_bad_flat, alpha = 0.2)
-```
-
-```{r}
-res_bad_conc <- compute_SBC(datasets_conc, backend_bad, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_bad_conc.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_bad_conc)
-plot_ecdf_diff(res_bad_conc)
-
-plot_sim_estimated(res_bad_conc, alpha = 0.2)
-```
-
-# Lin
-
-```{r}
-m_lin <- cmdstan_model("stan/ordered_simplex_lin.stan")
-backend_lin <- SBC_backend_cmdstan_sample(m_lin, chains = 2)
-```
-
-
-```{r}
-res_lin_flat <- compute_SBC(datasets_flat, backend_lin, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_lin_flat.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_lin_flat)
-plot_ecdf_diff(res_lin_flat)
-
-plot_sim_estimated(res_lin_flat, alpha = 0.2)
-```
-
-```{r}
-res_lin_conc <- compute_SBC(datasets_conc, backend_lin, keep_fits = FALSE, dquants = dq,
-                              cache_location = file.path(cache_dir, "ordered_simplex_lin_conc.rds"),
-                              cache_mode = "results")
-  
-plot_rank_hist(res_lin_conc)
-plot_ecdf_diff(res_lin_conc)
-
-plot_sim_estimated(res_lin_conc, alpha = 0.2)
-```
 
 
 # Performance
 
 ```{r}
 rbind(
-  res_bad_flat$backend_diagnostics %>% mutate(model = "softmax"),
+  res_softmax_bad_flat$backend_diagnostics %>% mutate(model = "softmax"),
   res_min_flat$backend_diagnostics %>% mutate(model = "min"),
   res_min_nodens_flat$backend_diagnostics %>% mutate(model = "min_nodens"),
   res_gamma_flat$backend_diagnostics %>% mutate(model = "gamma")) %>%
   ggplot(aes(x = max_chain_time)) + geom_histogram() + facet_wrap(~ model, ncol = 1)
 
-mean(res_bad_flat$backend_diagnostics$max_chain_time)
+mean(res_softmax_bad_flat$backend_diagnostics$max_chain_time)
 mean(res_min_flat$backend_diagnostics$max_chain_time)
 mean(res_min_nodens_flat$backend_diagnostics$max_chain_time)
 mean(res_gamma_flat$backend_diagnostics$max_chain_time)
 ```
-
-# Derivation - min
-
-Here, we start with unordered bounded vector $\mathbf{u} \in \mathbb{R}^{K - 1}, 0 < u_i < 1$ (which is a primitive in Stan). We notice that the minimal element of the simplex needs to satisfy $x_1 < \frac{1}{K}$, so we set $x_1 = \frac{u_1}{K}$. We further note that given $x_1$, if we set $\mathbf{x}^\prime \in \mathbb{R^{K-1}}, x^\prime_i = \frac{x_{i + 1} - x_1}{1 - Kx_1}$ then $\mathbf{x}^\prime \in OrdSimplex_{K - 1}$ giving us a recursive formula for the transformation:
-
-$$
-b_1 = 0, r_1 = 1 \\
-\text{for } 1 \leq i < K : c_i =  x_i = b_i + r_i \frac{u_i}{K + 1 - i}, b_{i + 1} = x_i, r_{i + 1} = r_{i}( 1 - u_i) \\
-x_k = b_k + r_k = 1 - \sum_i^{K - 1}x_i
-$$
-
-
-# Derivation - softmax
-
-$$
-s = 1 + \sum_i^{K-1} \exp v_i \\
-x_1 = \frac{1}{s}, x_k = \frac{\exp v_{k - 1}}{s} \\
-k >1: \\
-
-\frac{\partial x_k}{\partial v_{k - 1}} = \frac{\exp v_{k-1}}{s} - \frac{\exp^2 v_{k-1}}{s^2} = \frac{s \exp v_{k-1} - \exp^2 v_{k-1}}{s^2} = \frac{\exp v_{k-1}(s - \exp v_{k-1})}{s^2} \\
-j \neq k-1: \frac{\partial x_k}{\partial v_{j}} = -\frac{\exp (v_{k -1 } + v_j)}{s^2}
-$$
-
-Use a $K-1$ dimensional diagonal matrix $\mathbf{D}$ where $\mathbf{D}_{i, i} = \frac{\exp y_i}{s^2}$
-
-$$
-\mathbf{J} = \left(
-\mathbf D
-\begin{pmatrix}
-- \exp v_1 & \ldots &  - \exp v_{K-1} \\
-\vdots & \ddots & \vdots \\
-- \exp v_1 & \ldots &  - \exp v_{K-1} \\
-\end{pmatrix} + s\mathbf{I}_{K-1} \right) \\
-c_k = -\exp v_k, r_k = 1   \\
-\mathbf{J} = \mathbf{D}\left(\mathbf{cr} + s\mathbf{I}_{K-1}\right)
-$$
-
-
-by Matrix determinant lemma we have for invertible matrix $\mathbf{X}$ and any column vector $\mathbf{c}$ and row vector $\mathbf{r}$ that $\det(\mathbf{cr} + \mathbf{X}) =\det(\mathbf{X})( 1 + r\mathbf{X}^{-1}c)$ and thus
-
-Since $\mathbf{rc} = \sum_i^{K - 1}(-\exp v_i) = 1 - s$ we have:
-
-$$
-\det( \mathbf{cr} + s\mathbf{I}_{K-1}) = \left(1 + \frac{1}{s}\mathbf{rc} \right) s^{K-1} = \left(1 + \frac{1 - s}{s} \right) s^{K-1} = s^{K - 2} \\
-$$
-Since $\det \mathbf{D} = \frac{\exp \sum_i^{K - 1} y_i}{s^{2(K - 1)}}$ we finally have
-
-$$
-\det \mathbf{J} = \det \mathbf{D} \det (\mathbf{cr} + s\mathbf{I}_{K-1}) =   \frac{\exp \sum_i^{K - 1} v_i}{s^{K}}
-$$
-
-Version with error:
-
-$$
-\det \mathbf{J} = \det \mathbf{D} \det (\mathbf{cr} + s\mathbf{I}_{K-1}) = \frac{\exp \sum_i^{K - 1} v_i}{s^{K - 1}}
-$$
-
-# Derivation - lin
-
-\frac{\partial x_1}{\partial y_i} = -s^{-2},  
-
-
-$$
-s = K + \sum_i^{K-1} y_i \\
-x_1 = \frac{1}{s}, x_k = \frac{1 + y_{k - 1}}{s} \\
-k >1: \\
-
-\frac{\partial x_k}{\partial y_{k - 1}} = \frac{1}{s} - \frac{1 + y_{k-1}}{s^2} = \frac{s - 1 - y_{k-1}}{s^2} \\
-j \neq k_{-1}: \frac{\partial x_k}{\partial y_{j}} = -\frac{1 + y_{k - 1}}{s^2}
-$$
-
-$$
-J = \frac{1}{s^2}\left(\begin{pmatrix}
-- 1 - y_{1} & \ldots &  -1 - y_{K-1} \\
-\vdots & \ddots & \vdots \\
-- 1 - y_{1} & \ldots &  -1 - y_{K-1} \\
-\end{pmatrix} + s\mathbf{I}_{K-1} \right) \\
-c_k = - 1 - y_k, r_k = 1   \\
-J = \frac{1}{s^2}\left(\mathbf{cr} + s\mathbf{I}_{K-1}\right)
-$$
-
-by Matrix determinant lemma we have for invertible matrix $\mathbf{X}$ and any column vector $\mathbf{c}$ and row vector $\mathbf{r}$ that $\det(\mathbf{cr} + \mathbf{X}) =\det(\mathbf{X})( 1 + r\mathbf{X}^{-1}c)$ and thus
-
-Since $\mathbf{rc} = \sum_i^{K - 1}(-1 - y) = 1 - s$ we have:
-
-$$
-\det \frac{J}{s^2} = \left(1 + \frac{1}{s}\mathbf{rc} \right) s^{K-1} = \left(1 + \frac{1 - s}{s} \right) s^{K-1} = s^{K - 2} \\
-$$
-
-(the error is below)
-
-$$
-\det J = \frac{1}{s^{2(K - 1)}} \det \frac{J}{s^2} = \frac{1}{s^{K - 1}}
-$$
-correct version:
-
-$$
-\det J = \frac{1}{s^{2(K - 1)}} \det \frac{J}{s^2} = \frac{1}{s^{K}}
-$$

@@ -11,5 +11,6 @@ Source code can be found at: https://github.com/martinmodrak/sbc_test_quantities
 
 Contents:
 
-- [MVN](mvn.html) - the examples for the main body of the paper (Section 4 - Numerical Experiments)
+- [MVN](mvn.html) - the examples for Section 4 - Numerical Experiments in the main body of the paper
+- [Ordered simplex](ordered_simplex.html) - the examples for Section 5 - Real-world case study in the main body of the paper
 - [Bernoulli](bernoulli.html) - Examples in the Appendix B
