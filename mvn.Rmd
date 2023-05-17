@@ -50,7 +50,7 @@ if(!dir.exists(fig_dir)) {
 devtools::load_all()
 
 hist_plot_width <- 8
-hist_plot_height <- 4
+hist_plot_height <- 3
 
 
 ```
