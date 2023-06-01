@@ -141,8 +141,8 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "hyunjimoon",
       "RemoteRepo": "SBC",
-      "RemoteRef": "v0.2.0",
-      "RemoteSha": "0436db20fc6371ca60144203c66063d838ed54ff",
+      "RemoteRef": "master",
+      "RemoteSha": "0d94b74f10363b5a7adcc3286b0502dc7579e321",
       "Requirements": [
         "R6",
         "abind",
@@ -157,7 +157,7 @@
         "tidyr",
         "tidyselect"
       ],
-      "Hash": "1351dfd93e5aa24963351ba128cd7e6e"
+      "Hash": "29acea4550cc0b79c23bc225f23feb06"
     },
     "SparseM": {
       "Package": "SparseM",

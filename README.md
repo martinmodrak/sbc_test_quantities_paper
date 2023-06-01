@@ -7,7 +7,8 @@ https://martinmodrak.github.io/sbc_test_quantities_paper.
 
 Contents:
 
-- `mvn.Rmd` - the examples for the main body of the paper (Section 4 - Numerical Experiments)
+- `mvn.Rmd` - the multivariate normal examples for the main body of the paper (Section 4 - Numerical Experiments)
+- `ordered_simplex.Rmd` - the implementations of ordered simplex for the main body of the paper (Section 5 - Real-world case study)
 - `bernoulli.Rmd` - Examples in the Appendix B
 
 The code uses `renv` to recreate the same environment as we used to run the examples.

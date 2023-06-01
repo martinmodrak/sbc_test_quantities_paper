@@ -3,7 +3,7 @@ title: "Ordered simplex"
 output: 
   html_document:
     toc: TRUE
-abstract: "This R Markdown document runs the simulations and recreates all the figures used in TODO 'Simulation-Based Calibration Checking for Bayesian Computation: The Choice of Test Quantities Shapes Sensitivity'"
+abstract: "This R Markdown document runs the simulations and recreates all the figures used in Section 5 of the paper 'Simulation-Based Calibration Checking for Bayesian Computation: The Choice of Test Quantities Shapes Sensitivity'"
 ---
 
 # Setting up
@@ -40,10 +40,27 @@ devtools::load_all()
 
 hist_plot_width <- 8
 hist_plot_height <- 4
-
-
 ```
 
+
+We recall that the model works over the ordered simplex:
+
+$$
+ \text{OrdSimplex}_K = \{\mathbf{x} \in \mathbb{R}^K | 0 < x_1 < \ldots < x_K < 1, \sum_{i=1}^K x_i = 1 \}
+$$
+
+and the full model is
+
+$$
+\begin{align}
+\mathbf{x} &\in \text{OrdSimplex}_4, \pi(\mathbf{x}) \propto \text{Dirichlet(2, 2, 2, 2)} \\
+\mathbf{y} &\sim \text{Multinomial(10, x)}
+\end{align}
+$$
+
+To generate data we note that due to the prior being symmetric over the unrestricted simplex, we can sample from the prior by taking a draw from the Dirichlet distribution and ordering it (if the prior was not symmetrical, some form of rejection sampling would be necessary).
+
+The code to generate datasets is below:
 
 ```{r}
 generate_one_dataset <- function(N, K, prior_alpha = 1) {
@@ -63,7 +80,13 @@ ds_long <- generate_datasets(
     n_sims = 6000)
 
 ds <- ds_long[1:1000]
+```
 
+We will use 1000 datasets (the `ds` variable) for most checks, but for detailed investigations, we'll also use the `ds_long` version with 6000 datasets.
+
+Additionally, we define derived test quantities for the log prior and the log likelihood:
+
+```{r}
 log_ddirichlet <- function(x, alpha) {
   -sum(lgamma(alpha)) + lgamma(sum(alpha)) + sum((alpha - 1) * log(x))
 }
@@ -71,9 +94,22 @@ log_ddirichlet <- function(x, alpha) {
 dq <- derived_quantities(log_lik = dmultinom(observed, prob = x, log = TRUE),
                          log_prior = log_ddirichlet(x, prior_alpha), 
                          .globals = "log_ddirichlet")
+
 ```
 
+
+We will not repeat the mathematical description of the individual variants, please refer to the paper.
+
 # Min
+
+The Stan code for the `min` variant of the model is:
+
+```{r, comment = ""}
+cat(readLines("stan/ordered_simplex_min.stan"), sep = "\n")
+```
+
+
+Compile the model, build the backend
 
 ```{r}
 m_min <- cmdstan_model("stan/ordered_simplex_min.stan")
@@ -81,37 +117,63 @@ backend_min <- SBC_backend_cmdstan_sample(m_min, chains = 2)
 ```
 
 
-```{r}
+Run SBC
+
+```{r sbc-simplex-min}
 res_min <- compute_SBC(ds, backend_min, keep_fits = FALSE, dquants = dq,
                               cache_location = file.path(cache_dir, "ordered_simplex_min.rds"),
                               cache_mode = "results")
   
 plot_rank_hist(res_min)
 plot_ecdf_diff(res_min)
+```
 
+We see that there are no problems apparent after 1000 simulations.
+
+We however also see in the plot below, that the data are not very informative about any of the model parameters.
+
+```{r simplex-min-estimated}
 plot_sim_estimated(res_min, alpha = 0.2)
 ```
 
+
 # Softmax Bad
+
+Now, we'll test the incorrect version of the `softmax` approach. The Stan code is:
+
+```{r, comment = ""}
+cat(readLines("stan/ordered_simplex_softmax_bad.stan"), sep = "\n")
+```
+
+Compile the model, build the backend
 
 ```{r}
 m_softmax_bad <- cmdstan_model("stan/ordered_simplex_softmax_bad.stan")
 backend_softmax_bad <- SBC_backend_cmdstan_sample(m_softmax_bad, chains = 2)
 ```
 
+Run SBC (we're using `ds_long` to show some long-run behaviour)
 
-```{r}
+```{r sbc-simplex-softmax-bad}
 res_softmax_bad <- compute_SBC(ds_long, backend_softmax_bad, keep_fits = FALSE, dquants = dq,
                               cache_location = file.path(cache_dir, "ordered_simplex_softmax_bad.rds"),
                               cache_mode = "results")
   
 plot_rank_hist(res_softmax_bad[1:1000])
 plot_ecdf_diff(res_softmax_bad[1:1000])
+```
 
+We see that the true value vs. fitted posterior is very quite to the correct case - any single simulation is likely to get an OK-ish recovery of the true parameters and so would be unlikely to discover the problem.
+
+```{r simplex-softmax-bad-estimated}
 plot_sim_estimated(res_softmax_bad, alpha = 0.2)
 ```
 
-```{r, fig.width=8, fig.height=3}
+
+Here we show the history of the gamma statistic for various quantities. Eventually all quantities detect the problem, but note the different horizontal axis between top row (quantities that detect the problem quickly) and bottom row (quantities that detect the
+problem slowly). The vertical red dashed line marks 400 simulations.
+
+```{r simplex-softmax-bad-gamma-history, fig.width=8, fig.height=3}
 shared_mark <- geom_vline(color = "red", linetype = "dashed", xintercept = 400)
 ylim <-  c(-28, 5)
 plot_softmax_bad_quick <- plot_log_gamma_history(res_softmax_bad[1:400], variables_regex = "log_prior|x\\[1|3|4", ylim = ylim) + theme(axis.title = element_blank()) + shared_mark
@@ -132,25 +194,49 @@ ggsave(file.path(fig_dir, "hist_softmax_bad.pdf"), p_hist_softmax_bad, width = 8
 
 # Softmax - corrected
 
+
+Now, the correct version of the `softmax` approach. The Stan code is:
+
+```{r, comment = ""}
+cat(readLines("stan/ordered_simplex_softmax.stan"), sep = "\n")
+```
+
+(the only change is using `K` instead of `K - 1` on line 6.
+
+Compile the model, build the backend
+
 ```{r}
 m_softmax <- cmdstan_model("stan/ordered_simplex_softmax.stan")
 backend_softmax <- SBC_backend_cmdstan_sample(m_softmax, chains = 2)
 ```
 
 
-```{r}
+Run SBC
+
+```{r sbc-simplex-softmax}
 res_softmax <- compute_SBC(ds, backend_softmax, keep_fits = FALSE, dquants = dq,
                               cache_location = file.path(cache_dir, "ordered_simplex_softmax.rds"),
                               cache_mode = "results")
   
 plot_rank_hist(res_softmax)
 plot_ecdf_diff(res_softmax)
+```
 
+
+```{r simplex-softmax-estimated}
 plot_sim_estimated(res_softmax, alpha = 0.2)
 ```
 
 
 # Gamma
+
+Finally the `gamma` variant. The Stan code is:
+
+```{r, comment = ""}
+cat(readLines("stan/ordered_simplex_gamma.stan"), sep = "\n")
+```
+
+Compile the model, build the backend
 
 ```{r}
 m_gamma <- cmdstan_model("stan/ordered_simplex_gamma.stan")
@@ -158,21 +244,25 @@ backend_gamma <- SBC_backend_cmdstan_sample(m_gamma, chains = 2)
 ```
 
 
-```{r}
+Run SBC
+
+```{r sbc-simplex-gamma}
 res_gamma <- compute_SBC(ds, backend_gamma, keep_fits = FALSE, dquants = dq,
                               cache_location = file.path(cache_dir, "ordered_simplex_gamma.rds"),
                               cache_mode = "results")
   
 plot_rank_hist(res_gamma)
 plot_ecdf_diff(res_gamma)
+```
 
+```{r simplex-gamma-estimated}
 plot_sim_estimated(res_gamma, alpha = 0.2)
 ```
 
 
-
-
 # Performance
+
+SBC gave us a simulation study for free, so let us examine some performance characteristics (for the correct implementations only):
 
 ```{r}
 all_results <- list("softmax" = res_softmax, 
@@ -197,8 +287,8 @@ performance_data <- all_results %>% imap_dfr(perf_from_result) %>%
 ```
 
 
-```{r}
-performance_data %>% ggplot(aes(x = ess_per_time)) + geom_histogram() + facet_wrap(~variant, ncol = 1)
+```{r perf-time-histogram}
+performance_data %>% ggplot(aes(x = ess_per_time)) + geom_histogram(bins = 50) + facet_wrap(~variant, ncol = 1)
 ```
 
 ```{r}
