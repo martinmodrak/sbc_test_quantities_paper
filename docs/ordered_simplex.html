@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Ordered simplex</title>
+
+<script src="site_libs/header-attrs-2.16/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+  p.abstract{
+    text-align: center;
+    font-weight: bold;
+  }
+  div.abstract{
+    margin: auto;
+    width: 90%;
+  }
+</style>
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">SBC and various test quantities</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="mvn.html">MVN (Section 4)</a>
+</li>
+<li>
+  <a href="ordered_simplex.html">Ordered simplex (Section 5)</a>
+</li>
+<li>
+  <a href="bernoulli.html">Bernoulli (Appendix B)</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Ordered simplex</h1>
+<div class="abstract">
+<p class="abstract">Abstract</p>
+This R Markdown document runs the simulations and recreates all the
+figures used in Section 5 of the paper ‘Simulation-Based Calibration
+Checking for Bayesian Computation: The Choice of Test Quantities Shapes
+Sensitivity’
+</div>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#setting-up" id="toc-setting-up">Setting up</a></li>
+<li><a href="#min" id="toc-min">Min</a></li>
+<li><a href="#softmax-bad" id="toc-softmax-bad">Softmax Bad</a></li>
+<li><a href="#softmax---corrected" id="toc-softmax---corrected">Softmax
+- corrected</a></li>
+<li><a href="#gamma" id="toc-gamma">Gamma</a></li>
+<li><a href="#performance" id="toc-performance">Performance</a></li>
+</ul>
+</div>
+
+<div id="setting-up" class="section level1">
+<h1>Setting up</h1>
+<p>The examples are run using the <a
+href="https://hyunjimoon.github.io/SBC/">SBC</a> R package. - consult
+the <a href="https://hyunjimoon.github.io/SBC/articles/SBC.html">Getting
+Started with SBC</a> vignette for basics of the package.</p>
+<pre class="r"><code>knitr::opts_chunk$set(cache = TRUE)
+library(SBC)
+library(ggplot2)
+library(patchwork)
+library(tidyverse)
+library(cmdstanr)
+theme_set(cowplot::theme_cowplot())
+
+options(mc.cores = parallel::detectCores(), SBC.min_chunk_size = 5)
+
+library(future)
+plan(multisession)
+
+cache_dir &lt;- &quot;./_SBC_cache_ordered_simplex&quot;
+
+fig_dir &lt;- &quot;./_figs&quot; 
+
+if(!dir.exists(cache_dir)) {
+  dir.create(cache_dir)
+}
+if(!dir.exists(fig_dir)) {
+  dir.create(fig_dir)
+}
+
+devtools::load_all()
+
+hist_plot_width &lt;- 8
+hist_plot_height &lt;- 4</code></pre>
+<p>We recall that the model works over the ordered simplex:</p>
+<p><span class="math display">\[
+\text{OrdSimplex}_K = \{\mathbf{x} \in \mathbb{R}^K | 0 &lt; x_1 &lt;
+\ldots &lt; x_K &lt; 1, \sum_{i=1}^K x_i = 1 \}
+\]</span></p>
+<p>and the full model is</p>
+<p><span class="math display">\[
+\begin{align}
+\mathbf{x} &amp;\in \text{OrdSimplex}_4, \pi(\mathbf{x}) \propto
+\text{Dirichlet(2, 2, 2, 2)} \\
+\mathbf{y} &amp;\sim \text{Multinomial(10, x)}
+\end{align}
+\]</span></p>
+<p>To generate data we note that due to the prior being symmetric over
+the unrestricted simplex, we can sample from the prior by taking a draw
+from the Dirichlet distribution and ordering it (if the prior was not
+symmetrical, some form of rejection sampling would be necessary).</p>
+<p>The code to generate datasets is below:</p>
+<pre class="r"><code>generate_one_dataset &lt;- function(N, K, prior_alpha = 1) {
+  x_raw &lt;- MCMCpack::rdirichlet(1, alpha = rep(prior_alpha, K))
+  x &lt;- sort(x_raw)
+  observed &lt;- as.integer(rmultinom(1, size = N, prob = x))
+  
+  list(
+    variables = list(x = x),
+    generated = list(K = K, observed = observed, prior_alpha = rep(prior_alpha, K))
+  )
+}
+
+set.seed(56823974)
+ds_long &lt;- generate_datasets(
+    SBC_generator_function(generate_one_dataset, N = 10, K = 4, prior_alpha = 3),
+    n_sims = 6000)
+
+ds &lt;- ds_long[1:1000]</code></pre>
+<p>We will use 1000 datasets (the <code>ds</code> variable) for most
+checks, but for detailed investigations, we’ll also use the
+<code>ds_long</code> version with 6000 datasets.</p>
+<p>Additionally, we define derived test quantities for the log prior and
+the log likelihood:</p>
+<pre class="r"><code>log_ddirichlet &lt;- function(x, alpha) {
+  -sum(lgamma(alpha)) + lgamma(sum(alpha)) + sum((alpha - 1) * log(x))
+}
+
+dq &lt;- derived_quantities(log_lik = dmultinom(observed, prob = x, log = TRUE),
+                         log_prior = log_ddirichlet(x, prior_alpha), 
+                         .globals = &quot;log_ddirichlet&quot;)</code></pre>
+<p>We will not repeat the mathematical description of the individual
+variants, please refer to the paper.</p>
+</div>
+<div id="min" class="section level1">
+<h1>Min</h1>
+<p>The Stan code for the <code>min</code> variant of the model is:</p>
+<pre class="r"><code>cat(readLines(&quot;stan/ordered_simplex_min.stan&quot;), sep = &quot;\n&quot;)</code></pre>
+<pre><code>
+
+functions {
+ //Input: vector of numbers constrained to [0,1]
+ vector ordered_simplex_constrain_min_lp(vector u) {
+    int Km1 = rows(u);
+    vector[Km1 + 1] x;
+    real remaining = 1; // Remaining amount to be distributed
+    real base = 0; // The minimum for the next element
+    for(i in 1:Km1) {
+      if(u[i] &lt;= 0 || u[i] &gt;= 1) {
+        reject(&quot;All elements of u have to be in [0,1]&quot;);
+      }
+      int K_prime = Km1 + 2 - i; // Number of remaining elements
+      //First constrain to [0; remaining / K_prime]
+      real x_cons = remaining * inv(K_prime) * u[i];
+      // Jacobian for the constraint
+      target += log(remaining) - log(K_prime);
+
+      x[i] = base + x_cons;
+      base = x[i];
+      //We added  x_cons to each of the K_prime elements yet to be processed
+      //remaining -= x_cons * K_prime;
+      remaining *= 1 - u[i];
+    }
+    x[Km1 + 1] = base + remaining;
+
+    return x;
+ }
+}
+data {
+  int K;
+  array[K] int&lt;lower=0&gt; observed;
+  vector&lt;lower=0&gt;[K] prior_alpha;
+}
+
+
+
+parameters {
+  vector&lt;lower=0, upper=1&gt;[K - 1] u;
+}
+
+transformed parameters {
+  simplex[K] x = ordered_simplex_constrain_min_lp(u);
+}
+
+model {
+  x ~ dirichlet(prior_alpha);
+  observed ~ multinomial(x);
+}</code></pre>
+<p>Compile the model, build the backend</p>
+<pre class="r"><code>m_min &lt;- cmdstan_model(&quot;stan/ordered_simplex_min.stan&quot;)</code></pre>
+<pre><code>## Model executable is up to date!</code></pre>
+<pre class="r"><code>backend_min &lt;- SBC_backend_cmdstan_sample(m_min, chains = 2)</code></pre>
+<p>Run SBC</p>
+<pre class="r"><code>res_min &lt;- compute_SBC(ds, backend_min, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, &quot;ordered_simplex_min.rds&quot;),
+                              cache_mode = &quot;results&quot;)</code></pre>
+<pre><code>## Results loaded from cache file &#39;ordered_simplex_min.rds&#39;</code></pre>
+<pre><code>##  - 1 (0%) fits had at least one Rhat &gt; 1.01. Largest Rhat was 1.012.</code></pre>
+<pre><code>##  - 1000 (100%) fits had some steps rejected. Maximum number of rejections was 15.</code></pre>
+<pre><code>## Not all diagnostics are OK.
+## You can learn more by inspecting $default_diagnostics, $backend_diagnostics 
+## and/or investigating $outputs/$messages/$warnings for detailed output from the backend.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_min)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-min-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_min)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-min-2.png" width="672" /></p>
+<p>We see that there are no problems apparent after 1000
+simulations.</p>
+<p>We however also see in the plot below, that the data are not very
+informative about any of the model parameters.</p>
+<pre class="r"><code>plot_sim_estimated(res_min, alpha = 0.2)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/simplex-min-estimated-1.png" width="672" /></p>
+</div>
+<div id="softmax-bad" class="section level1">
+<h1>Softmax Bad</h1>
+<p>Now, we’ll test the incorrect version of the <code>softmax</code>
+approach. The Stan code is:</p>
+<pre class="r"><code>cat(readLines(&quot;stan/ordered_simplex_softmax_bad.stan&quot;), sep = &quot;\n&quot;)</code></pre>
+<pre><code>functions {
+  vector ordered_simplex_constrain_softmax_lp(vector v) {
+     int K = size(v) + 1;
+     vector[K] v0 = append_row(0, v);
+     // Jacobian
+     target += sum(v) - (K - 1) * log_sum_exp(v0);
+     return softmax(v0);
+  }
+}
+
+data {
+  int K;
+  array[K] int&lt;lower=0&gt; observed;
+  vector&lt;lower=0&gt;[K] prior_alpha;
+}
+
+
+parameters {
+  positive_ordered[K - 1] v;
+}
+
+transformed parameters {
+  simplex[K] x =  ordered_simplex_constrain_softmax_lp(v);
+}
+
+model {
+  x ~ dirichlet(prior_alpha);
+  observed ~ multinomial(x);
+}</code></pre>
+<p>Compile the model, build the backend</p>
+<pre class="r"><code>m_softmax_bad &lt;- cmdstan_model(&quot;stan/ordered_simplex_softmax_bad.stan&quot;)</code></pre>
+<pre><code>## Model executable is up to date!</code></pre>
+<pre class="r"><code>backend_softmax_bad &lt;- SBC_backend_cmdstan_sample(m_softmax_bad, chains = 2)</code></pre>
+<p>Run SBC (we’re using <code>ds_long</code> to show some long-run
+behaviour)</p>
+<pre class="r"><code>res_softmax_bad &lt;- compute_SBC(ds_long, backend_softmax_bad, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, &quot;ordered_simplex_softmax_bad.rds&quot;),
+                              cache_mode = &quot;results&quot;)</code></pre>
+<pre><code>## Results loaded from cache file &#39;ordered_simplex_softmax_bad.rds&#39;</code></pre>
+<pre><code>##  - 45 (1%) fits had at least one Rhat &gt; 1.01. Largest Rhat was 1.018.</code></pre>
+<pre><code>##  - 9 (0%) fits had divergent transitions. Maximum number of divergences was 1.</code></pre>
+<pre><code>##  - 30 (0%) fits had some steps rejected. Maximum number of rejections was 1.</code></pre>
+<pre><code>## Not all diagnostics are OK.
+## You can learn more by inspecting $default_diagnostics, $backend_diagnostics 
+## and/or investigating $outputs/$messages/$warnings for detailed output from the backend.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_softmax_bad[1:1000])</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-softmax-bad-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_softmax_bad[1:1000])</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-softmax-bad-2.png" width="672" /></p>
+<p>We see that the true value vs. fitted posterior is very quite to the
+correct case - any single simulation is likely to get an OK-ish recovery
+of the true parameters and so would be unlikely to discover the
+problem.</p>
+<pre class="r"><code>plot_sim_estimated(res_softmax_bad, alpha = 0.2)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/simplex-softmax-bad-estimated-1.png" width="672" /></p>
+<p>Here we show the history of the gamma statistic for various
+quantities. Eventually all quantities detect the problem, but note the
+different horizontal axis between top row (quantities that detect the
+problem quickly) and bottom row (quantities that detect the problem
+slowly). The vertical red dashed line marks 400 simulations.</p>
+<pre class="r"><code>shared_mark &lt;- geom_vline(color = &quot;red&quot;, linetype = &quot;dashed&quot;, xintercept = 400)
+ylim &lt;-  c(-28, 5)
+plot_softmax_bad_quick &lt;- plot_log_gamma_history(res_softmax_bad[1:400], variables_regex = &quot;log_prior|x\\[1|3|4&quot;, ylim = ylim) + theme(axis.title = element_blank()) + shared_mark
+
+plot_softmax_bad_slow &lt;- plot_log_gamma_history(res_softmax_bad[1:3000], variables_regex = &quot;log_lik|x\\[(2)\\]&quot;, ylim = ylim) + theme(axis.title = element_blank()) + shared_mark
+
+#axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
+p_label &lt;- ggplot(data.frame(l = &quot;Log Gamma - Threshold&quot;, x = 1, y = 1)) +
+      geom_text(aes(x, y, label = l), angle = 90, size = 5) + 
+      theme_void() +
+      coord_cartesian(clip = &quot;off&quot;)
+
+p_hist_softmax_bad &lt;- p_label + (plot_softmax_bad_quick / plot_softmax_bad_slow) + plot_layout(widths = c(0.4, 25))
+p_hist_softmax_bad</code></pre>
+<p><img src="ordered_simplex_files/figure-html/simplex-softmax-bad-gamma-history-1.png" width="768" /></p>
+<pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_softmax_bad.pdf&quot;), p_hist_softmax_bad, width = 8, height = 3)</code></pre>
+</div>
+<div id="softmax---corrected" class="section level1">
+<h1>Softmax - corrected</h1>
+<p>Now, the correct version of the <code>softmax</code> approach. The
+Stan code is:</p>
+<pre class="r"><code>cat(readLines(&quot;stan/ordered_simplex_softmax.stan&quot;), sep = &quot;\n&quot;)</code></pre>
+<pre><code>functions {
+  vector ordered_simplex_constrain_softmax_lp(vector v) {
+     int K = size(v) + 1;
+     vector[K] v0 = append_row(0, v);
+     // Jacobian
+     target += sum(v) - K * log_sum_exp(v0);
+     return softmax(v0);
+  }
+}
+
+data {
+  int K;
+  array[K] int&lt;lower=0&gt; observed;
+  vector&lt;lower=0&gt;[K] prior_alpha;
+}
+
+
+parameters {
+  positive_ordered[K - 1] v;
+}
+
+transformed parameters {
+  simplex[K] x =  ordered_simplex_constrain_softmax_lp(v);
+}
+
+model {
+  x ~ dirichlet(prior_alpha);
+  observed ~ multinomial(x);
+}</code></pre>
+<p>(the only change is using <code>K</code> instead of
+<code>K - 1</code> on line 6.</p>
+<p>Compile the model, build the backend</p>
+<pre class="r"><code>m_softmax &lt;- cmdstan_model(&quot;stan/ordered_simplex_softmax.stan&quot;)</code></pre>
+<pre><code>## Model executable is up to date!</code></pre>
+<pre class="r"><code>backend_softmax &lt;- SBC_backend_cmdstan_sample(m_softmax, chains = 2)</code></pre>
+<p>Run SBC</p>
+<pre class="r"><code>res_softmax &lt;- compute_SBC(ds, backend_softmax, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, &quot;ordered_simplex_softmax.rds&quot;),
+                              cache_mode = &quot;results&quot;)</code></pre>
+<pre><code>## Results loaded from cache file &#39;ordered_simplex_softmax.rds&#39;</code></pre>
+<pre><code>##  - 4 (0%) fits had at least one Rhat &gt; 1.01. Largest Rhat was 1.012.</code></pre>
+<pre><code>##  - 2 (0%) fits had divergent transitions. Maximum number of divergences was 1.</code></pre>
+<pre><code>##  - 9 (1%) fits had some steps rejected. Maximum number of rejections was 1.</code></pre>
+<pre><code>## Not all diagnostics are OK.
+## You can learn more by inspecting $default_diagnostics, $backend_diagnostics 
+## and/or investigating $outputs/$messages/$warnings for detailed output from the backend.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_softmax)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-softmax-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_softmax)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-softmax-2.png" width="672" /></p>
+<pre class="r"><code>plot_sim_estimated(res_softmax, alpha = 0.2)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/simplex-softmax-estimated-1.png" width="672" /></p>
+</div>
+<div id="gamma" class="section level1">
+<h1>Gamma</h1>
+<p>Finally the <code>gamma</code> variant. The Stan code is:</p>
+<pre class="r"><code>cat(readLines(&quot;stan/ordered_simplex_gamma.stan&quot;), sep = &quot;\n&quot;)</code></pre>
+<pre><code>data {
+  int K;
+  array[K] int&lt;lower=0&gt; observed;
+  vector&lt;lower=0&gt;[K] prior_alpha;
+}
+
+parameters {
+  positive_ordered[K] w;
+}
+
+transformed parameters {
+  simplex[K] x = w / sum(w);
+}
+
+model {
+  w ~ gamma(prior_alpha, 1);
+  observed ~ multinomial(x);
+}</code></pre>
+<p>Compile the model, build the backend</p>
+<pre class="r"><code>m_gamma &lt;- cmdstan_model(&quot;stan/ordered_simplex_gamma.stan&quot;)</code></pre>
+<pre><code>## Model executable is up to date!</code></pre>
+<pre class="r"><code>backend_gamma &lt;- SBC_backend_cmdstan_sample(m_gamma, chains = 2)</code></pre>
+<p>Run SBC</p>
+<pre class="r"><code>res_gamma &lt;- compute_SBC(ds, backend_gamma, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, &quot;ordered_simplex_gamma.rds&quot;),
+                              cache_mode = &quot;results&quot;)</code></pre>
+<pre><code>## Results loaded from cache file &#39;ordered_simplex_gamma.rds&#39;</code></pre>
+<pre><code>##  - 3 (0%) fits had at least one Rhat &gt; 1.01. Largest Rhat was 1.013.</code></pre>
+<pre><code>##  - 34 (3%) fits had some steps rejected. Maximum number of rejections was 1.</code></pre>
+<pre><code>## Not all diagnostics are OK.
+## You can learn more by inspecting $default_diagnostics, $backend_diagnostics 
+## and/or investigating $outputs/$messages/$warnings for detailed output from the backend.</code></pre>
+<pre class="r"><code>plot_rank_hist(res_gamma)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-gamma-1.png" width="672" /></p>
+<pre class="r"><code>plot_ecdf_diff(res_gamma)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/sbc-simplex-gamma-2.png" width="672" /></p>
+<pre class="r"><code>plot_sim_estimated(res_gamma, alpha = 0.2)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/simplex-gamma-estimated-1.png" width="672" /></p>
+</div>
+<div id="performance" class="section level1">
+<h1>Performance</h1>
+<p>SBC gave us a simulation study for free, so let us examine some
+performance characteristics (for the correct implementations only):</p>
+<pre class="r"><code>all_results &lt;- list(&quot;softmax&quot; = res_softmax, 
+                    &quot;min&quot; = res_min,
+                    &quot;gamma&quot; = res_gamma)
+
+perf_from_result &lt;- function(res, variant) {
+  ess_res &lt;- res$stats %&gt;% 
+    filter(grepl(&quot;^x&quot;, variable)) %&gt;%
+    group_by(sim_id) %&gt;%
+    summarise(min_x_ess = min(ess_bulk))
+  stats &lt;- res$backend_diagnostics %&gt;% 
+    inner_join(res$default_diagnostics, by = &quot;sim_id&quot;) %&gt;%
+    inner_join(ess_res, by = &quot;sim_id&quot;)
+  stopifnot(identical(stats$sim_id, res$backend_diagnostics$sim_id))
+  stats$variant &lt;- variant
+  stats
+}
+
+performance_data &lt;- all_results %&gt;% imap_dfr(perf_from_result) %&gt;%
+  mutate(ess_per_time = min_x_ess / max_chain_time)</code></pre>
+<pre class="r"><code>performance_data %&gt;% ggplot(aes(x = ess_per_time)) + geom_histogram(bins = 50) + facet_wrap(~variant, ncol = 1)</code></pre>
+<p><img src="ordered_simplex_files/figure-html/perf-time-histogram-1.png" width="672" /></p>
+<pre class="r"><code>performance_data %&gt;% group_by(variant) %&gt;%
+  mutate(high_rhat = max_rhat &gt; 1.01, divergences = n_divergent &gt; 0, 
+         non_converged = high_rhat | divergences) %&gt;%
+  summarise(`Mean ESS per s` = mean(ess_per_time), `High Rhat` = scales::percent(mean(high_rhat), accuracy = 0.1),
+           `Divergent transitions` = scales::percent(mean(divergences), accuracy = 0.1),
+           `Any convergence problem` = scales::percent(mean(non_converged), accuracy = 0.1) 
+                                                     )</code></pre>
+<pre><code>## # A tibble: 3 × 5
+##   variant `Mean ESS per s` `High Rhat` `Divergent transitions` `Any convergence problem`
+##   &lt;chr&gt;              &lt;dbl&gt; &lt;chr&gt;       &lt;chr&gt;                   &lt;chr&gt;                    
+## 1 gamma              6295. 0.3%        0.0%                    0.3%                     
+## 2 min               10491. 0.1%        0.0%                    0.1%                     
+## 3 softmax            4304. 0.4%        0.2%                    0.6%</code></pre>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

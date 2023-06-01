@@ -266,6 +266,9 @@ $(document).ready(function () {
   <a href="mvn.html">MVN (Section 4)</a>
 </li>
 <li>
+  <a href="ordered_simplex.html">Ordered simplex (Section 5)</a>
+</li>
+<li>
   <a href="bernoulli.html">Bernoulli (Appendix B)</a>
 </li>
       </ul>
@@ -361,7 +364,7 @@ if(!dir.exists(fig_dir)) {
 devtools::load_all()
 
 hist_plot_width &lt;- 8
-hist_plot_height &lt;- 4</code></pre>
+hist_plot_height &lt;- 3</code></pre>
 <p>We are using the model:</p>
 <p><span class="math display">\[
 \begin{align}
@@ -507,9 +510,8 @@ res_correct &lt;- compute_SBC(ds, backend_correct, dquants = quants,
 <p><img src="mvn_files/figure-html/res_correct_diag-2.png" width="672" /></p>
 <p>And here is the history of the gamma statistic (see the paper for
 exact definitons).</p>
-<pre class="r"><code>p_hist_correct &lt;- plot_log_gamma_history(res_correct)</code></pre>
-<pre><code>## Precomputing gamma thresholds</code></pre>
-<pre class="r"><code>p_hist_correct</code></pre>
+<pre class="r"><code>p_hist_correct &lt;- plot_log_gamma_history(res_correct)
+p_hist_correct</code></pre>
 <p><img src="mvn_files/figure-html/res_correct_history-1.png" width="768" /></p>
 <pre class="r"><code>ggsave(file.path(fig_dir, &quot;hist_correct.pdf&quot;), p_hist_correct, width = hist_plot_width, height = hist_plot_height)</code></pre>
 <p>For comparison also the history of the p-value for a
@@ -797,9 +799,8 @@ p_rank_hist_non_mon_split</code></pre>
 of the simulations for some quantities:</p>
 <pre class="r"><code>shared_mark &lt;- geom_vline(color = &quot;red&quot;, linetype = &quot;dashed&quot;, xintercept = 500)
 p_hist_non_mon_1 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), variables_regex = &quot;(^mu\\[.\\]$)|lik|sin&quot;) + 
-  theme(axis.title = element_blank()) + shared_mark</code></pre>
-<pre><code>## Precomputing gamma thresholds</code></pre>
-<pre class="r"><code>p_hist_non_mon_2 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = &quot;abs|\\*|drop&quot;) +
+  theme(axis.title = element_blank()) + shared_mark
+p_hist_non_mon_2 &lt;- plot_log_gamma_history(res_non_mon, ylim = c(-30, 5), max_sim_id = 500, variables_regex = &quot;abs|\\*|drop&quot;) +
   theme(axis.title = element_blank()) + shared_mark
 
 #axis title: https://stackoverflow.com/questions/65291723/merging-two-y-axes-titles-in-patchwork
