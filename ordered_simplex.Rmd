@@ -64,13 +64,30 @@ The code to generate datasets is below:
 
 ```{r}
 generate_one_dataset <- function(N, K, prior_alpha = 1) {
-  x_raw <- MCMCpack::rdirichlet(1, alpha = rep(prior_alpha, K))
-  x <- sort(x_raw)
+  if(length(prior_alpha) == 1) { 
+    prior_alpha <- rep(prior_alpha, K)
+  }
+  if(length(unique(prior_alpha)) == 1) {
+    # Can just sort due to symmetry
+    x_raw <- MCMCpack::rdirichlet(1, alpha = prior_alpha)
+    x <- sort(x_raw)
+  } else {
+    # Rejection sampling
+    for(i in 1:1e5) {
+      x <- as.numeric(MCMCpack::rdirichlet(1, alpha = prior_alpha))
+      if(!is.unsorted(x)) {
+        break;
+      }
+    }
+    if(is.unsorted(x)) {
+      stop("Couldn't generate ordered simplex by rejection smapling")
+    }
+  }
   observed <- as.integer(rmultinom(1, size = N, prob = x))
   
   list(
     variables = list(x = x),
-    generated = list(K = K, observed = observed, prior_alpha = rep(prior_alpha, K))
+    generated = list(K = K, observed = observed, prior_alpha = prior_alpha)
   )
 }
 
@@ -80,6 +97,11 @@ ds_long <- generate_datasets(
     n_sims = 6000)
 
 ds <- ds_long[1:1000]
+
+set.seed(23621845)
+ds_uneven <- generate_datasets(
+    SBC_generator_function(generate_one_dataset, N = 10, K = 4, prior_alpha = c(1,2,3,10)),
+    n_sims = 1000)
 ```
 
 We will use 1000 datasets (the `ds` variable) for most checks, but for detailed investigations, we'll also use the `ds_long` version with 6000 datasets.
@@ -136,6 +158,15 @@ We however also see in the plot below, that the data are not very informative ab
 plot_sim_estimated(res_min, alpha = 0.2)
 ```
 
+
+```{r sbc-simplex-min-uneven}
+res_min_uneven <- compute_SBC(ds_uneven, backend_min, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_min_uneven.rds"),
+                              cache_mode = "results")
+  
+plot_rank_hist(res_min_uneven)
+plot_ecdf_diff(res_min_uneven)
+```
 
 # Softmax Bad
 
@@ -225,6 +256,15 @@ plot_ecdf_diff(res_softmax)
 
 ```{r simplex-softmax-estimated}
 plot_sim_estimated(res_softmax, alpha = 0.2)
+```
+
+```{r sbc-simplex-softmax-uneven}
+res_softmax_uneven <- compute_SBC(ds_uneven, backend_softmax, keep_fits = FALSE, dquants = dq,
+                              cache_location = file.path(cache_dir, "ordered_simplex_softmax_uneven.rds"),
+                              cache_mode = "results")
+  
+plot_rank_hist(res_softmax_uneven)
+plot_ecdf_diff(res_softmax_uneven)
 ```
 
 
